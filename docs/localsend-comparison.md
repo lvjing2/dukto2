@@ -1,6 +1,6 @@
 # dukto2 与 LocalSend：基线后的技术选择
 
-研究日期：2026-10-18。本文只做源码、协议与正式安装包检查；未安装运行 LocalSend，未测量其速度、内存或后台稳定性。dukto2 的真机结果与未验证范围见 [验证记录](validation.md) 和 [基线](baseline.md)。暂停新增功能，未经后续决策不替换传输核心。
+研究日期：2026-10-18，本轮再次核对 GitHub `releases/latest` 仍指向 v1.18.2。本文只做源码、协议与正式安装包检查；未安装运行 LocalSend，未测量其速度、内存或后台稳定性。dukto2 的真机结果与未验证范围见 [验证记录](validation.md) 和 [基线](baseline.md)。暂停新增功能，未经后续决策不替换传输核心。
 
 ## 建议
 
@@ -12,6 +12,16 @@
 4. dukto2 已跑通本轮 macOS / Android 双向小文件互传，但大文件、后台、老设备、自动发现可靠性都仍需专项验收。当前没有证据证明任一方案在目标旧设备上性能更好。
 
 如果下一阶段明确优先与 LocalSend 生态互通，可再评估独立的协议适配器；原 Dukto 协议兼容仍是另一个适配目标。现在保留本地基线，等待用户确认下一阶段优先级。
+
+### 按目标作决定
+
+| 用户最看重的目标 | 更合适的选择 | 原因 |
+| --- | --- | --- |
+| 保留当前简洁 UI，先把 macOS / Android 做可靠 | 暂不整体迁移，选择性参考平台能力 | 近期缺口集中在发现、文件保存、后台与验收，不一定需要更换传输语言 |
+| 尽快拥有现成的多平台功能，并与 LocalSend 客户端互通 | 认真考虑基于 LocalSend fork，再接入当前 UI | 可复用其已有平台与多文件流程；需要接受跟踪上游、构建和 UI 接入成本 |
+| 主要为了支持旧系统或断点续传 | 不以迁移作为解决方案 | 当前正式包的系统下限和 v2 协议都没有直接满足这些目标 |
+
+不整体迁移并不代表长期自研更便宜。继续自研需要自己维护协议、发现、存储、后台与异常恢复；选择性借鉴也不会自动继承上游修复。若跨平台覆盖和 LocalSend 互通成为首要目标，复用上游的长期收益可能超过一次性接入成本。此次建议依据当前只先跑通 macOS / Android 的范围，不依据已投入的代码量。
 
 ## 对比对象与证据等级
 
@@ -51,7 +61,7 @@
 
 关键源码：[v2 上传客户端](https://github.com/localsend/localsend/blob/v1.18.2/packages/core/src/http/client/v2.rs)、[v2 接收入口](https://github.com/localsend/localsend/blob/v1.18.2/packages/core/src/http/server/v2.rs)、[接收落盘与有界队列](https://github.com/localsend/localsend/blob/v1.18.2/packages/core/src/http/server/common/save.rs)、[内存会话](https://github.com/localsend/localsend/blob/v1.18.2/packages/core/src/http/server/common/session.rs)、[桥接背压](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/rust/src/api/stream.rs)、[上传数据源与 u64 长度](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/rust/src/api/http.rs)、[重开保存目标](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/lib/src/task/server/file_saver.dart)、[checksum 默认设置](https://github.com/localsend/localsend/blob/v1.18.2/app/lib/provider/persistence_provider.dart)、[发送端生成校验值](https://github.com/localsend/localsend/blob/v1.18.2/app/lib/provider/network/send_provider.dart)。
 
-上述续传结论针对固定正式版的标准 v2 上传路径，不把存在 v3 模块或未来协议规划当作已实现能力。
+上述续传结论针对固定正式版的标准 v2 上传路径：其 app HTTP provider 和上传 isolate 的 HTTP provider 实际均选择 `LsHttpClientVersion.v2`；v3 模块的存在不代表客户端已获得新上传能力。[app provider](https://github.com/localsend/localsend/blob/v1.18.2/app/lib/provider/http_provider.dart)、[isolate provider](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/lib/src/isolate/child/http_provider.dart)
 
 ## Android 存储与后台、网络变化
 
@@ -70,6 +80,20 @@ LocalSend 还有失效 HTTP 服务探测、服务重启与相关网络恢复处�
 | 用 LocalSend 核心替换 | 可以保留 UI 和大部分 Flutter 平台外壳 | 接入 Cargo / NDK / FRB 生成链；重做身份及证书校验、发现、offer / 接收授权、进度 / 取消、文件路径 / FD、历史状态和错误映射；再跑各平台包验证 | 中到高集成成本，且续传、旧系统问题依旧存在 |
 
 当前 `Dukto2Controller` 直接使用 `TransferServer`、`TransferClient`、`PeerDiscovery`、`DeviceIdentity` 以及回执 / 授权事件，尚不是可无缝插拔的通用传输接口。若以后替换，应先围绕这些实际接点定义最小适配接口，而不是先把 UI 或整个项目迁到 LocalSend。完整 fork LocalSend 还涉及替换其 UI、品牌、配置与更新链路，成本比仅换核心更大。
+
+LocalSend 的优势还包括已有多文件会话和各平台发布工程；dukto2 当前 UI 只选择一个文件、同一时间执行一次收发。它的 `localsend_isolates` 也不是已发布的通用 SDK：标签 `pubspec.yaml` 标记 `publish_to: none`、`resolution: workspace`，依赖 Refena、相邻 `typed_isolates` 和本地 Rust builder。直接接入这层需要维护源码依赖及其生成文件；直接接 Rust 核心则需要自行提供桥接和应用事件适配。[isolate 包依赖](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/pubspec.yaml)、[Rust 桥接依赖](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/rust/Cargo.toml)、[多文件与授权接口](https://github.com/localsend/localsend/blob/v1.18.2/packages/localsend_isolates/lib/src/isolate/parent/actions.dart)
+
+选择“兼容 LocalSend 协议”也不强制使用 Rust：可以让当前 Dart 核心另加协议适配，但这只获得互操作能力，仍须自己维护实现与兼容测试，不能声称已经复用了上游核心的性能和修复。
+
+开发分支相对正式标签还有连接数限制、事件和服务器处理等变更；本次对比没有把这些未发布代码的能力计入 v1.18.2，也没有直接依赖 main。
+
+## 建议的下一阶段顺序
+
+1. 保留已验证基线和现有 UI，先确定最低系统 / CPU 与最大文件目标。
+2. 若接受当前路线，优先补自动发现与切网恢复、Android 直接保存和传输前台服务，随后完成下列大文件 / 中断验收；先控制为 macOS / Android 两个平台。
+3. 若决定优先多平台覆盖或 LocalSend 互通，再在隔离分支验证最小适配：发现、一个文件双向收发、拒绝 / 取消、证书校验与进度。用实际接入结果决定换核心或完整 fork。
+
+以上是后续方案，没有在本轮创建迁移分支、接入依赖或改动 UI / 传输实现。
 
 ## 决策前需要的验收
 
