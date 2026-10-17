@@ -1,5 +1,9 @@
 package dev.dukto2.dukto2
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -13,15 +17,63 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterActivity() {
+    private var storage: ReceiveStorage? = null
+    private var folderResult: MethodChannel.Result? = null
+    private var notificationResult: MethodChannel.Result? = null
+    private var notificationTitle = "dukto2 正在传输"
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var bridge: MethodChannel? = null
     private var multicastLock: WifiManager.MulticastLock? = null
     private var exportResult: MethodChannel.Result? = null
     private var exportSource: File? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dukto2/platform")
-            .setMethodCallHandler { call, result ->
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dukto2/platform")
+        bridge = channel
+        storage = ReceiveStorage(applicationContext)
+        TransferService.onStopped = { reason -> runOnUiThread { channel.invokeMethod("transferStopped", reason) } }
+        val connectivity = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { runOnUiThread { channel.invokeMethod("networkChanged", null) } }
+            override fun onLost(network: Network) { runOnUiThread { channel.invokeMethod("networkChanged", null) } }
+        }.also { connectivity.registerDefaultNetworkCallback(it) }
+        channel.setMethodCallHandler { call, result ->
+                if (storage!!.handle(call, result)) return@setMethodCallHandler
                 when (call.method) {
+                    "chooseReceiveFolder" -> {
+                        if (folderResult != null) { result.error("BUSY", "Folder picker is open", null); return@setMethodCallHandler }
+                        folderResult = result
+                        try {
+                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
+                            }
+                            @Suppress("DEPRECATION")
+                            startActivityForResult(intent, FOLDER_REQUEST)
+                        } catch (error: Exception) { folderResult = null; result.error("STORAGE", error.message, null) }
+                    }
+                    "startTransfer" -> {
+                        notificationTitle = call.argument<String>("title") ?: "dukto2 正在传输"
+                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
+                            !getPreferences(Context.MODE_PRIVATE).getBoolean("notificationsAsked", false)) {
+                            if (notificationResult != null) { result.error("BUSY", "Notification permission pending", null); return@setMethodCallHandler }
+                            notificationResult = result
+                            getPreferences(Context.MODE_PRIVATE).edit().putBoolean("notificationsAsked", true).apply()
+                            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQUEST)
+                        } else startTransferService(result)
+                    }
+                    "updateTransfer" -> {
+                        TransferService.current?.update(call.argument<String>("title") ?: "dukto2 正在传输",
+                            call.argument<String>("text") ?: "", call.argument<Number>("progress")?.toInt() ?: -1)
+                        result.success(null)
+                    }
+                    "stopTransfer" -> {
+                        notificationResult?.error("CANCELLED", "Transfer stopped", null)
+                        notificationResult = null
+                        TransferService.stop(this)
+                        result.success(null)
+                    }
                     "getDeviceName" -> {
                         val configured = try {
                             Settings.Global.getString(contentResolver, "device_name")
@@ -94,6 +146,14 @@ class MainActivity : FlutterActivity() {
     @Deprecated("Activity result bridge used by FlutterActivity")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FOLDER_REQUEST) {
+            val result = folderResult ?: return
+            folderResult = null
+            val uri = data?.data
+            if (resultCode != Activity.RESULT_OK || uri == null) result.success(null)
+            else storage!!.setFolder(uri, data.flags, result)
+            return
+        }
         if (requestCode != EXPORT_REQUEST) return
         val result = exportResult ?: return
         val source = exportSource
@@ -117,6 +177,25 @@ class MainActivity : FlutterActivity() {
         }.start()
     }
 
+    private fun startTransferService(result: MethodChannel.Result) {
+        try {
+            val intent = Intent(this, TransferService::class.java).putExtra("title", notificationTitle)
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
+            result.success(null)
+        } catch (error: Exception) { result.error("BACKGROUND", error.message, null) }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == NOTIFICATION_REQUEST) {
+            val result = notificationResult ?: return
+            notificationResult = null
+            // Android permits the service when notification permission is denied;
+            // users can still see/stop it in the system's active-apps UI.
+            startTransferService(result)
+        }
+    }
+
     private fun releaseDiscovery() {
         if (multicastLock?.isHeld == true) multicastLock?.release()
         multicastLock = null
@@ -124,10 +203,20 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         releaseDiscovery()
+        networkCallback?.let { (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).unregisterNetworkCallback(it) }
+        TransferService.onStopped = null
+        TransferService.stop(this)
+        storage?.shutdown()
+        folderResult?.error("CLOSED", "Activity closed", null)
+        notificationResult?.error("CLOSED", "Activity closed", null)
         exportResult?.error("CLOSED", "Activity closed", null)
         exportResult = null
         super.onDestroy()
     }
 
-    companion object { private const val EXPORT_REQUEST = 45879 }
+    companion object {
+        private const val EXPORT_REQUEST = 45879
+        private const val FOLDER_REQUEST = 45880
+        private const val NOTIFICATION_REQUEST = 45881
+    }
 }

@@ -331,7 +331,19 @@ void main() {
       );
       final port = reserve.port;
       reserve.close();
-      final discovery = PeerDiscovery(server.localPeer, port: port);
+      final remote = TransferServer(
+        identity: alice,
+        name: 'Alice',
+        receiveDirectory: Directory(p.join(root.path, randomId())),
+        onOffer: (_) async => false,
+        bindAddress: InternetAddress.loopbackIPv4,
+      );
+      await remote.start();
+      final discovery = PeerDiscovery(
+        server.localPeer,
+        port: port,
+        subnetFallback: false,
+      );
       await discovery.start();
       final udp = await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, 0);
       try {
@@ -345,7 +357,7 @@ void main() {
                 id: alice.id,
                 name: 'Alice',
                 host: '127.0.0.1',
-                port: 1234,
+                port: remote.port,
                 fingerprint: alice.fingerprint,
               ).toJson(),
             }),
@@ -356,9 +368,25 @@ void main() {
         final peers = await found.timeout(const Duration(seconds: 3));
         expect(peers.single.id, alice.id);
         expect(peers.single.host, '127.0.0.1');
+        expect(peers.single.fingerprint, alice.fingerprint);
+        // Rebinding after resume preserves the stream and can discover again.
+        await discovery.refresh(force: true);
+        final refreshed = discovery.changes.first;
+        udp.send(
+          utf8.encode(
+            jsonEncode({'app': 'dukto2', ...remote.localPeer.toJson()}),
+          ),
+          InternetAddress.loopbackIPv4,
+          port,
+        );
+        expect(
+          (await refreshed.timeout(const Duration(seconds: 3))).single.id,
+          alice.id,
+        );
       } finally {
         udp.close();
         await discovery.close();
+        await remote.close();
       }
     },
   );

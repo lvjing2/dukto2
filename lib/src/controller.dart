@@ -9,6 +9,8 @@ import 'package:dukto2_core/dukto2_core.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'android_receive_target.dart';
+
 class HistoryEntry {
   final TransferReceipt receipt;
   final bool incoming;
@@ -59,6 +61,12 @@ class Dukto2Controller extends ChangeNotifier {
   FileOffer? receivingOffer;
   String _incomingSender = '';
   bool _disposed = false;
+  bool directReceive = false;
+  String receiveLocation = '应用内';
+  bool get canChooseReceiveFolder => Platform.isAndroid;
+  Timer? _networkDebounce;
+  bool _recoveringNetwork = false;
+  DateTime _lastNotification = DateTime.fromMillisecondsSinceEpoch(0);
   FileOffer? pendingOffer;
   Completer<bool>? _approval;
   TransferProgress? activeProgress;
@@ -74,6 +82,23 @@ class Dukto2Controller extends ChangeNotifier {
 
   Future<void> start() async {
     try {
+      if (Platform.isAndroid) {
+        platform.setMethodCallHandler((call) async {
+          if (_disposed) return;
+          if (call.method == 'networkChanged') {
+            _networkDebounce?.cancel();
+            _networkDebounce = Timer(const Duration(milliseconds: 700), () {
+              if (ready) unawaited(refreshAddresses());
+            });
+          } else if (call.method == 'transferStopped' &&
+              (sending || receiving)) {
+            cancelTransfer();
+            error = call.arguments as String? ?? '后台传输已停止';
+            _notify();
+          }
+        });
+        await _loadReceiveLocation();
+      }
       _support = await getApplicationSupportDirectory();
       identity = await DeviceIdentity.loadOrCreate(
         Directory(p.join(_support!.path, 'identity')),
@@ -93,12 +118,20 @@ class Dukto2Controller extends ChangeNotifier {
         name: name,
         receiveDirectory: receiveDirectory!,
         onOffer: _offer,
+        createTarget: Platform.isAndroid ? _receiveTarget : null,
       );
-      await server!.start();
+      try {
+        await server!.start(port: PeerDiscovery.defaultTransferPort);
+      } on SocketException catch (error) {
+        if (![48, 98, 10048].contains(error.osError?.errorCode)) rethrow;
+        // Multiple local instances can still use UDP/manual IP on a random port.
+        await server!.start();
+      }
       _subscriptions.add(server!.progress.listen(_progress));
       _subscriptions.add(client.progress.listen(_progress));
       _subscriptions.add(
-        server!.received.listen((receipt) {
+        server!.received.listen((receipt) async {
+          await _endForeground();
           receiving = false;
           activeProgress = null;
           status = '已接收 ${receipt.name}，校验通过';
@@ -113,6 +146,7 @@ class Dukto2Controller extends ChangeNotifier {
           activeProgress = null;
           receivingOffer = null;
           error = '接收失败：$message';
+          unawaited(_endForeground());
           status = '等待文件';
           unawaited(_keepAwake());
           _notify();
@@ -127,6 +161,14 @@ class Dukto2Controller extends ChangeNotifier {
       _subscriptions.add(
         discovery!.changes.listen((value) {
           peers = value;
+          final chosen = selected;
+          if (chosen != null) {
+            for (final peer in value) {
+              if (peer.fingerprint == chosen.fingerprint &&
+                  peer.id == chosen.id)
+                selected = peer;
+            }
+          }
           _notify();
         }),
       );
@@ -147,16 +189,93 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   Future<void> refreshAddresses() async {
-    final interfaces = await NetworkInterface.list(
-      type: InternetAddressType.IPv4,
+    if (_disposed || _recoveringNetwork) return;
+    _recoveringNetwork = true;
+    try {
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      );
+      addresses = interfaces
+          .expand((i) => i.addresses)
+          .where((a) => !a.isLoopback)
+          .map((a) => '${a.address}:${server?.port ?? 0}')
+          .toList();
+      await discovery?.refresh(force: true);
+      if (!busy && server != null) await server!.ensureListening();
+      _notify();
+    } on Object catch (exception) {
+      error = '网络恢复失败，可再次刷新：$exception';
+      _notify();
+    } finally {
+      _recoveringNetwork = false;
+    }
+  }
+
+  Future<void> _loadReceiveLocation() async {
+    final result = await platform.invokeMapMethod<String, dynamic>(
+      'receiveLocation',
     );
-    addresses = interfaces
-        .expand((interface) => interface.addresses)
-        .where((address) => !address.isLoopback)
-        .map((address) => '${address.address}:${server?.port ?? 0}')
-        .toList();
-    discovery?.announce();
+    directReceive = result?['direct'] == true;
+    receiveLocation = result?['label'] as String? ?? '应用内';
+  }
+
+  Future<void> chooseReceiveFolder() async {
+    if (!Platform.isAndroid || busy || !ready) return;
+    picking = true;
     _notify();
+    try {
+      final result = await platform.invokeMapMethod<String, dynamic>(
+        'chooseReceiveFolder',
+      );
+      if (result != null) {
+        directReceive = result['direct'] == true;
+        receiveLocation = result['label'] as String? ?? '已授权文件夹';
+        status = '接收位置已更新';
+        error = null;
+      }
+    } on Object catch (exception) {
+      error = '无法设置接收位置：$exception';
+    } finally {
+      picking = false;
+      _notify();
+    }
+  }
+
+  Future<ReceiveTarget> _receiveTarget(String id, FileOffer offer) async {
+    ReceiveTarget? target;
+    try {
+      await _beginForeground('正在接收 ${offer.name}');
+      target = directReceive
+          ? await AndroidReceiveTarget.create(platform, id, offer)
+          : await FileReceiveTarget.create(receiveDirectory!, id);
+      if (_disposed || !receiving) throw TransferCancelled();
+      return target;
+    } on Object {
+      await target?.discard();
+      await _endForeground();
+      rethrow;
+    }
+  }
+
+  Future<void> _beginForeground(String title) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await platform
+          .invokeMethod<void>('startTransfer', {'title': title})
+          .timeout(const Duration(seconds: 20));
+    } on Object {
+      await _endForeground();
+      rethrow;
+    }
+  }
+
+  Future<void> _endForeground() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await platform.invokeMethod<void>('stopTransfer');
+    } on PlatformException {
+      /* Already stopped by Android. */
+    }
   }
 
   @visibleForTesting
@@ -220,6 +339,21 @@ class Dukto2Controller extends ChangeNotifier {
   void _progress(TransferProgress event) {
     activeProgress = event;
     final now = DateTime.now();
+    if (Platform.isAndroid &&
+        now.difference(_lastNotification).inMilliseconds >= 500) {
+      _lastNotification = now;
+      unawaited(
+        platform
+            .invokeMethod<void>('updateTransfer', {
+              'title': event.incoming ? '正在接收文件' : '正在发送文件',
+              'text': event.name,
+              'progress': event.total == 0
+                  ? 100
+                  : (100 * event.bytes ~/ event.total).clamp(0, 100),
+            })
+            .catchError((Object _) {}),
+      );
+    }
     transferStarted ??= now;
     if (!event.incoming) {
       sendPhase = event.bytes == event.total
@@ -285,6 +419,7 @@ class Dukto2Controller extends ChangeNotifier {
     _notify();
     try {
       await _keepAwake();
+      await _beginForeground('正在发送 ${picked.name}');
       final receipt = await client.sendStream(
         peer: peer,
         size: size,
@@ -305,6 +440,7 @@ class Dukto2Controller extends ChangeNotifier {
       status = '可重新选择文件发送';
     } finally {
       sending = false;
+      await _endForeground();
       _outgoing = null;
       activeProgress = null;
       unawaited(_keepAwake());
@@ -313,6 +449,7 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   void cancelTransfer() {
+    unawaited(_endForeground());
     if (sending) _outgoing?.cancel();
     if (receiving) {
       server?.cancelIncoming();
@@ -337,8 +474,14 @@ class Dukto2Controller extends ChangeNotifier {
 
   Future<void> export(TransferReceipt receipt) async {
     final file = receipt.file;
-    if (file == null) return;
     try {
+      if (Platform.isAndroid && receipt.contentUri != null) {
+        await platform.invokeMethod<void>('openReceived', {
+          'uri': receipt.contentUri,
+        });
+        return;
+      }
+      if (file == null) return;
       if (Platform.isAndroid) {
         final saved = await platform.invokeMethod<bool>('exportFile', {
           'path': file.path,
@@ -369,9 +512,13 @@ class Dukto2Controller extends ChangeNotifier {
         final row = raw as Map<String, dynamic>;
         final incoming = row['incoming'] as bool;
         final path = row['path'] as String?;
+        final uri = row['contentUri'] as String?;
         // Only restore paths within the app's receive directory.
         if (incoming &&
-            (path == null || !p.isWithin(receiveDirectory!.path, path))) {
+            !((path != null && p.isWithin(receiveDirectory!.path, path)) ||
+                (Platform.isAndroid &&
+                    uri != null &&
+                    Uri.tryParse(uri)?.scheme == 'content'))) {
           continue;
         }
         history.add(
@@ -381,6 +528,7 @@ class Dukto2Controller extends ChangeNotifier {
               size: row['size'] as int,
               sha256: row['sha256'] as String,
               file: path == null ? null : File(path),
+              contentUri: uri,
             ),
             incoming,
             peerName: row['peerName'] as String? ?? '',
@@ -410,6 +558,7 @@ class Dukto2Controller extends ChangeNotifier {
               'sha256': entry.receipt.sha256,
               'incoming': entry.incoming,
               'path': entry.receipt.file?.path,
+              'contentUri': entry.receipt.contentUri,
               'peerName': entry.peerName,
               'time': entry.time.toIso8601String(),
             },
@@ -431,6 +580,7 @@ class Dukto2Controller extends ChangeNotifier {
 
   Future<void> shutdown() async {
     _disposed = true;
+    _networkDebounce?.cancel();
     _outgoing?.cancel();
     answerOffer(false);
     for (final subscription in _subscriptions) {
@@ -441,6 +591,8 @@ class Dukto2Controller extends ChangeNotifier {
     await client.close();
     await _historyWrite;
     if (Platform.isAndroid) {
+      platform.setMethodCallHandler(null);
+      await _endForeground();
       await platform.invokeMethod<void>('stopDiscovery');
       await platform.invokeMethod<void>('keepAwake', false);
     }

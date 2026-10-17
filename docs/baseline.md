@@ -44,3 +44,8 @@ Android 真机验收已结束，可退出应用并断开 USB。没有挂起的�
 源码基线使用 Git 提交与 `baseline-2026-10-18` 标签保存。`artifacts/dukto2-baseline.bundle` 是包含该提交的 Git 备份，可用 `git clone` 恢复到新目录；`dukto2-baseline-source.tar.gz` 是对应的纯源码快照。产物清单中的摘要用于确认本地安装包与归档一致。
 
 工具链在当前机器仍可通过 `tool/flutterw` / `tool/dartw` 使用；其他机器需要安装匹配版本的 Flutter、Xcode / Android SDK，再执行 `tool/check.sh` 与平台构建。不要在原目录执行重置以恢复副本。
+
+
+## 后续状态
+
+本页描述 0.1.0 历史基线。用户随后已授权保留 dukto2，研究 LocalSend 后继续实现自动发现、Android 后台与直接保存。0.1.1 的实现和分层验收见 [可靠性改进](reliability.md)；本页标签与旧安装包继续保留。

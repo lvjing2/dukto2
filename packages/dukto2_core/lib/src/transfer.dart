@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'identity.dart';
 import 'models.dart';
+import 'receive_target.dart';
 
 typedef OfferHandler = Future<bool> Function(FileOffer offer);
 const _idleTimeout = Duration(seconds: 30);
@@ -34,16 +35,49 @@ Future<Map<String, dynamic>> _json(
   return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
 }
 
+Stream<List<int>> _withCancellation(
+  Stream<List<int>> source,
+  CancellationToken token,
+) {
+  late StreamController<List<int>> controller;
+  StreamSubscription<List<int>>? subscription;
+  void cancel() {
+    if (!controller.isClosed) {
+      controller.addError(TransferCancelled());
+      unawaited(controller.close());
+    }
+    unawaited(subscription?.cancel());
+  }
+
+  controller = StreamController<List<int>>(
+    onListen: () {
+      subscription = source.listen(
+        controller.add,
+        onError: controller.addError,
+        onDone: controller.close,
+      );
+      token.onCancel(cancel);
+    },
+    onPause: () => subscription?.pause(),
+    onResume: () => subscription?.resume(),
+    onCancel: () async {
+      token.remove(cancel);
+      await subscription?.cancel();
+    },
+  );
+  return controller.stream;
+}
+
 class _Ticket {
   final String id;
   final FileOffer offer;
-  final Directory directory;
+  final ReceiveTarget target;
   DateTime expires = DateTime.now().add(const Duration(minutes: 2));
   final cancellation = CancellationToken();
   String? digest;
   bool uploading = false;
-  _Ticket(this.id, this.offer, this.directory);
-  File get temporary => File(p.join(directory.path, '.partial'));
+  bool discarded = false;
+  _Ticket(this.id, this.offer, this.target);
 }
 
 /// V1: offer -> explicit approval -> stream upload -> digest checked commit.
@@ -54,6 +88,8 @@ class TransferServer {
   final Directory receiveDirectory;
   final OfferHandler onOffer;
   final InternetAddress? bindAddress;
+  final ReceiveTargetFactory? createTarget;
+  final Duration idleTimeout;
   final _progress = StreamController<TransferProgress>.broadcast();
   final _received = StreamController<TransferReceipt>.broadcast();
   final _errors = StreamController<String>.broadcast();
@@ -72,6 +108,8 @@ class TransferServer {
     required this.receiveDirectory,
     required this.onOffer,
     this.bindAddress,
+    this.createTarget,
+    this.idleTimeout = _idleTimeout,
   });
   Stream<TransferProgress> get progress => _progress.stream;
   Stream<TransferReceipt> get received => _received.stream;
@@ -97,6 +135,23 @@ class TransferServer {
         }
       }
     }
+    await _listen(port);
+    _expiry = Timer.periodic(const Duration(seconds: 5), (_) async {
+      final ticket = _ticket;
+      if (ticket != null &&
+          DateTime.now().isAfter(ticket.expires) &&
+          !ticket.uploading) {
+        try {
+          await _discard(ticket);
+          if (!_closed) _errors.add('Transfer expired before completion');
+        } on Object catch (error) {
+          if (!_closed) _errors.add('Cannot clean expired transfer: $error');
+        }
+      }
+    });
+  }
+
+  Future<void> _listen(int port) async {
     _server = await HttpServer.bindSecure(
       bindAddress ?? InternetAddress.anyIPv4,
       port,
@@ -113,19 +168,39 @@ class TransferServer {
         if (!_closed) _errors.add(error.toString());
       },
     );
-    _expiry = Timer.periodic(const Duration(seconds: 5), (_) async {
-      final ticket = _ticket;
-      if (ticket != null &&
-          DateTime.now().isAfter(ticket.expires) &&
-          !ticket.uploading) {
-        await _discard(ticket);
+  }
+
+  /// A resumed app may retain an invalidated listener. Rebind only while idle;
+  /// discovery restart is independent and never cancels an active upload.
+  Future<void> ensureListening() async {
+    if (_closed || _ticket != null || _awaitingApproval) return;
+    final previousPort = port;
+    try {
+      final peer = await TransferClient.probe(
+        '127.0.0.1',
+        previousPort,
+        timeout: const Duration(seconds: 1),
+      );
+      if (peer.fingerprint != identity.fingerprint) {
+        throw const HandshakeException('Local listener identity changed');
       }
-    });
+      return;
+    } on Object {
+      await _subscription?.cancel();
+      await _server?.close(force: true);
+      if (!_closed) await _listen(previousPort);
+    }
   }
 
   void cancelIncoming() {
     final ticket = _ticket;
-    if (ticket != null) unawaited(_discard(ticket));
+    if (ticket != null) {
+      unawaited(
+        _discard(ticket).catchError((Object error) {
+          if (!_closed) _errors.add('Cannot clean cancelled transfer: $error');
+        }),
+      );
+    }
   }
 
   Future<void> _reply(
@@ -142,14 +217,14 @@ class TransferServer {
   Future<void> _discard(_Ticket ticket) async {
     ticket.cancellation.cancel();
     // The upload handler owns the file while its stream is active.
-    if (ticket.uploading) return;
+    if (ticket.uploading || ticket.discarded) return;
+    ticket.discarded = true;
     if (identical(_ticket, ticket)) _ticket = null;
-    if (await ticket.directory.exists()) {
-      await ticket.directory.delete(recursive: true);
-    }
+    await ticket.target.discard();
   }
 
   Future<void> _handle(HttpRequest request) async {
+    _Ticket? activeTicket;
     try {
       if (request.method == 'GET' && request.uri.path == '/v1/info') {
         await _reply(request, 200, localPeer.toJson());
@@ -177,10 +252,14 @@ class TransferServer {
             return;
           }
           final id = randomId();
-          final directory = await Directory(
-            p.join(receiveDirectory.path, id),
-          ).create();
-          _ticket = _Ticket(id, offer, directory);
+          final target =
+              await (createTarget?.call(id, offer) ??
+                  FileReceiveTarget.create(receiveDirectory, id));
+          if (_closed) {
+            await target.discard();
+            return;
+          }
+          _ticket = _Ticket(id, offer, target);
           await _reply(request, 200, {'token': id});
         } finally {
           _awaitingApproval = false;
@@ -199,8 +278,11 @@ class TransferServer {
         await _reply(request, 404, {'error': 'Unknown or expired transfer'});
         return;
       }
+      activeTicket = ticket;
       if (request.method == 'DELETE' && segments[1] == 'file') {
+        final wasUploading = ticket.uploading;
         await _discard(ticket);
+        if (!wasUploading && !_closed) _errors.add('Sender cancelled transfer');
         await _reply(request, 200, {'cancelled': true});
         return;
       }
@@ -211,6 +293,7 @@ class TransferServer {
         }
         if (request.contentLength != ticket.offer.size) {
           await _discard(ticket);
+          if (!_closed) _errors.add('Content length differs from offer');
           await _reply(request, 400, {
             'error': 'Content length differs from offer',
           });
@@ -219,13 +302,15 @@ class TransferServer {
         ticket.uploading = true;
         final digest = _DigestSink();
         final hash = crypto.sha256.startChunkedConversion(digest);
-        final sink = ticket.temporary.openWrite();
         var bytes = 0;
         var succeeded = false;
         try {
           ticket.cancellation.check();
-          await sink.addStream(
-            request.timeout(_idleTimeout).map((chunk) {
+          await ticket.target.addStream(
+            _withCancellation(
+              request,
+              ticket.cancellation,
+            ).timeout(idleTimeout).map((chunk) {
               ticket.cancellation.check();
               ticket.expires = DateTime.now().add(const Duration(minutes: 2));
               bytes += chunk.length;
@@ -245,7 +330,6 @@ class TransferServer {
               return chunk;
             }),
           );
-          await sink.flush();
           ticket.cancellation.check();
           if (bytes != ticket.offer.size) {
             throw const FormatException('Incomplete file');
@@ -256,7 +340,7 @@ class TransferServer {
           succeeded = true;
         } finally {
           try {
-            await sink.close();
+            await ticket.target.close();
           } finally {
             ticket.uploading = false;
             if (!succeeded) await _discard(ticket);
@@ -272,23 +356,18 @@ class TransferServer {
             ticket.digest == null ||
             body['sha256'] != ticket.digest) {
           await _discard(ticket);
+          if (!_closed) _errors.add('File checksum mismatch or upload missing');
           await _reply(request, 422, {
             'error': 'File checksum mismatch or upload missing',
           });
           return;
         }
-        final file = await ticket.temporary.rename(
-          p.join(ticket.directory.path, ticket.offer.name),
+        final receipt = await ticket.target.commit(
+          ticket.offer,
+          ticket.digest!,
         );
         _ticket = null;
-        _received.add(
-          TransferReceipt(
-            name: ticket.offer.name,
-            size: ticket.offer.size,
-            sha256: ticket.digest!,
-            file: file,
-          ),
-        );
+        _received.add(receipt);
         await _reply(request, 200, {
           'committed': true,
           'sha256': ticket.digest!,
@@ -297,6 +376,13 @@ class TransferServer {
       }
       await _reply(request, 405, {'error': 'Unsupported operation'});
     } on Object catch (error) {
+      if (activeTicket != null && !activeTicket.uploading) {
+        try {
+          await _discard(activeTicket);
+        } on Object {
+          /* Recover from journal on restart. */
+        }
+      }
       if (!_closed) _errors.add(error.toString());
       try {
         await _reply(request, 400, {'error': 'Transfer failed'});
@@ -339,7 +425,11 @@ class TransferClient {
 
   /// This only reads an unauthenticated candidate identity. No file is sent until
   /// the user compares the displayed code with the receiving device.
-  static Future<Peer> probe(String host, int port) async {
+  static Future<Peer> probe(
+    String host,
+    int port, {
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
     final address = InternetAddress.tryParse(host);
     if (address == null ||
         address.type != InternetAddressType.IPv4 ||
@@ -351,26 +441,28 @@ class TransferClient {
     }
     final client = HttpClient(context: SecurityContext(withTrustedRoots: false))
       ..findProxy = ((_) => 'DIRECT')
-      ..connectionTimeout = const Duration(seconds: 8);
+      ..connectionTimeout = timeout;
     String? observed;
     client.badCertificateCallback = (certificate, _, _) {
       observed = crypto.sha256.convert(certificate.der).toString();
       return true;
     };
     try {
-      final request = await client.getUrl(
-        Uri(scheme: 'https', host: host, port: port, path: '/v1/info'),
-      );
-      request.followRedirects = false;
-      final response = await request.close().timeout(_idleTimeout);
-      if (response.statusCode != 200) {
-        throw const HttpException('Peer info unavailable');
-      }
-      final peer = Peer.fromJson(await _json(response), host);
-      if (peer.fingerprint != observed) {
-        throw const HandshakeException('Peer certificate changed');
-      }
-      return peer;
+      return await (() async {
+        final request = await client.getUrl(
+          Uri(scheme: 'https', host: host, port: port, path: '/v1/info'),
+        );
+        request.followRedirects = false;
+        final response = await request.close().timeout(_idleTimeout);
+        if (response.statusCode != 200) {
+          throw const HttpException('Peer info unavailable');
+        }
+        final peer = Peer.fromJson(await _json(response), host);
+        if (peer.fingerprint != observed) {
+          throw const HandshakeException('Peer certificate changed');
+        }
+        return peer;
+      })().timeout(timeout);
     } finally {
       client.close(force: true);
     }
@@ -439,7 +531,7 @@ class TransferClient {
       final accepted = await jsonRequest(
         '/v1/offer',
         offer.toJson(),
-        timeout: const Duration(seconds: 70),
+        timeout: const Duration(seconds: 95),
       );
       transferId = accepted['token'] as String;
       if (!RegExp(r'^[a-f0-9]{48}$').hasMatch(transferId)) {

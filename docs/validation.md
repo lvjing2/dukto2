@@ -69,3 +69,8 @@
 Android 产物按 `android-arm64` 构建，已在 Android 16 / arm64 运行；aapt 列出的其他 ABI 可能来自原生依赖，不能据此认定 Flutter 引擎的所有架构均已打包或验证。macOS 最低部署目标为 12.0，本轮只验证 Apple Silicon。具体包内容见基线记录。
 
 按用户指令暂停新增功能和 UI 扩展。接下来只比较现有核心与 LocalSend，不实施迁移。
+
+
+## 2026-10-18：0.1.1 可靠性改进
+
+用户决定保留 dukto2，在其现有核心上借鉴 LocalSend。源码、构建、自动化、大文件与新版 Mac GUI ↔ 同机 CLI 的实际结果集中记录在 [可靠性改进](reliability.md)。本轮手机未连接；尚未把新的后台服务和 Android 直接保存标记为真机通过。

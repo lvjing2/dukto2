@@ -145,11 +145,13 @@ class TransferReceipt {
   final int size;
   final String sha256;
   final File? file;
+  final String? contentUri;
   const TransferReceipt({
     required this.name,
     required this.size,
     required this.sha256,
     this.file,
+    this.contentUri,
   });
 }
 

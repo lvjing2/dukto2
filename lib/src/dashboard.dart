@@ -145,6 +145,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       color: colors.onSurfaceVariant,
                     ),
                   ),
+                  if (c.canChooseReceiveFolder) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      '接收位置：${c.receiveLocation}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Align(
                     alignment: Alignment.centerRight,
@@ -237,7 +244,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
             ),
             const SizedBox(height: 16),
             Text(
-              '传输时请让两台设备保持应用在前台。',
+              '确认收发后，Android 可在后台继续传输；请勿强行停止应用。',
               style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
             ),
           ],
@@ -264,7 +271,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'dukto2 · 0.1.0',
+              'dukto2 · 0.1.1',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
@@ -513,7 +520,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                '附近设备 ${peers.length}',
+                '附近设备 ${c.peers.length}',
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
               ),
             ),
@@ -552,6 +559,12 @@ class _TransferDashboardState extends State<TransferDashboard> {
     final selected =
         c.selected?.fingerprint == peer.fingerprint &&
         c.selected?.host == peer.host;
+    final discovered = c.peers.any(
+      (p) =>
+          p.fingerprint == peer.fingerprint &&
+          p.host == peer.host &&
+          p.port == peer.port,
+    );
     return Semantics(
       selected: selected,
       child: Material(
@@ -581,7 +594,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        selected ? '已核对 · 当前连接' : '未核对',
+                        selected
+                            ? (discovered ? '已核对 · 已选择' : '已核对 · 未发现')
+                            : '未核对',
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.onSurfaceVariant,
@@ -721,6 +736,23 @@ class _TransferDashboardState extends State<TransferDashboard> {
       const SizedBox(height: 28),
       const Divider(height: 1),
       const SizedBox(height: 20),
+      if (c.canChooseReceiveFolder) ...[
+        Text(
+          '接收位置',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          c.receiveLocation,
+          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+        ),
+        TextButton.icon(
+          onPressed: c.busy || !c.ready ? null : c.chooseReceiveFolder,
+          icon: const Icon(Icons.folder_open_outlined),
+          label: const Text('更改接收文件夹'),
+        ),
+        const SizedBox(height: 16),
+      ],
       _history(),
       const SizedBox(height: 24),
       _note(Icons.lock_outline, '局域网直连 · 加密传输'),
@@ -1035,7 +1067,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   if (entry.incoming)
                     TextButton(
                       onPressed: () => c.export(entry.receipt),
-                      child: Text(Platform.isAndroid ? '保存到…' : '查看'),
+                      child: Text(
+                        Platform.isAndroid && entry.receipt.contentUri == null
+                            ? '保存到…'
+                            : '打开',
+                      ),
                     )
                   else
                     Text(

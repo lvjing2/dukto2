@@ -1,7 +1,7 @@
 name: dukto2
 description: Local encrypted file sharing for macOS and Android.
 publish_to: none
-version: 0.1.0+1
+version: 0.1.1+2
 environment:
   sdk: ^3.13.5
 dependencies:

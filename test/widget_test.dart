@@ -67,6 +67,16 @@ class TestController extends Dukto2Controller {
   }
 }
 
+class StorageTestController extends TestController {
+  int folderChoices = 0;
+  @override
+  bool get canChooseReceiveFolder => true;
+  @override
+  Future<void> chooseReceiveFolder() async {
+    folderChoices++;
+  }
+}
+
 void main() {
   Future<void> show(
     WidgetTester tester,
@@ -99,6 +109,48 @@ void main() {
       c.dispose();
     });
   }
+
+  testWidgets(
+    'an old selection is not counted as a currently discovered device',
+    (tester) async {
+      final controller = TestController();
+      await show(tester, controller, const Size(1024, 768));
+      expect(find.text('附近设备 0'), findsOneWidget);
+      expect(find.text('已核对 · 未发现'), findsOneWidget);
+      controller.peers = [controller.selected!];
+      controller.notifyListeners();
+      await tester.pump();
+      expect(find.text('附近设备 1'), findsOneWidget);
+      expect(find.text('已核对 · 已选择'), findsOneWidget);
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'receive location remains usable on a small phone with large text',
+    (tester) async {
+      final controller = StorageTestController()
+        ..receiveLocation = '本地接收目录_名字很长也需要换行显示_0123456789';
+      await show(
+        tester,
+        controller,
+        const Size(375, 812),
+        dark: true,
+        scale: 2,
+      );
+      final button = find.widgetWithText(TextButton, '更改接收文件夹');
+      await tester.scrollUntilVisible(
+        button,
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(button);
+      await tester.pump();
+      expect(controller.folderChoices, 1);
+      expect(tester.takeException(), isNull);
+      controller.dispose();
+    },
+  );
 
   testWidgets('choosing a file never sends until explicit send action', (
     tester,
