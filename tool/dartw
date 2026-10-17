@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -n "${DART_BIN:-}" ]]; then
+  dart_bin="$DART_BIN"
+elif [[ -n "${FLUTTER_BIN:-}" ]]; then
+  dart_bin="$(dirname "$FLUTTER_BIN")/dart"
+elif command -v dart >/dev/null 2>&1; then
+  dart_bin="$(command -v dart)"
+else
+  dart_bin="$project_root/../.toolchains/flutter/bin/dart"
+fi
+if [[ ! -x "$dart_bin" ]]; then
+  echo 'Install Flutter stable, or set DART_BIN to its Dart executable.' >&2
+  exit 1
+fi
+exec "$dart_bin" "$@"

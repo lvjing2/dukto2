@@ -1,0 +1,13 @@
+name: dukto2_core
+description: Local peer discovery and pinned TLS file transfers for Dukto2.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+dependencies:
+  basic_utils: ^5.8.2
+  crypto: ^3.0.6
+  path: ^1.9.1
+dev_dependencies:
+  test: ^1.25.15
+  lints: ^6.0.0
