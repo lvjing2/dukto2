@@ -264,7 +264,8 @@ class PeerDiscovery {
         try {
           final value = item as Map<String, dynamic>;
           final host = value['host'] as String;
-          if (InternetAddress.tryParse(host)?.type != InternetAddressType.IPv4) {
+          if (InternetAddress.tryParse(host)?.type !=
+              InternetAddressType.IPv4) {
             continue;
           }
           final peer = Peer.fromJson(value, host);

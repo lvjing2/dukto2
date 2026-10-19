@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Cross-platform LAN file and text sharing, rebuilt with Flutter and Dart to carry forward Dukto's simple, direct experience. No account or internet relay is required. Verify the receiving device before sending; transferred content is checked before completion.
 
-The source is a **0.1.6-rc.1+8 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
+The source is a **0.1.6-rc.2+9 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
 | Platform | Verified | Not yet covered |
 | --- | --- | --- |
