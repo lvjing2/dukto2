@@ -151,7 +151,7 @@ Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/d
 
 Dukto2 aims to continue the original's practical spirit with a modern implementation. Its name expresses a tribute and an intention to continue that experience; it does not imply official successor status, authorization or endorsement by the original author. The initiator plans to contact the author, and this description will be updated to reflect any actual agreement.
 
-The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. The [initial provenance review](docs/en/source-provenance-audit.md) found no clear evidence confirming copied or translated Dukto / LocalSend business implementations. Shared Flutter templates and LocalSend design references are documented; certificate-generation provenance and early development history remain unresolved. This is not a legal determination about derivative-work status. See [acknowledgements](ACKNOWLEDGEMENTS.md).
+The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. Legacy Dukto protocol compatibility is planned for future work. See [acknowledgements](ACKNOWLEDGEMENTS.md).
 
 ## Created with AI assistance
 
