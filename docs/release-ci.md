@@ -28,6 +28,8 @@ sha256sum --check *.sha256
 | Android | Ubuntu + Java 21 | 三 ABI APK 的 zip | 未签名 Release APK；签名后才能安装，非可直接上架的包 |
 | iPhone / iPad | macOS 26 | 无签名 device app 的 zip | 同一个 iOS app 覆盖两类设备，不是可直接安装的 IPA，也不是 TestFlight 包 |
 
+Windows 压缩包包含应用、Flutter DLL 和 data，但当前不捆绑 Visual C++ 运行库；目标机器需要安装对应的 x64 Runtime。首次运行缺少 `MSVCP140.dll` / `VCRUNTIME140.dll` 时，使用 [微软官方下载](https://aka.ms/vc14/vc_redist.x64.exe)，不要从非官方 DLL 站点单独下载文件。要求与 [Flutter Windows 分发说明](https://docs.flutter.dev/platform-integration/windows/building) 及 [微软运行库说明](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) 一致。Linux 仍依赖目标系统的 GTK3 / glibc；原生依赖由构建日志中的 `ldd` 记录。
+
 Android CI 设置 `DUKTO2_ANDROID_UNSIGNED=true`，不使用临时 debug key 假装正式签名。本地未设置该变量时保留已有 debug key 的开发构建行为。APK 打包时复核未签名状态；Apple 端复核 ad-hoc / unsigned 状态。后续接入 Android release key、Apple Developer ID、公证和 App Store / Ad Hoc 描述文件时，再使用 GitHub Secrets / Environments 配置，不将私钥放入仓库。
 
 ## 检查与追溯
@@ -39,3 +41,13 @@ Flutter 固定为 3.47.7；各系统下载地址与官方 SHA-256 在 [flutter-s
 只有草稿汇总 job 获得 `contents: write`，构建 job 为只读；不读取个人签名配置，不改变仓库可见性。标签创建与正式发布由维护者安排，手动验收前不要把自动产物称为已通过跨平台互传测试。
 
 仓库为私有时，GitHub 托管 Runner 使用账号 Actions 配额。流程仅手动或标签触发，设有超时和产物保留期限，不对每次代码推送重复启动五个平台。
+
+## 首轮实跑记录（2026-10-19）
+
+[完整成功运行](https://github.com/lvjing2/dukto2/actions/runs/39191860838)，源码提交 `a91b11b98c125d15280d2f5eba3b117c69232fc8`，版本 0.1.6+7：预检查和五个平台的原生构建、打包、上传全部通过。预检查覆盖 60 项应用 / 平台测试、42 项核心测试、4 项 Python 工具测试、分析与格式检查；Windows、macOS 另执行了宿主检查。
+
+此前 [第一次运行](https://github.com/lvjing2/dukto2/actions/runs/39191119154) 的 macOS 原生编译已成功，但打包器错误地检查了 iOS 风格的 Info.plist 路径；修正为 `Contents/Info.plist`，新增包布局与版本标签回归检查后完整重跑通过。没有将第一轮失败改写成成功记录。
+
+已核对下载包摘要、许可证与运行资源；macOS 主程序为 x86_64 / arm64，Windows 主程序为 AMD64，Android 包包含 ARMv7 / ARM64 / x86_64 的 AOT 库，iOS 设备族包含 iPhone 和 iPad。仍不代表这些 CI 产物已完成各真机 UI 或局域网互传复验。
+
+本次使用 workflow_dispatch，草稿 Release job 按设计跳过；没有创建版本标签或正式 Release，标签触发的草稿发布步骤尚未实跑。最后的运行记录和 Windows 运行库说明是构建通过后的文档补充，没有改动受测实现。
