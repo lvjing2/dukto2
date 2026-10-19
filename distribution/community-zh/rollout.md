@@ -1,6 +1,6 @@
 # 国内社区发布安排
 
-状态：仅准备；仓库 private，Release Draft，不创建公开下载，不发帖。当前版本 0.1.6-rc.2+9；新安装修复尚需原生构建和干净环境复验，不能使用旧包冒充修复版。
+状态：仅准备；仓库 private，Release Draft，不创建公开下载，不发帖。当前版本 0.1.6-rc.2+9；新安装修复已通过 Windows / Linux 原生 CI，仍需干净环境复验，不能使用旧包冒充修复版。
 
 ## 顺序与素材
 
@@ -19,12 +19,14 @@
 | 系统 | 目前准备 | 对外试用前还需要 |
 | --- | --- | --- |
 | Android | 正式签名 APK，已有签名一致性校验 | 真机文件管理器安装；同签名更高 versionCode 覆盖且保留数据 |
-| Windows | 新构建自动打包 Release CRT，缺项即失败 | Windows CI 构建；没有开发环境的 Windows 11 启动与互传 |
+| Windows | 原生 CI 通过；随包附带 Release CRT，下载包内容与 x64 架构已核对 | 没有开发环境的 Windows 11 启动与互传 |
 | macOS | 完整 app、来源提示操作说明 | 从浏览器下载后的安装与首次启动；无 Developer ID 公证，不能承诺无提示 |
-| Linux | 完整 bundle，依赖检查与应用菜单入口 | Ubuntu 24.04 桌面按包内 install.sh 安装、启动、更新 |
+| Linux | 原生 CI 与动态库检查通过；完整 bundle、依赖检查与应用菜单入口 | Ubuntu 24.04 桌面按包内 install.sh 安装、启动、更新 |
 | iOS/iPadOS | 未签名开发构建 | 无付费 Apple 会员，公众分发暂缓 |
 
 [用户安装指引](../../docs/install.md)；[原有真机范围](../../docs/validation.md)。保留当前不可变候选包，新代码的修复不倒写到历史验证记录。
+
+本轮构建源码为 `8bf258a8d6f625967f87660d9e4fb4fadbc2a054`，不是旧标签 `v0.1.6-rc.2` 的历史二进制。本机 `tool/check.sh` 通过（含 18 项 Python 工具测试与 App / core 分析和测试）；[Windows 产物](https://github.com/lvjing2/dukto2/actions/runs/39218405754)、[Linux 产物](https://github.com/lvjing2/dukto2/actions/runs/39218470040) 均在私有 CI 中保留。仅构建与包内容核验，不代表已在用户设备重新安装；用户选择稍后连接设备验收。
 
 ## 公开前最后一步
 
