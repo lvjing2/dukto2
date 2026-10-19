@@ -1,5 +1,7 @@
 # Dukto2 协议 v1
 
+[English](en/protocol-v1.md) | 简体中文
+
 协议和 UI 分离。后续旧 Dukto 适配应新增独立传输实现，不在 v1 中引入无加密回退。
 
 ## 设备发现与信任

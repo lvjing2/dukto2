@@ -222,6 +222,73 @@ void main() {
     });
   }
 
+  test('foreground failure retains its cause when cleanup also fails and releases once', () async {
+    final primary = PlatformException(
+      code: 'FOREGROUND_DENIED',
+      message: 'private details',
+    );
+    messenger.setMockMethodCallHandler(Dukto2Controller.platform, (call) async {
+      calls.add(call);
+      if (call.method == 'startTransfer') throw primary;
+      if (call.method == 'stopTransfer') {
+        throw PlatformException(code: 'STOP_FAILED');
+      }
+      return null;
+    });
+    final file = await File(p.join(root.path, 'source.bin'))
+        .writeAsBytes([1, 2, 3]);
+    final c =
+        DesktopController(
+            'android',
+            filePicker: () async => [DiskSelection(file)],
+          )
+          ..selected = Peer(
+            id: 'peer',
+            name: 'Peer',
+            host: '127.0.0.1',
+            port: 1,
+            fingerprint: 'a' * 64,
+          );
+    try {
+      await c.pickFile();
+      await c.sendFile();
+      expect(c.sendPhase, SendPhase.failed);
+      expect(c.busy, isFalse);
+      expect(c.lastTransferFailure!.kind, TransferFailureKind.platform);
+      expect(c.lastTransferFailure!.stage, TransferStage.platform);
+      expect(c.lastTransferFailure!.platformCode, 'FOREGROUND_DENIED');
+      expect(
+        (c.lastTransferFailure!.cause as PlatformException).code,
+        'FOREGROUND_DENIED',
+      );
+      expect(c.error, isNot(contains('private details')));
+      expect(
+        c.diagnostics.entries.any((e) => e.event == TransferLogEvent.failed),
+        isTrue,
+      );
+      expect(
+        c.diagnostics.entries.any(
+          (e) => e.event == TransferLogEvent.cleanupFailed,
+        ),
+        isTrue,
+      );
+      await c.shutdown();
+      expect(
+        calls.where((call) => call.method == 'stopTransfer'),
+        hasLength(1),
+      );
+      expect(
+        calls
+            .where((call) => call.method == 'keepAwake')
+            .map((call) => call.arguments),
+        [true, false],
+      );
+    } finally {
+      await c.shutdown();
+      c.dispose();
+    }
+  });
+
   test(
     'Linux notification settings only open when the desktop supports them',
     () async {

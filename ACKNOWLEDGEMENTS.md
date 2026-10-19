@@ -1,23 +1,27 @@
-# 致敬与创作说明
+# Acknowledgements and AI creation
+
+English | [简体中文](ACKNOWLEDGEMENTS.zh-CN.md)
 
 ## Dukto
 
-感谢 **Emanuele Colombo** 创作 Dukto。Dukto2 希望延续原作让局域网文件传输简单、直接的产品精神。
+Thank you to **Emanuele Colombo** for creating Dukto. Dukto2 aims to continue its simple, direct LAN transfer experience.
 
-- 原作者的项目介绍：[Dukto R6](https://www.msec.it/blog/dukto/)
-- 社区维护版本：[xuzhen/dukto](https://github.com/xuzhen/dukto)
-- 感谢参与移植和维护的[社区贡献者](https://github.com/xuzhen/dukto/graphs/contributors)。
+- Original project: [Dukto R6](https://www.msec.it/blog/dukto/).
+- Community maintenance: [xuzhen/dukto](https://github.com/xuzhen/dukto).
+- Thanks to the [community contributors](https://github.com/xuzhen/dukto/graphs/contributors) who maintain and port it.
 
-Dukto2 以使用 Flutter / Dart 独立重写为目标，目前尚不兼容旧协议。[首轮来源核查](docs/source-provenance-audit.md) 记录了源码对照结果和历史证据缺口；更换语言或框架不能单独证明不存在复制、改写或翻译。我们希望与原作者沟通延续项目的意向；当前没有声称获得原作者的官方继任授权、认可或背书。后续介绍将根据来源核查和实际沟通结果更新。
+Dukto2 aims to be an independent Flutter / Dart rewrite and does not currently support the old protocol. The [initial provenance review](docs/en/source-provenance-audit.md) records comparisons and historical evidence gaps; changing language or framework alone does not prove the absence of copying, adaptation or translation. We hope to discuss continuity with the original author. No official successor authorization, approval or endorsement is claimed. This description will reflect further provenance findings and actual communication.
 
-## LocalSend 设计参考
+## LocalSend design references
 
-自动发现的分阶段探测、按网络接口处理组播、传输前台服务生命周期及 Android 系统文件访问设计，参考了 [LocalSend v1.18.2](https://github.com/localsend/localsend/tree/v1.18.2) 的实现。感谢 LocalSend 作者及贡献者。本项目使用自身的 Dart 协议与传输核心，未把 LocalSend Rust 核心作为运行时组件集成；具体代码相似性及不能确认来源的部分见 [核查报告](docs/source-provenance-audit.md)，不把开发时“自行实现”的自述当作完整来源证明。参考位置和取舍见 [改进说明](docs/reliability.md)。
+Staged discovery, per-interface multicast, foreground-transfer lifecycle and Android system-file access were informed by [LocalSend v1.18.2](https://github.com/localsend/localsend/tree/v1.18.2). Thank you to its authors and contributors.
 
-## AI 创作
+Dukto2 uses its own Dart protocol and transfer core, without integrating LocalSend's Rust core. See the [provenance review](docs/en/source-provenance-audit.md) for similarities and unresolved origins. Development statements about independent implementation are not complete provenance proof. Implementation choices are described in [reliability](docs/en/reliability.md).
 
-本项目主要由 OpenAI Codex 在人工指导下生成并迭代，覆盖代码、界面、测试与文档。人类发起人提出目标、确定取舍并审阅成果。开发过程中使用了 GPT-6.1 Sol；UI 设计参考了 [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) 的本地设计指导。
+## AI creation
 
-Flutter / Dart 及其他依赖为各自作者的工作，不属于本项目或 AI 的原创。应用提供“第三方许可”页面展示运行时依赖的许可信息。Dukto2 自身代码采用 [Apache License 2.0](LICENSE)。
+OpenAI Codex primarily generated and iterated the code, UI, tests and documentation under human direction. The human initiator defines goals, chooses approaches and reviews results. Development used GPT-6.1 Sol and local design guidance from [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill).
 
-上游许可证与当前项目的来源边界见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，Flutter 模板许可副本保存在 `licenses/`。本项目采用 Apache-2.0，不把 AI 创作声明视作第三方许可的替代。
+Flutter, Dart and other dependencies are their authors' work, not original work by this project or AI. The app's third-party licenses page shows runtime notices. Dukto2's own code uses [Apache License 2.0](LICENSE).
+
+See [third-party notices](THIRD_PARTY_NOTICES.md); a Flutter template license copy is in `licenses/`. AI disclosure does not replace third-party license obligations.

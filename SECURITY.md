@@ -1,19 +1,21 @@
-# 安全说明
+# Security
 
-Dukto2 当前处于开发预览阶段，尚未经过独立安全审计。当前维护对象为仓库最新代码；没有旧发行分支的安全维护承诺。
+English | [简体中文](SECURITY.zh-CN.md)
 
-## 信任边界
+Dukto2 is a development preview and has not had an independent security audit. Maintenance targets current repository code; there is no security-support commitment for older release branches.
 
-- 自动发现只提供候选地址。发送前应实际查看对端屏幕上的核对码，确认后固定目标 TLS 证书指纹。
-- 接收文件或文本需要显式确认；批量确认仅授权展示的那份清单。确认认识内容后再接收。
-- 大小和 SHA-256 验证用于检测传输内容错误，不代表内容安全或发送人可信。接收后是否打开文件由用户决定。
-- 设备身份和历史保存在本机应用数据目录，接收文件保存到系统或用户选择的目录。历史文本及接收正文没有额外的应用层静态加密；目录权限、备份、云盘同步与磁盘加密取决于操作系统和用户配置。
-- 不提供互联网中继、账户服务或自动剪贴板同步。不承诺在不受信任网络、恶意设备或休眠/进程终止后仍能安全、持续传输。
+## Trust model
 
-## 报告漏洞
+- Discovery provides candidate addresses. Compare the code on the other device's screen before pinning its TLS certificate fingerprint.
+- Files and text require explicit receiving consent. Batch approval covers only the displayed manifest.
+- Size and SHA-256 checks detect content mismatches; they do not establish sender trust or file safety. Users decide whether to open received files.
+- Identity and history stay in local app data; files go to system or selected folders. History text and received bodies have no additional app-level encryption at rest. Permissions, backups, cloud synchronization and disk encryption depend on the OS and user configuration.
+- There is no internet relay, account service or automatic clipboard synchronization. Continuous safe operation on hostile networks, against malicious peers, or after sleep / process termination is not guaranteed.
 
-请不要在公开 Issue 中发布可直接利用的步骤、真实文件、密码、身份私钥或完整证书身份目录。
+## Report a vulnerability
 
-公共仓库已启用 GitHub Private Vulnerability Reporting。请通过 [私密漏洞报告](https://github.com/lvjing2/dukto2/security/advisories/new)（Security → Report a vulnerability）提交，不在公开 Issue 中披露利用细节。
+Do not disclose exploitable details, real files, passwords, identity private keys or full identity directories in public issues.
 
-报告可包含受影响版本与系统、影响描述、使用无敏感内容的最小复现、预期与实际行为。这里没有响应时限或赏金承诺。其他发行准备见 [社区提交准备](docs/community-release.md)。
+Use [GitHub Private Vulnerability Reporting](https://github.com/lvjing2/dukto2/security/advisories/new) through Security → Report a vulnerability. Reports may be written in English or Simplified Chinese.
+
+Include affected versions and systems, impact, a minimal reproduction without sensitive content, and expected / actual behavior. There is no response-time or bounty commitment. See [Release CI](docs/en/release-ci.md) for distribution and signing limits.

@@ -1,6 +1,8 @@
 # 多系统 Release CI
 
-工作流：[Release builds](https://github.com/lvjing2/dukto2/actions/workflows/release.yml)，配置位于 [release.yml](../.github/workflows/release.yml)。仓库当前保持 Private，产物下载遵循仓库访问权限。
+[English](en/release-ci.md) | 简体中文
+
+工作流：[Release builds](https://github.com/lvjing2/dukto2/actions/workflows/release.yml)，配置位于 [release.yml](../.github/workflows/release.yml)。产物下载遵循仓库访问权限。
 
 ## 触发与下载
 
@@ -40,14 +42,4 @@ Flutter 固定为 3.47.7；各系统下载地址与官方 SHA-256 在 [flutter-s
 
 只有草稿汇总 job 获得 `contents: write`，构建 job 为只读；Android 签名材料仅由对应构建步骤从 Secrets 恢复到临时目录并清理，不改变仓库可见性。标签创建与正式发布由维护者安排，手动验收前不要把自动产物称为已通过跨平台互传测试。
 
-仓库为私有时，GitHub 托管 Runner 使用账号 Actions 配额。流程仅手动或标签触发，设有超时和产物保留期限，不对每次代码推送重复启动五个平台。
-
-## 首轮实跑记录（2026-10-19）
-
-[完整成功运行](https://github.com/lvjing2/dukto2/actions/runs/39191860838)，源码提交 `a91b11b98c125d15280d2f5eba3b117c69232fc8`，版本 0.1.6+7：预检查和五个平台的原生构建、打包、上传全部通过。预检查覆盖 60 项应用 / 平台测试、42 项核心测试、4 项 Python 工具测试、分析与格式检查；Windows、macOS 另执行了宿主检查。
-
-此前 [第一次运行](https://github.com/lvjing2/dukto2/actions/runs/39191119154) 的 macOS 原生编译已成功，但打包器错误地检查了 iOS 风格的 Info.plist 路径；修正为 `Contents/Info.plist`，新增包布局与版本标签回归检查后完整重跑通过。没有将第一轮失败改写成成功记录。
-
-已核对下载包摘要、许可证与运行资源；macOS 主程序为 x86_64 / arm64，Windows 主程序为 AMD64，Android 包包含 ARMv7 / ARM64 / x86_64 的 AOT 库，iOS 设备族包含 iPhone 和 iPad。仍不代表这些 CI 产物已完成各真机 UI 或局域网互传复验。
-
-本次使用 workflow_dispatch，草稿 Release job 按设计跳过；没有创建版本标签或正式 Release，标签触发的草稿发布步骤尚未实跑。最后的运行记录和 Windows 运行库说明是构建通过后的文档补充，没有改动受测实现。
+流程仅手动或标签触发，设有超时和产物保留期限，不对每次代码推送重复启动五个平台。

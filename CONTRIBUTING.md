@@ -1,38 +1,42 @@
-# 参与 Dukto2
+# Contributing to Dukto2
 
-感谢你帮助改善局域网传输体验。提交问题前先查看 README 的平台验证范围；构建成功、模拟器测试和真实跨设备互传是不同的验证结果。
+English | [简体中文](CONTRIBUTING.zh-CN.md)
 
-## 本地开发
+Read the platform coverage in the README before reporting a problem. A successful build, simulator test and physical LAN transfer are different results. Issues and pull requests are welcome in English or Simplified Chinese.
 
-使用 Flutter 3.47.7 stable / Dart 3.13.5；完整检查还需要 Python 3 运行工具脚本测试。从工程根目录运行：
+## Local development
+
+Use Flutter 3.47.7 stable / Dart 3.13.5 and Python 3 for script tests. From the repository root:
 
 ```sh
 ./tool/flutterw pub get
 ./tool/check.sh
 ```
 
-Flutter 可安装在 PATH 中，也可用 `FLUTTER_BIN` 指定绝对路径。Windows 可使用 PowerShell 执行 `./tool/windows.ps1`；Linux 使用 `./tool/linux.sh`。平台环境分别见 [Windows](docs/windows.md)、[Linux](docs/linux.md)、[iOS](docs/ios.md)。SSH 只是可选的远程开发方式，应用使用不需要 SSH。
+Use Flutter on PATH or set `FLUTTER_BIN`. Windows supports `./tool/windows.ps1` in PowerShell; Linux supports `./tool/linux.sh`. See [Windows](docs/en/windows.md), [Linux](docs/en/linux.md) and [iOS](docs/en/ios.md). SSH is optional for remote development and is not required to use the app.
 
-修改 Dart 文件后运行 `./tool/dartw format <修改的文件>`。不要格式化无关文件、更新无关依赖或混入机器生成的配置。需要原生编译的修改，请说明实际编译的系统、架构和工具链版本。
+Format changed Dart files with `./tool/dartw format <files>`. Avoid unrelated formatting, dependency changes and generated machine configuration. Report the actual OS, architecture and toolchain when native builds are relevant.
 
-## 代码边界
+## Code boundaries
 
-- `packages/dukto2_core` 保持纯 Dart，平台文件访问通过流和接收目标接口隔离。
-- 使用有界流，不把大文件完整读入内存；大小和 SHA-256 校验成功后才发布最终文件，不覆盖旧文件。
-- 不绕过 TLS 指纹核对。设备名称和发现公告不证明身份。
-- 单文件授权仅限本文件，批量授权仅限明确展示的清单和有效期；取消或错误不得自动接收后续无关请求。
-- 平台权限、原生存储、通知和休眠行为应通过对应平台工程实现，不能把某一平台测试视为所有平台通过。
+- Keep `packages/dukto2_core` pure Dart; access platform files through streams and receive-target interfaces.
+- Use bounded streams. Publish only after size and SHA-256 checks; never overwrite existing files.
+- Preserve TLS fingerprint verification. Names and discovery announcements do not prove identity.
+- Consent covers one file or one explicitly displayed batch and its validity period. Cancellation and errors must not approve unrelated later requests.
+- Validate native permissions, storage, notifications and sleep behavior on the relevant platform rather than generalizing another platform's result.
 
-## 问题与合并请求
+## Issues and pull requests
 
-问题报告请提供系统及版本、CPU 架构、应用版本、连接方式、复现步骤和预期行为。日志、文件名、设备名和截图请先脱敏，不提供真实文件内容、私钥、证书身份文件或密码。
+Include OS versions, CPU architecture, app versions, connection method, reproduction steps and expected behavior. Redact logs, names and screenshots; do not provide real file contents, private keys, identity files or passwords.
 
-合并请求应说明解决的具体问题、行为变化、验证命令与结果，以及尚未验证的平台。涉及收发、取消、清理或授权边界时补充能验证实际行为的回归测试。UI 调整附相应设备尺寸的截图。一次提交围绕一个问题，避免无关重构。
+Explain the concrete problem, behavior changes, actual validation commands and results, and untested platforms. Transfer, cancellation, cleanup and consent changes need meaningful regression coverage. UI changes should include screenshots at the relevant sizes. Keep each contribution focused.
 
-欢迎使用 AI 辅助开发；请说明使用范围，提交者应检查生成内容、来源和测试结果。AI 生成不能代替验证，不能把未执行的检查写成通过。
+AI-assisted contributions are welcome. Explain the scope and how generated content, provenance and tests were checked; do not report unexecuted checks as passing.
 
-安全问题请先阅读 [SECURITY.md](SECURITY.md)。发布前维护事项见 [社区提交准备](docs/community-release.md)。本地生成源码审阅包可执行 `python3 tool/prepare_source.py`，产物保存在忽略的 `artifacts/community/`，不执行提交或发布。
+Repository documentation supports English and Simplified Chinese. Root documents use `NAME.md` and `NAME.zh-CN.md`; topic guides use `docs/en/` and `docs/`. Maintain both versions and reciprocal language links when behavior changes. Code identifiers and protocol keys remain English. Keep original license texts unchanged.
 
-## 贡献许可
+See [SECURITY.md](SECURITY.md) for vulnerabilities and [Release CI](docs/en/release-ci.md) for packaging and signing. `python3 tool/prepare_source.py` creates a local source-review package in ignored `artifacts/community/`; it does not commit or publish.
 
-除非另有明确约定，有意提交并纳入 Dukto2 的贡献按项目的 [Apache License 2.0](LICENSE) 提供。请保留第三方版权和许可说明，并注明引入或改写代码的来源。
+## Contribution license
+
+Unless explicitly agreed otherwise, contributions intentionally submitted for inclusion are provided under the project's [Apache License 2.0](LICENSE). Retain third-party copyright and license notices and record sources for introduced or adapted code.

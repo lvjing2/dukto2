@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'identity.dart';
 import 'models.dart';
 import 'receive_target.dart';
+import 'diagnostics.dart';
 
 typedef OfferHandler = Future<bool> Function(FileOffer offer);
 const _idleTimeout = Duration(seconds: 30);
@@ -18,6 +19,14 @@ const receiveApprovalTimeout = Duration(minutes: 5);
 // Leave time for the receiver's expiry response to arrive before giving up.
 final _offerResponseTimeout =
     receiveApprovalTimeout + const Duration(seconds: 35);
+
+TransferFailureKind _responseFailureKind(int status) => switch (status) {
+  403 => TransferFailureKind.declined,
+  409 => TransferFailureKind.busy,
+  404 => TransferFailureKind.expired,
+  422 => TransferFailureKind.integrity,
+  _ => TransferFailureKind.unexpected,
+};
 
 class _DigestSink implements Sink<crypto.Digest> {
   crypto.Digest? value;
@@ -78,13 +87,14 @@ class _Ticket {
   final String id;
   final FileOffer offer;
   final ReceiveTarget target;
+  final TransferOperation operation;
   DateTime expires = DateTime.now().add(const Duration(minutes: 2));
   final cancellation = CancellationToken();
   String? digest;
   bool uploading = false;
   bool discarded = false;
   final String? batchToken;
-  _Ticket(this.id, this.offer, this.target, {this.batchToken});
+  _Ticket(this.id, this.offer, this.target, this.operation, {this.batchToken});
 }
 
 class _Batch {
@@ -99,6 +109,8 @@ class _Batch {
 /// V1: offer -> explicit approval -> stream upload -> digest checked commit.
 /// Only a committed file appears in the receive history.
 class TransferServer {
+  final TransferDiagnostics diagnostics;
+  final bool _ownsDiagnostics;
   final DeviceIdentity identity;
   final DeviceType deviceType;
   String _name;
@@ -112,7 +124,7 @@ class TransferServer {
   final Duration batchIdleTimeout;
   final _progress = StreamController<TransferProgress>.broadcast();
   final _received = StreamController<TransferReceipt>.broadcast();
-  final _errors = StreamController<String>.broadcast();
+  final _errors = StreamController<TransferFailure>.broadcast();
   HttpServer? _server;
   StreamSubscription<HttpRequest>? _subscription;
   Timer? _expiry;
@@ -137,7 +149,10 @@ class TransferServer {
     this.createTarget,
     this.idleTimeout = _idleTimeout,
     this.batchIdleTimeout = const Duration(minutes: 2),
+    TransferDiagnostics? diagnostics,
   }) : _name = name,
+       diagnostics = diagnostics ?? TransferDiagnostics(),
+       _ownsDiagnostics = diagnostics == null,
        deviceType = deviceType ?? DeviceType.hostPlatform;
   void rename(String value) {
     if (value.trim().isEmpty || value.length > 128) {
@@ -148,7 +163,25 @@ class TransferServer {
 
   Stream<TransferProgress> get progress => _progress.stream;
   Stream<TransferReceipt> get received => _received.stream;
-  Stream<String> get errors => _errors.stream;
+  Stream<TransferFailure> get errors => _errors.stream;
+
+  void _emitFailure(
+    Object error,
+    StackTrace stack, {
+    TransferOperation? operation,
+    TransferStage stage = TransferStage.connection,
+    TransferFailureKind? kind,
+    bool notify = true,
+  }) {
+    final failure = (operation ?? diagnostics.begin(incoming: true)).fail(
+      error,
+      stack,
+      at: stage,
+      kind: kind,
+    );
+    if (!_closed && notify) _errors.add(failure);
+  }
+
   int get port => _server!.port;
   Peer get localPeer => Peer(
     id: identity.id,
@@ -172,7 +205,12 @@ class TransferServer {
           !_awaitingApproval &&
           DateTime.now().isAfter(_batch!.expires)) {
         _batch = null;
-        if (!_closed) _errors.add('Batch approval expired');
+        _emitFailure(
+          StateError('Batch approval expired'),
+          StackTrace.current,
+          stage: TransferStage.approval,
+          kind: TransferFailureKind.expired,
+        );
       }
       final ticket = _ticket;
       if (ticket != null &&
@@ -180,9 +218,20 @@ class TransferServer {
           !ticket.uploading) {
         try {
           await _discard(ticket);
-          if (!_closed) _errors.add('Transfer expired before completion');
-        } on Object catch (error) {
-          if (!_closed) _errors.add('Cannot clean expired transfer: $error');
+          _emitFailure(
+            StateError('Transfer expired before completion'),
+            StackTrace.current,
+            operation: ticket.operation,
+            stage: ticket.operation.stage,
+            kind: TransferFailureKind.expired,
+          );
+        } on Object catch (error, stack) {
+          _emitFailure(
+            error,
+            stack,
+            operation: ticket.operation,
+            stage: TransferStage.cleanup,
+          );
         }
       }
     });
@@ -201,8 +250,8 @@ class TransferServer {
         _handlers.add(handler);
         unawaited(handler.whenComplete(() => _handlers.remove(handler)));
       },
-      onError: (Object error) {
-        if (!_closed) _errors.add(error.toString());
+      onError: (Object error, StackTrace stack) {
+        _emitFailure(error, stack);
       },
     );
   }
@@ -233,9 +282,10 @@ class TransferServer {
     _batch = null;
     final ticket = _ticket;
     if (ticket != null) {
+      ticket.operation.fail(TransferCancelled(), StackTrace.current);
       unawaited(
-        _discard(ticket).catchError((Object error) {
-          if (!_closed) _errors.add('Cannot clean cancelled transfer: $error');
+        _discard(ticket).catchError((Object error, StackTrace stack) {
+          ticket.operation.cleanupFailed(error, stack);
         }),
       );
     }
@@ -266,13 +316,22 @@ class TransferServer {
 
   Future<void> _handle(HttpRequest request) async {
     _Ticket? activeTicket;
+    TransferOperation? operation;
+    var applicationOwnsRequest = false;
     try {
       if (request.method == 'GET' && request.uri.path == '/v1/info') {
         await _reply(request, 200, localPeer.toJson());
         return;
       }
       if (request.method == 'POST' && request.uri.path == '/v1/batch') {
+        operation = diagnostics.begin(incoming: true)
+          ..move(TransferStage.approval);
         if (_awaitingApproval || _ticket != null || _batch != null) {
+          operation.fail(
+            StateError('Receiver is busy'),
+            StackTrace.current,
+            kind: TransferFailureKind.busy,
+          );
           await _reply(request, 409, {'error': 'Receiver is busy'});
           return;
         }
@@ -291,12 +350,20 @@ class TransferServer {
           _pendingBatchToken = token;
           _pendingBatchAddress = offer.remoteAddress;
           _batchApprovalCancellation = cancelled;
+          applicationOwnsRequest = true;
           final accepted = await Future.any([
             onOffer(offer),
             _shutdown.future.then((_) => false),
             cancelled.future.then((_) => false),
           ]).timeout(receiveApprovalTimeout, onTimeout: () => false);
           if (_closed || !accepted || cancelled.isCompleted) {
+            operation.fail(
+              StateError('Batch declined or approval timed out'),
+              StackTrace.current,
+              kind: cancelled.isCompleted
+                  ? TransferFailureKind.cancelled
+                  : TransferFailureKind.declined,
+            );
             await _reply(request, 403, {
               'error': 'Batch declined or approval timed out',
             });
@@ -305,6 +372,7 @@ class TransferServer {
           final batch = _Batch(token, offer, batchIdleTimeout);
           _batch = batch;
           await _reply(request, 200, {'token': batch.token});
+          operation.complete();
         } finally {
           _pendingBatchToken = null;
           _pendingBatchAddress = null;
@@ -324,7 +392,11 @@ class TransferServer {
           if (_batchApprovalCancellation?.isCompleted == false) {
             _batchApprovalCancellation!.complete();
           }
-          if (!_closed) _errors.add('Batch cancelled');
+          _emitFailure(
+            TransferCancelled(),
+            StackTrace.current,
+            stage: TransferStage.approval,
+          );
           await _reply(request, 200, {'cancelled': true});
           return;
         }
@@ -337,12 +409,23 @@ class TransferServer {
           return;
         }
         cancelIncoming();
-        if (!_closed) _errors.add('Batch cancelled');
+        _emitFailure(
+          TransferCancelled(),
+          StackTrace.current,
+          stage: TransferStage.approval,
+        );
         await _reply(request, 200, {'cancelled': true});
         return;
       }
       if (request.method == 'POST' && request.uri.path == '/v1/offer') {
+        operation = diagnostics.begin(incoming: true)
+          ..move(TransferStage.approval);
         if (_awaitingApproval || _ticket != null) {
+          operation.fail(
+            StateError('Receiver is busy'),
+            StackTrace.current,
+            kind: TransferFailureKind.busy,
+          );
           await _reply(request, 409, {'error': 'Receiver is busy'});
           return;
         }
@@ -365,12 +448,18 @@ class TransferServer {
                 offer.isText ||
                 offer.name != batch.offer.files[batch.next].name ||
                 offer.size != batch.offer.files[batch.next].size) {
+              operation.fail(
+                StateError('File is not in the approved batch'),
+                StackTrace.current,
+                kind: TransferFailureKind.declined,
+              );
               await _reply(request, 403, {
                 'error': 'File is not in the approved batch',
               });
               return;
             }
           }
+          applicationOwnsRequest = true;
           final accepted = await Future.any([
             batch == null
                 ? onOffer(offer)
@@ -380,9 +469,20 @@ class TransferServer {
           if (_closed ||
               !accepted ||
               (batch != null && !identical(_batch, batch))) {
+            operation.fail(
+              StateError('Transfer declined or approval timed out'),
+              StackTrace.current,
+              kind: TransferFailureKind.declined,
+            );
             if (batch != null && identical(_batch, batch)) _batch = null;
             if (batch != null && !_closed) {
-              _errors.add('Batch could not continue');
+              _emitFailure(
+                StateError('Batch could not continue'),
+                StackTrace.current,
+                operation: operation,
+                stage: TransferStage.approval,
+                kind: TransferFailureKind.declined,
+              );
             }
             await _reply(request, 403, {
               'error': 'Transfer declined or approval timed out',
@@ -390,6 +490,7 @@ class TransferServer {
             return;
           }
           final id = randomId();
+          operation.move(TransferStage.storage);
           final target = offer.isText
               ? TextReceiveTarget(
                   storage: offer.size > maxInlineTextBytes
@@ -408,7 +509,13 @@ class TransferServer {
             await _reply(request, 403, {'error': 'Batch cancelled'});
             return;
           }
-          _ticket = _Ticket(id, offer, target, batchToken: batch?.token);
+          _ticket = _Ticket(
+            id,
+            offer,
+            target,
+            operation,
+            batchToken: batch?.token,
+          );
           await _reply(request, 200, {'token': id});
         } finally {
           _awaitingApproval = false;
@@ -428,21 +535,36 @@ class TransferServer {
         return;
       }
       activeTicket = ticket;
+      operation = ticket.operation;
       if (request.method == 'DELETE' && segments[1] == 'file') {
         final wasUploading = ticket.uploading;
         await _discard(ticket);
-        if (!wasUploading && !_closed) _errors.add('Sender cancelled transfer');
+        if (!wasUploading) {
+          _emitFailure(
+            TransferCancelled(),
+            StackTrace.current,
+            operation: operation,
+            stage: operation.stage,
+          );
+        }
         await _reply(request, 200, {'cancelled': true});
         return;
       }
       if (request.method == 'PUT' && segments[1] == 'file') {
+        operation.move(TransferStage.upload);
         if (ticket.uploading || ticket.digest != null) {
           await _reply(request, 409, {'error': 'Upload already started'});
           return;
         }
         if (request.contentLength != ticket.offer.size) {
           await _discard(ticket);
-          if (!_closed) _errors.add('Content length differs from offer');
+          _emitFailure(
+            const FormatException('Content length differs from offer'),
+            StackTrace.current,
+            operation: operation,
+            stage: TransferStage.verification,
+            kind: TransferFailureKind.integrity,
+          );
           await _reply(request, 400, {
             'error': 'Content length differs from offer',
           });
@@ -453,6 +575,7 @@ class TransferServer {
         final hash = crypto.sha256.startChunkedConversion(digest);
         var bytes = 0;
         var succeeded = false;
+        Object? primaryError;
         try {
           ticket.cancellation.check();
           _progress.add(
@@ -496,30 +619,62 @@ class TransferServer {
           ticket.expires = DateTime.now().add(const Duration(minutes: 2));
           ticket.digest = digest.value.toString();
           succeeded = true;
+        } on Object catch (error, stack) {
+          primaryError = operation.capture(
+            error,
+            stack,
+            at: error is FileSystemException ? TransferStage.storage : null,
+          );
+          Error.throwWithStackTrace(primaryError, stack);
         } finally {
           try {
             await ticket.target.close();
+          } on Object catch (error, stack) {
+            if (primaryError == null) {
+              primaryError = operation.capture(
+                error,
+                stack,
+                at: TransferStage.storage,
+              );
+              Error.throwWithStackTrace(primaryError, stack);
+            }
+            operation.cleanupFailed(error, stack);
           } finally {
             ticket.uploading = false;
-            if (!succeeded) await _discard(ticket);
+            if (!succeeded || primaryError != null) {
+              try {
+                await _discard(ticket);
+              } on Object catch (error, stack) {
+                if (primaryError == null) rethrow;
+                operation.cleanupFailed(error, stack);
+              }
+            }
           }
         }
         await _reply(request, 200, {'sha256': ticket.digest!, 'size': bytes});
         return;
       }
       if (request.method == 'POST' && segments[1] == 'commit') {
+        operation.move(TransferStage.verification);
         final body = await _json(request);
         ticket.cancellation.check();
         if (ticket.uploading ||
             ticket.digest == null ||
             body['sha256'] != ticket.digest) {
           await _discard(ticket);
-          if (!_closed) _errors.add('File checksum mismatch or upload missing');
+          _emitFailure(
+            const FormatException('File checksum mismatch or upload missing'),
+            StackTrace.current,
+            operation: operation,
+            stage: operation.stage,
+            kind: TransferFailureKind.integrity,
+          );
           await _reply(request, 422, {
             'error': 'File checksum mismatch or upload missing',
           });
           return;
         }
+        operation.move(TransferStage.commit);
         final receipt = await ticket.target.commit(
           ticket.offer,
           ticket.digest!,
@@ -532,6 +687,7 @@ class TransferServer {
           if (batch.next == batch.offer.files.length) _batch = null;
         }
         _received.add(receipt);
+        operation.complete();
         await _reply(request, 200, {
           'committed': true,
           'sha256': ticket.digest!,
@@ -539,15 +695,21 @@ class TransferServer {
         return;
       }
       await _reply(request, 405, {'error': 'Unsupported operation'});
-    } on Object catch (error) {
+    } on Object catch (error, stack) {
       if (activeTicket != null && !activeTicket.uploading) {
         try {
           await _discard(activeTicket);
-        } on Object {
-          /* Recover from journal on restart. */
+        } on Object catch (cleanup, cleanupStack) {
+          activeTicket.operation.cleanupFailed(cleanup, cleanupStack);
         }
       }
-      if (!_closed) _errors.add(error.toString());
+      _emitFailure(
+        error,
+        stack,
+        operation: operation,
+        stage: operation?.stage ?? TransferStage.connection,
+        notify: applicationOwnsRequest || activeTicket != null,
+      );
       try {
         await _reply(request, 400, {'error': 'Transfer failed'});
       } on Object {
@@ -571,10 +733,16 @@ class TransferServer {
     await _progress.close();
     await _received.close();
     await _errors.close();
+    if (_ownsDiagnostics) await diagnostics.close();
   }
 }
 
 class TransferClient {
+  final TransferDiagnostics diagnostics;
+  final bool _ownsDiagnostics;
+  TransferClient({TransferDiagnostics? diagnostics})
+    : diagnostics = diagnostics ?? TransferDiagnostics(),
+      _ownsDiagnostics = diagnostics == null;
   final _progress = StreamController<TransferProgress>.broadcast();
   Stream<TransferProgress> get progress => _progress.stream;
 
@@ -601,6 +769,7 @@ class TransferClient {
     final http = _client(peer.fingerprint);
     void abort() => http.close(force: true);
     token.onCancel(abort);
+    final operation = diagnostics.begin(incoming: false);
     try {
       final request = await http.postUrl(
         Uri(
@@ -613,22 +782,29 @@ class TransferClient {
       request.followRedirects = false;
       request.headers.contentType = ContentType.json;
       request.write(jsonEncode(body));
+      operation.move(TransferStage.approval);
       final response = await request.close().timeout(_offerResponseTimeout);
       final reply = await _json(response);
       if (response.statusCode != 200) {
-        throw HttpException(reply['error']?.toString() ?? 'Batch declined');
+        throw operation.capture(
+          HttpException(reply['error']?.toString() ?? 'Batch declined'),
+          StackTrace.current,
+          kind: _responseFailureKind(response.statusCode),
+        );
       }
       final batch = reply['token'];
       if (batch is! String || batch != batchToken) {
         throw const FormatException('Invalid batch token');
       }
+      operation.complete();
       return batch;
-    } on Object {
+    } on Object catch (error, stack) {
       if (token.isCancelled) {
         await cancelBatch(peer, batchToken);
+        operation.fail(TransferCancelled(), stack);
         throw TransferCancelled();
       }
-      rethrow;
+      Error.throwWithStackTrace(operation.fail(error, stack), stack);
     } finally {
       token.remove(abort);
       http.close(force: true);
@@ -638,6 +814,8 @@ class TransferClient {
   Future<void> cancelBatch(Peer peer, String token) async {
     if (!RegExp(r'^[a-f0-9]{48}$').hasMatch(token)) return;
     final http = _client(peer.fingerprint);
+    final operation = diagnostics.begin(incoming: false)
+      ..move(TransferStage.cleanup);
     try {
       final request = await http
           .deleteUrl(
@@ -654,7 +832,9 @@ class TransferClient {
         const Duration(seconds: 2),
       );
       await response.drain<void>().timeout(const Duration(seconds: 2));
-    } on Object {
+      operation.complete();
+    } on Object catch (error, stack) {
+      operation.cleanupFailed(error, stack);
       // An unreachable receiver expires the in-memory grant automatically.
     } finally {
       http.close(force: true);
@@ -792,6 +972,7 @@ class TransferClient {
     token.onCancel(abort);
     String? transferId;
     var committed = false;
+    final operation = diagnostics.begin(incoming: false);
     Uri uri(String path) =>
         Uri(scheme: 'https', host: peer.host, port: peer.port, path: path);
     Future<Map<String, dynamic>> jsonRequest(
@@ -801,14 +982,19 @@ class TransferClient {
     }) async {
       token.check();
       final request = await client.postUrl(uri(path));
+      operation.move(
+        path == '/v1/offer' ? TransferStage.approval : TransferStage.commit,
+      );
       request.followRedirects = false;
       request.headers.contentType = ContentType.json;
       request.write(jsonEncode(data));
       final response = await request.close().timeout(timeout);
       final body = await _json(response);
       if (response.statusCode != 200) {
-        throw HttpException(
-          body['error']?.toString() ?? 'Peer rejected transfer',
+        throw operation.capture(
+          HttpException(body['error']?.toString() ?? 'Peer rejected transfer'),
+          StackTrace.current,
+          kind: _responseFailureKind(response.statusCode),
         );
       }
       return body;
@@ -826,6 +1012,7 @@ class TransferClient {
       }
       token.check();
       final request = await client.putUrl(uri('/v1/file/$transferId'));
+      operation.move(TransferStage.upload);
       _progress.add(
         TransferProgress(
           id: transferId,
@@ -861,14 +1048,25 @@ class TransferClient {
           )
           .timeout(const Duration(hours: 2));
       hash.close();
+      operation.move(TransferStage.verification);
       final response = await request.close().timeout(_idleTimeout);
       final uploaded = await _json(response);
       final checksum = digest.value.toString();
-      if (response.statusCode != 200 ||
-          uploaded['sha256'] != checksum ||
+      if (response.statusCode != 200) {
+        throw operation.capture(
+          const HttpException('Upload failed'),
+          StackTrace.current,
+          kind: _responseFailureKind(response.statusCode),
+        );
+      }
+      if (uploaded['sha256'] != checksum ||
           uploaded['size'] != size ||
           bytes != size) {
-        throw const HttpException('Upload failed or checksum mismatch');
+        throw operation.capture(
+          const HttpException('Upload failed or checksum mismatch'),
+          StackTrace.current,
+          kind: TransferFailureKind.integrity,
+        );
       }
       final receipt = await jsonRequest('/v1/commit/$transferId', {
         'sha256': checksum,
@@ -877,10 +1075,14 @@ class TransferClient {
         throw const HttpException('Missing commit acknowledgement');
       }
       committed = true;
+      operation.complete();
       return TransferReceipt(name: fileName, size: size, sha256: checksum);
-    } on Object {
-      if (token.isCancelled) throw TransferCancelled();
-      rethrow;
+    } on Object catch (error, stack) {
+      if (token.isCancelled) {
+        operation.fail(TransferCancelled(), stack);
+        throw TransferCancelled();
+      }
+      Error.throwWithStackTrace(operation.fail(error, stack), stack);
     } finally {
       token.remove(abort);
       client.close(force: true);
@@ -894,7 +1096,8 @@ class TransferClient {
             const Duration(seconds: 2),
           );
           await response.drain<void>().timeout(const Duration(seconds: 2));
-        } on Object {
+        } on Object catch (error, stack) {
+          operation.cleanupFailed(error, stack);
           /* Receiver expires orphaned tickets automatically. */
         } finally {
           cleanup.close(force: true);
@@ -903,5 +1106,8 @@ class TransferClient {
     }
   }
 
-  Future<void> close() => _progress.close();
+  Future<void> close() async {
+    await _progress.close();
+    if (_ownsDiagnostics) await diagnostics.close();
+  }
 }

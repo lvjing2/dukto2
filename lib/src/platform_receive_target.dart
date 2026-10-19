@@ -1,6 +1,22 @@
 import 'package:flutter/services.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 
+Future<T> _storage<T>(Future<T> Function() action) async {
+  try {
+    return await action();
+  } on PlatformException catch (error, stack) {
+    throw TransferFailure.capture(
+      error,
+      stack,
+      stage: TransferStage.storage,
+      kind: TransferFailureKind.storage,
+      operationId: randomId(8),
+      incoming: true,
+      platformCode: error.code,
+    );
+  }
+}
+
 /// The native writer owns pending platform storage. One bounded chunk
 /// is acknowledged after the worker writes it, retaining network backpressure.
 class PlatformReceiveTarget implements ReceiveTarget {
@@ -17,12 +33,14 @@ class PlatformReceiveTarget implements ReceiveTarget {
     FileOffer offer, {
     String uriScheme = 'content',
   }) async {
-    await channel.invokeMethod<void>('prepareReceive', {
-      'id': id,
-      'name': offer.name,
-      'size': offer.size,
-      'text': offer.isText,
-    });
+    await _storage(
+      () => channel.invokeMethod<void>('prepareReceive', {
+        'id': id,
+        'name': offer.name,
+        'size': offer.size,
+        'text': offer.isText,
+      }),
+    );
     return PlatformReceiveTarget._(channel, id, uriScheme);
   }
 
@@ -32,10 +50,12 @@ class PlatformReceiveTarget implements ReceiveTarget {
     var used = 0;
     Future<void> write() async {
       if (used == 0) return;
-      await channel.invokeMethod<void>('writeReceive', {
-        'id': id,
-        'bytes': Uint8List.sublistView(buffer, 0, used),
-      });
+      await _storage(
+        () => channel.invokeMethod<void>('writeReceive', {
+          'id': id,
+          'bytes': Uint8List.sublistView(buffer, 0, used),
+        }),
+      );
       used = 0;
     }
 
@@ -56,14 +76,18 @@ class PlatformReceiveTarget implements ReceiveTarget {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
-    await channel.invokeMethod<void>('closeReceive', {'id': id});
+    await _storage(
+      () => channel.invokeMethod<void>('closeReceive', {'id': id}),
+    );
   }
 
   @override
   Future<TransferReceipt> commit(FileOffer offer, String sha256) async {
-    final result = await channel.invokeMapMethod<String, dynamic>(
-      'commitReceive',
-      {'id': id, 'sha256': sha256},
+    final result = await _storage(
+      () => channel.invokeMapMethod<String, dynamic>('commitReceive', {
+        'id': id,
+        'sha256': sha256,
+      }),
     );
     final uri = result?['uri'] as String?;
     if (uri == null || Uri.tryParse(uri)?.scheme != uriScheme) {
@@ -79,6 +103,8 @@ class PlatformReceiveTarget implements ReceiveTarget {
 
   @override
   Future<void> discard() async {
-    await channel.invokeMethod<void>('discardReceive', {'id': id});
+    await _storage(
+      () => channel.invokeMethod<void>('discardReceive', {'id': id}),
+    );
   }
 }

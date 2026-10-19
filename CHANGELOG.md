@@ -1,32 +1,35 @@
-# 变更记录
+# Changelog
 
-版本号描述源码演进，不表示已经发布对应安装包。各平台实际构建和互传范围以 [验证记录](docs/validation.md) 为准。
+English | [简体中文](CHANGELOG.zh-CN.md)
 
-## 0.1.6+7 — 未发布
+Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
-- 增加五平台原生 Release CI、版本化产物与摘要，以及标签触发的草稿 Release；当前未接入正式分发签名。
+## 0.1.6+7 — Unreleased
 
-- Linux 接入共享桌面接收目录设置、打开目录和休眠抑制；完善通知设置能力探测及用户级桌面注册。新增行为仍需桌面复验。
-- 选择 Apache-2.0，添加许可证、第三方声明、贡献和安全指南、来源核查与社区检查工作流。
+- Add structured transfer failures, bounded diagnostic logs and unified transfer-session cleanup.
+- Provide English / Simplified Chinese repository documentation and bilingual issue / pull-request templates; consolidate development records and update simulator screenshots.
+- Add five-platform native Release CI, versioned artifacts and digests, and tag-triggered draft releases; Android uses separate application and upload signing keys.
+- Integrate Linux receiving-folder settings, opening folders, sleep inhibition, notification capability detection and user-level desktop registration. Revalidation coverage is documented separately.
+- Select Apache-2.0; add licenses, third-party notices, contribution and security guides, provenance review and community checks.
 
-## 0.1.5+6 — 开发预览
+## 0.1.5+6 — Development preview
 
-- 统一启动图标和应用内品牌图片，更新 macOS 实机截图。
+- Unify launcher and in-app branding and update macOS hardware screenshots.
 
-## 0.1.4+5 — 开发预览
+## 0.1.4+5 — Development preview
 
-- 批量文件改为整批确认，失败或取消停止余下文件；继续发送时重新授权剩余清单。
-- 接收确认窗口调整为五分钟，与批次内空闲超时分开计算。
-- 最近传输增加设备筛选、完成时间和耗时，调整窄屏布局。
-- 接入 iPhone / iPad、Windows 与 Linux；各平台验证程度不同。
+- Approve batches once; failure or cancellation stops remaining files, and continuing requests consent for the unfinished manifest.
+- Extend receiving approval to five minutes, independently of inter-file idle expiry.
+- Add device filtering, completion time and duration to recent transfers and improve narrow layouts.
+- Add iPhone / iPad, Windows and Linux integration, with different platform validation levels.
 
-## 0.1.1–0.1.3 — 开发预览
+## 0.1.1–0.1.3 — Development preview
 
-- 改善自动发现、Android 前台传输服务和系统目录接收。
-- 增加可记忆的接收位置、16 MiB 文本收发、设置与完成提醒。
-- 增加大文件、后台、锁屏、取消及中断验证，保留已知失败和边界。
+- Improve discovery, Android foreground transfer service and system-folder storage.
+- Add remembered receiving folders, 16 MiB text transfers, settings and completion notifications.
+- Validate selected large-file, background, screen-off, cancellation and interruption scenarios, with known failures and limits retained.
 
-## 0.1.0 — 初始基线
+## 0.1.0 — Initial baseline
 
-- Flutter 界面及独立 Dart HTTPS 传输核心，身份核对、流式收发、大小与摘要校验。
-- macOS 与 Android 图形版双向文件互传。
+- Flutter UI and independent Dart HTTPS core, identity comparison, streaming, size and digest checks.
+- Bidirectional file transfers between macOS and Android GUI applications.

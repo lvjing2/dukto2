@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,7 @@ class TestController extends Dukto2Controller {
   @override
   Future<void> sendFile() async {
     sends++;
-    sending = true;
+    beginOutgoingSession();
     sendPhase = SendPhase.waiting;
     notifyListeners();
   }
@@ -55,7 +56,7 @@ class TestController extends Dukto2Controller {
   @override
   Future<void> sendText(String text) async {
     sentText = text;
-    sending = true;
+    beginOutgoingSession();
     sendPhase = SendPhase.waiting;
     notifyListeners();
   }
@@ -69,23 +70,23 @@ class TestController extends Dukto2Controller {
   }
 
   void offer() {
-    pendingOffer = const FileOffer(
-      sender: 'Android',
-      name: '收到的测试.bin',
-      size: 42,
+    unawaited(
+      receiveOffer(
+        const FileOffer(sender: 'Android', name: '收到的测试.bin', size: 42),
+      ),
     );
     notifyListeners();
   }
 
   void expire() {
-    pendingOffer = null;
+    super.answerOffer(false);
     notifyListeners();
   }
 
   @override
   void answerOffer(bool accept) {
     answer = accept;
-    pendingOffer = null;
+    super.answerOffer(accept);
     notifyListeners();
   }
 }
@@ -338,14 +339,18 @@ void main() {
       final c = TestController();
       clean(tester, c);
       await show(tester, c, const Size(375, 812), dark: true, scale: 2);
-      c.pendingOffer = batchOfferFromJson({
-        'sender': 'iPad',
-        'files': [
-          {'name': 'first.bin', 'size': 1024},
-          {'name': '第二份.txt', 'size': 3},
-          {'name': 'empty.bin', 'size': 0},
-        ],
-      }, '192.168.31.99');
+      unawaited(
+        c.receiveOffer(
+          batchOfferFromJson({
+            'sender': 'iPad',
+            'files': [
+              {'name': 'first.bin', 'size': 1024},
+              {'name': '第二份.txt', 'size': 3},
+              {'name': 'empty.bin', 'size': 0},
+            ],
+          }, '192.168.31.99'),
+        ),
+      );
       c.notifyListeners();
       await tester.pumpAndSettle();
       expect(find.text('iPad 想发送 3 个文件'), findsOneWidget);
@@ -354,8 +359,11 @@ void main() {
       expect(find.text('接收文件'), findsNothing);
       await tester.ensureVisible(find.text('接收全部'));
       await tester.tap(find.text('接收全部'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
       expect(c.answer, isTrue);
+      expect(c.pendingOffer, isNull);
+      expect(c.receiving, isTrue);
       expect(find.text('接收全部'), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -457,7 +465,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.answer, isNull);
     await tester.tap(find.text('接收文件'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(c.answer, true);
   });
   testWidgets('text needs explicit send and draft survives switching tabs', (

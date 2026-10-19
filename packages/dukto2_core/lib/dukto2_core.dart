@@ -1,6 +1,7 @@
 library;
 
 export 'src/discovery.dart';
+export 'src/diagnostics.dart';
 export 'src/identity.dart';
 export 'src/models.dart';
 export 'src/receive_target.dart';

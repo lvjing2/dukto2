@@ -45,7 +45,7 @@ void main() {
     'listener health check completes TLS and emits no transfer error',
     () async {
       final server = await start();
-      final errors = <String>[];
+      final errors = <TransferFailure>[];
       final subscription = server.errors.listen(errors.add);
       addTearDown(subscription.cancel);
       await server.ensureListening();
@@ -76,7 +76,7 @@ void main() {
       final stopped = server.errors.first;
       final cancel = await http.deleteUrl(url('/v1/file/${body['token']}'));
       await (await cancel.close()).drain<void>();
-      expect(await stopped, contains('cancelled'));
+      expect((await stopped).kind, TransferFailureKind.cancelled);
       expect(await server.receiveDirectory.list().toList(), isEmpty);
     },
   );
@@ -176,7 +176,13 @@ void main() {
           openRead: () => Stream.value(List.filled(16, 1)),
           sender: 'Sender',
         ),
-        throwsA(isA<HttpException>()),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
       );
       expect(target.discarded, isTrue);
       expect(receipts, isEmpty);

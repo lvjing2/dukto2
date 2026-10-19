@@ -94,7 +94,16 @@ void main() {
       expect(received, hasLength(2));
       expect(await received.first.file!.readAsBytes(), [1, 2, 3]);
       expect(await received.last.file!.length(), 0);
-      await expectLater(send(batch, 0), throwsA(isA<HttpException>()));
+      await expectLater(
+        send(batch, 0),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
+      );
       expect(consents, hasLength(1));
     },
   );
@@ -133,7 +142,16 @@ void main() {
 
   test('rejecting a batch never offers files or opens their streams', () async {
     accept = false;
-    await expectLater(approveBatch(), throwsA(isA<HttpException>()));
+    await expectLater(
+      approveBatch(),
+      throwsA(
+        isA<TransferFailure>().having(
+          (f) => f.cause,
+          'cause',
+          isA<HttpException>(),
+        ),
+      ),
+    );
     expect(consents, hasLength(1));
     expect(received, isEmpty);
     expect(await server.receiveDirectory.list().toList(), isEmpty);
@@ -157,11 +175,29 @@ void main() {
         () => send('0' * 48, 0, opened: () => opened = true),
         () => send(batch, 1, opened: () => opened = true),
       ]) {
-        await expectLater(attempt(), throwsA(isA<HttpException>()));
+        await expectLater(
+          attempt(),
+          throwsA(
+            isA<TransferFailure>().having(
+              (f) => f.cause,
+              'cause',
+              isA<HttpException>(),
+            ),
+          ),
+        );
       }
       expect(opened, isFalse);
       await send(batch, 0);
-      await expectLater(send(batch, 0), throwsA(isA<HttpException>()));
+      await expectLater(
+        send(batch, 0),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
+      );
       await send(batch, 1);
       expect(received, hasLength(2));
       expect(consents, hasLength(1));
@@ -174,11 +210,29 @@ void main() {
       var batch = await approveBatch();
       await send(batch, 0);
       await client.cancelBatch(peer, batch);
-      await expectLater(send(batch, 1), throwsA(isA<HttpException>()));
+      await expectLater(
+        send(batch, 1),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
+      );
       expect(received, hasLength(1));
       batch = await approveBatch();
       server.cancelIncoming();
-      await expectLater(send(batch, 0), throwsA(isA<HttpException>()));
+      await expectLater(
+        send(batch, 0),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
+      );
       expect(consents, hasLength(2));
     },
   );
@@ -188,7 +242,16 @@ void main() {
     () async {
       final batch = await approveBatch();
       await Future<void>.delayed(const Duration(milliseconds: 850));
-      await expectLater(send(batch, 0), throwsA(isA<HttpException>()));
+      await expectLater(
+        send(batch, 0),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
+      );
       expect(received, isEmpty);
     },
   );

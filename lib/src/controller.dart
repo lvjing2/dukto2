@@ -13,6 +13,10 @@ import 'package:path_provider/path_provider.dart';
 import 'platform_receive_target.dart';
 import 'app_settings.dart';
 import 'desktop_receive_folders.dart';
+import 'transfer_session.dart';
+import 'transfer_log.dart';
+import 'transfer_failure_message.dart';
+export 'transfer_session.dart' show SendPhase;
 
 class HistoryEntry {
   final TransferReceipt receipt;
@@ -73,22 +77,15 @@ class QueuedFile {
   QueuedFile(this.file, this.size);
 }
 
-enum SendPhase {
-  idle,
-  ready,
-  waiting,
-  uploading,
-  verifying,
-  sent,
-  cancelled,
-  failed,
-}
-
 class Dukto2Controller extends ChangeNotifier {
   static const platform = MethodChannel('dukto2/platform');
   TransferServer? server;
   PeerDiscovery? discovery;
-  final client = TransferClient();
+  final diagnostics = TransferDiagnostics();
+  late final client = TransferClient(diagnostics: diagnostics);
+  TransferLogWriter? _logWriter;
+  StreamSubscription<TransferLogEntry>? _logSubscription;
+  TransferFailure? lastTransferFailure;
   final _subscriptions = <StreamSubscription<dynamic>>[];
   final history = <HistoryEntry>[];
   List<Peer> peers = [];
@@ -130,15 +127,23 @@ class Dukto2Controller extends ChangeNotifier {
     _desktopFolders = desktopFolders;
     _settingsStore = settingsStore;
     _subscriptions.add(client.progress.listen(_progress));
+    _logSubscription = diagnostics.changes.listen(
+      (entry) => _logWriter?.add(entry),
+    );
   }
   String name = '';
   DeviceType deviceType = DeviceType.hostPlatform;
   String status = '正在准备本机身份…';
   String? error;
   bool starting = true;
-  bool sending = false;
-  bool receiving = false;
-  int receivingBatchRemaining = 0;
+  TransferSession? _session;
+  TransferSession? get session => _session;
+  bool get sending => _session?.sending ?? false;
+  bool get receiving => _session?.receiving ?? false;
+  int get receivingBatchRemaining =>
+      (_session?.incoming == true && _session!.totalFiles > 1)
+      ? _session!.remainingFiles
+      : 0;
   bool picking = false;
   final _files = <QueuedFile>[];
   List<QueuedFile> get files => UnmodifiableListView(_files);
@@ -149,9 +154,10 @@ class Dukto2Controller extends ChangeNotifier {
   PlatformFile? get chosenFile =>
       _files.isEmpty ? null : _files[_fileIndex].file;
   int? get chosenSize => _files.isEmpty ? null : _files[_fileIndex].size;
-  SendPhase sendPhase = SendPhase.idle;
-  FileOffer? receivingOffer;
-  String _incomingSender = '';
+  SendPhase _sendPhase = SendPhase.idle;
+  SendPhase get sendPhase => sending ? _session!.sendPhase : _sendPhase;
+  set sendPhase(SendPhase phase) => _sendPhase = phase;
+  FileOffer? get receivingOffer => _session?.offer;
   bool _disposed = false;
   bool directReceive = false;
   String receiveLocation = '应用内';
@@ -175,16 +181,15 @@ class Dukto2Controller extends ChangeNotifier {
   Timer? _networkDebounce;
   bool _recoveringNetwork = false;
   DateTime _lastNotification = DateTime.fromMillisecondsSinceEpoch(0);
-  FileOffer? pendingOffer;
-  Completer<bool>? _approval;
-  TransferProgress? activeProgress;
-  CancellationToken? _outgoing;
-  DateTime? transferStarted;
-  Stopwatch? _payloadClock;
+  FileOffer? get pendingOffer => _session?.pendingOffer;
+  TransferProgress? get activeProgress => _session?.progress;
+  CancellationToken? get _outgoing => _session?.cancellation;
+  DateTime? get transferStarted => _session?.started;
   Future<void>? _incomingCompletion;
+  Completer<void>? _outgoingSettled;
   DateTime _lastProgress = DateTime.fromMillisecondsSinceEpoch(0);
   bool get ready => server != null && !starting;
-  bool get busy => picking || sending || receiving || pendingOffer != null;
+  bool get busy => picking || (_session?.active ?? false);
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -221,6 +226,7 @@ class Dukto2Controller extends ChangeNotifier {
         await loadReceiveLocation();
       }
       _support = await getApplicationSupportDirectory();
+      _logWriter = TransferLogWriter(_support!);
       if (_usesDesktopFolders && _desktopFolders == null) {
         final downloads = await getDownloadsDirectory();
         if (downloads == null) {
@@ -261,6 +267,7 @@ class Dukto2Controller extends ChangeNotifier {
         onOffer: receiveOffer,
         onApprovedBatchFile: receiveApprovedBatchFile,
         createTarget: _receiveTarget,
+        diagnostics: diagnostics,
       );
       try {
         await server!.start(port: PeerDiscovery.defaultTransferPort);
@@ -271,20 +278,7 @@ class Dukto2Controller extends ChangeNotifier {
       }
       _subscriptions.add(server!.progress.listen(_progress));
       _subscriptions.add(server!.received.listen(completeReceive));
-      _subscriptions.add(
-        server!.errors.listen((message) {
-          if (pendingOffer?.isBatch == true) answerOffer(false);
-          receivingBatchRemaining = 0;
-          receiving = false;
-          activeProgress = null;
-          receivingOffer = null;
-          error = '接收失败：$message';
-          _incomingCompletion = endTransferSession();
-          status = '等待文件';
-          unawaited(_keepAwake());
-          _notify();
-        }),
-      );
+      _subscriptions.add(server!.errors.listen(_receiveFailed));
       await refreshAddresses();
       if (_disposed) return;
       discovery = PeerDiscovery(server!.localPeer, useMulticast: !_isIOS);
@@ -550,6 +544,7 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   Future<ReceiveTarget> _receiveTarget(String id, FileOffer offer) async {
+    final current = _session;
     ReceiveTarget? target;
     try {
       await _beginForeground('正在接收 ${offer.name}');
@@ -568,57 +563,125 @@ class Dukto2Controller extends ChangeNotifier {
               _desktopReceiveDirectory ?? receiveDirectory!,
               id,
             );
-      if (_disposed || !receiving) throw TransferCancelled();
+      if (_disposed ||
+          current == null ||
+          !identical(current, _session) ||
+          !current.receiving ||
+          current.cancellation.isCancelled) {
+        throw TransferCancelled();
+      }
       return target;
-    } on Object {
-      await target?.discard();
-      await endTransferSession();
-      rethrow;
+    } on Object catch (exception, stack) {
+      try {
+        await target?.discard();
+      } on Object catch (cleanup, cleanupStack) {
+        _recordCleanupFailure(cleanup, cleanupStack);
+      }
+      if (exception is TransferCancelled) rethrow;
+      throw TransferFailure.capture(
+        exception,
+        stack,
+        stage: TransferStage.storage,
+        kind: TransferFailureKind.storage,
+        operationId: _session?.id ?? randomId(8),
+        incoming: true,
+      );
     }
   }
 
   Future<void> completeReceive(TransferReceipt receipt) {
-    _payloadClock?.stop();
-    final elapsed = _payloadClock?.elapsed;
-    _payloadClock = null;
-    final sender = _incomingSender;
-    // The sender may offer its next file as soon as commit is acknowledged.
-    // Keep that offer behind native cleanup and the history/state transition.
+    final current = _session;
+    if (current == null || !current.receiving) return Future.value();
+    final elapsed = current.completeFile();
     return _incomingCompletion = () async {
-      if (receivingBatchRemaining > 0) receivingBatchRemaining--;
-      final more = receivingBatchRemaining > 0;
-      if (!more) await endTransferSession();
-      receiving = more;
-      activeProgress = null;
+      final more = current.remainingFiles > 0;
+      if (!more) await _finishSession(current, SessionPhase.completed);
       status = receipt.text != null ? '已接收文本，校验通过' : '已接收 ${receipt.name}，校验通过';
-      receivingOffer = null;
-      _addHistory(receipt, true, peerName: sender, elapsed: elapsed);
+      _addHistory(receipt, true, peerName: current.peerName, elapsed: elapsed);
       if (!more) unawaited(notifyCompletion(receipt, incoming: true));
-      unawaited(_keepAwake());
+      _notify();
     }();
+  }
+
+  void _receiveFailed(TransferFailure failure) {
+    final current = _session;
+    if (current == null || !current.incoming || !current.active) return;
+    current.answer(false);
+    lastTransferFailure = failure;
+    final cancelled =
+        current.cancellation.isCancelled ||
+        failure.kind == TransferFailureKind.cancelled;
+    error = cancelled ? null : '接收失败：${transferFailureMessage(failure)}';
+    status = cancelled ? '已取消接收' : '等待文件';
+    _incomingCompletion = _finishSession(
+      current,
+      cancelled ? SessionPhase.cancelled : SessionPhase.failed,
+    ).whenComplete(_notify);
+    _notify();
   }
 
   Future<void> _beginForeground(String title) async {
     if (!_isAndroid && !_isIOS) return;
+    final current = _session;
+    if (current == null) throw TransferCancelled();
     try {
-      await platform
-          .invokeMethod<void>('startTransfer', {'title': title})
-          .timeout(const Duration(seconds: 20));
-    } on Object {
-      await endTransferSession();
-      rethrow;
+      await current.acquire(
+        () => platform
+            .invokeMethod<void>('startTransfer', {'title': title})
+            .timeout(const Duration(seconds: 20)),
+      );
+    } on Object catch (error, stack) {
+      throw TransferFailure.capture(
+        error,
+        stack,
+        stage: TransferStage.platform,
+        kind: error is PlatformException ? TransferFailureKind.platform : null,
+        operationId: current.id,
+        incoming: current.incoming,
+        platformCode: error is PlatformException ? error.code : null,
+      );
     }
   }
 
   @protected
   Future<void> endTransferSession() async {
     if (!_isAndroid && !_isIOS) return;
-    try {
-      await platform.invokeMethod<void>('stopTransfer');
-    } on PlatformException {
-      /* Already stopped by Android. */
-    }
+    await platform
+        .invokeMethod<void>('stopTransfer')
+        .timeout(const Duration(seconds: 5));
   }
+
+  void _recordCleanupFailure(Object error, StackTrace stack) {
+    final failure = TransferFailure.capture(
+      error,
+      stack,
+      stage: TransferStage.cleanup,
+      operationId: _session?.id ?? randomId(8),
+      incoming: _session?.incoming ?? false,
+      platformCode: error is PlatformException ? error.code : null,
+    );
+    diagnostics
+        .begin(incoming: _session?.incoming ?? false)
+        .cleanupFailed(failure, stack);
+  }
+
+  Future<void> _finishSession(TransferSession current, SessionPhase terminal) =>
+      current.finish(terminal, () async {
+        try {
+          await endTransferSession();
+        } on Object catch (error, stack) {
+          _recordCleanupFailure(error, stack);
+        }
+        if (_isAndroid || _isIOS || _usesDesktopFolders) {
+          try {
+            await platform
+                .invokeMethod<void>('keepAwake', false)
+                .timeout(const Duration(seconds: 5));
+          } on Object catch (error, stack) {
+            _recordCleanupFailure(error, stack);
+          }
+        }
+      });
 
   @visibleForTesting
   Future<DeviceType> readDeviceType() async {
@@ -658,54 +721,41 @@ class Dukto2Controller extends ChangeNotifier {
   Future<bool> receiveOffer(FileOffer offer) async {
     if (_incomingCompletion != null) await _incomingCompletion;
     if (_disposed || busy) return false;
-    final approval = Completer<bool>();
-    _approval = approval;
-    pendingOffer = offer;
+    final current = TransferSession.incoming(offer);
+    _session = current;
+    lastTransferFailure = null;
     error = null;
     status = '有新的接收请求';
     _notify();
-    final accepted = await approval.future.timeout(
-      receiveApprovalTimeout,
-      onTimeout: () => false,
-    );
-    if (identical(_approval, approval)) {
-      _approval = null;
-      pendingOffer = null;
-      receiving = accepted;
-      receivingBatchRemaining = accepted && offer.isBatch
-          ? offer.files.length
-          : 0;
-      receivingOffer = accepted ? offer : null;
-      if (accepted) _incomingSender = offer.sender;
-      activeProgress = null;
-      transferStarted = DateTime.now();
-      _payloadClock = null;
-      status = accepted ? '等待发送方上传…' : '已拒绝接收';
-      unawaited(_keepAwake());
+    final accepted = await current.awaitApproval();
+    if (identical(_session, current)) {
+      status = accepted
+          ? '等待发送方上传…'
+          : current.cancellation.isCancelled
+          ? '已取消接收'
+          : '已拒绝接收';
+      if (accepted) unawaited(_keepAwake());
       _notify();
     }
-    return accepted;
+    return accepted && !_disposed;
   }
 
-  void answerOffer(bool accept) {
-    if (_approval?.isCompleted == false) _approval!.complete(accept);
-  }
+  void answerOffer(bool accept) => _session?.answer(accept);
 
   Future<bool> receiveApprovedBatchFile(FileOffer offer) async {
     if (_incomingCompletion != null) await _incomingCompletion;
+    final current = _session;
     if (_disposed ||
-        receivingBatchRemaining == 0 ||
-        sending ||
+        current == null ||
+        !current.receiving ||
+        current.phase == SessionPhase.cancelling ||
+        current.remainingFiles == 0 ||
+        current.totalFiles <= 1 ||
         picking ||
         pendingOffer != null) {
       return false;
     }
-    receiving = true;
-    receivingOffer = offer;
-    _incomingSender = offer.sender;
-    activeProgress = null;
-    transferStarted = null;
-    _payloadClock = null;
+    current.beginFile(offer: offer, alreadyApproved: true);
     status = '正在接收本批文件：${offer.name}';
     _notify();
     return true;
@@ -719,8 +769,6 @@ class Dukto2Controller extends ChangeNotifier {
       }
       _fileIndex = 0;
       sendPhase = chosenFile == null ? SendPhase.idle : SendPhase.ready;
-      activeProgress = null;
-      transferStarted = null;
       status = '已选择 ${peer.name}';
     }
     selected = peer;
@@ -729,12 +777,15 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   void _progress(TransferProgress event) {
-    activeProgress = event;
-    final now = DateTime.now();
-    if (_payloadClock == null) {
-      _payloadClock = Stopwatch()..start();
-      transferStarted = now;
+    final current = _session;
+    if (current == null ||
+        !current.active ||
+        current.incoming != event.incoming ||
+        current.phase == SessionPhase.cancelling) {
+      return;
     }
+    current.updateProgress(event);
+    final now = DateTime.now();
     if (_isAndroid && now.difference(_lastNotification).inMilliseconds >= 500) {
       _lastNotification = now;
       unawaited(
@@ -746,14 +797,10 @@ class Dukto2Controller extends ChangeNotifier {
                   ? 100
                   : (100 * event.bytes ~/ event.total).clamp(0, 100),
             })
-            .catchError((Object _) {}),
+            .catchError((Object error, StackTrace stack) {
+              _recordCleanupFailure(error, stack);
+            }),
       );
-    }
-    transferStarted ??= now;
-    if (!event.incoming) {
-      sendPhase = event.bytes == event.total
-          ? SendPhase.verifying
-          : SendPhase.uploading;
     }
     if (now.difference(_lastProgress).inMilliseconds >= 100 ||
         event.bytes == event.total) {
@@ -946,12 +993,7 @@ class Dukto2Controller extends ChangeNotifier {
             _outgoing!.check();
             if (_disposed) throw TransferCancelled();
             _fileIndex = _files.indexOf(item);
-            sendPhase = batchToken == null
-                ? SendPhase.waiting
-                : SendPhase.uploading;
-            activeProgress = null;
-            transferStarted = null;
-            _payloadClock = null;
+            _session!.beginFile(alreadyApproved: batchToken != null);
             status = batchToken == null
                 ? '等待 ${peer.name} 确认接收 ${item.file.name}…'
                 : '正在发送本批文件 ${index + 1} / ${pending.length}';
@@ -966,13 +1008,13 @@ class Dukto2Controller extends ChangeNotifier {
               batchToken: batchToken,
               batchIndex: batchToken == null ? null : index,
             );
-            _payloadClock?.stop();
+            final elapsed = _session!.completeFile();
             item._sent = true;
             _addHistory(
               last,
               false,
               peerName: peer.name,
-              elapsed: _payloadClock?.elapsed,
+              elapsed: elapsed,
               // iOS exposes an imported cache, not the original source directory.
               sourceUri: _isIOS ? null : item.file.uri.toString(),
             );
@@ -989,6 +1031,17 @@ class Dukto2Controller extends ChangeNotifier {
     );
   }
 
+  @protected
+  TransferSession beginOutgoingSession({int fileCount = 1}) {
+    if (_session?.active == true) {
+      throw StateError('A transfer session is already active');
+    }
+    return _session = TransferSession.outgoing(
+      totalFiles: fileCount,
+      peerName: selected?.name ?? '',
+    );
+  }
+
   Future<void> _sendContent(
     Peer peer,
     String label,
@@ -996,47 +1049,67 @@ class Dukto2Controller extends ChangeNotifier {
     String? sourceUri,
     bool recordHistory = true,
   }) async {
-    sending = true;
-    sendPhase = SendPhase.waiting;
-    activeProgress = null;
-    transferStarted = null;
-    _payloadClock = null;
+    final current = beginOutgoingSession(
+      fileCount: recordHistory ? 1 : _files.where((f) => !f.sent).length,
+    );
+    final settled = Completer<void>();
+    _outgoingSettled = settled;
+    lastTransferFailure = null;
     error = null;
     status = '等待 ${peer.name} 确认接收…';
-    _outgoing = CancellationToken();
     _notify();
     TransferReceipt? completed;
+    var terminal = SessionPhase.failed;
     try {
       await _keepAwake();
       await _beginForeground('正在发送 $label');
+      current.cancellation.check();
       final receipt = await send();
-      _payloadClock?.stop();
       if (recordHistory) {
+        final elapsed = current.completeFile();
         _addHistory(
           receipt,
           false,
           peerName: peer.name,
           sourceUri: sourceUri,
-          elapsed: _payloadClock?.elapsed,
+          elapsed: elapsed,
         );
       }
-      sendPhase = SendPhase.sent;
+      _sendPhase = SendPhase.sent;
       status = '已发送 $label，对方校验通过';
       completed = receipt;
+      terminal = SessionPhase.completed;
     } on TransferCancelled {
-      sendPhase = SendPhase.cancelled;
+      diagnostics
+          .begin(incoming: false)
+          .fail(TransferCancelled(), StackTrace.current);
+      _sendPhase = SendPhase.cancelled;
       status = '已取消发送';
-    } on Object catch (exception) {
-      sendPhase = SendPhase.failed;
-      error = '发送失败：$exception';
-      status = '可重新发送';
+      terminal = SessionPhase.cancelled;
+    } on Object catch (exception, stack) {
+      final failure = TransferFailure.capture(
+        exception,
+        stack,
+        stage: TransferStage.connection,
+        operationId: current.id,
+        incoming: false,
+        platformCode: exception is PlatformException ? exception.code : null,
+      );
+      lastTransferFailure = failure;
+      diagnostics.recordFailure(failure);
+      if (current.cancellation.isCancelled) {
+        _sendPhase = SendPhase.cancelled;
+        status = '已取消发送';
+        terminal = SessionPhase.cancelled;
+      } else {
+        _sendPhase = SendPhase.failed;
+        error = '发送失败：${transferFailureMessage(failure)}';
+        status = '可重新发送';
+      }
     } finally {
-      await endTransferSession();
-      sending = false;
-      _outgoing = null;
-      _payloadClock = null;
-      activeProgress = null;
-      unawaited(_keepAwake());
+      await _finishSession(current, terminal);
+      settled.complete();
+      if (identical(_outgoingSettled, settled)) _outgoingSettled = null;
       _notify();
     }
     if (completed != null) {
@@ -1045,26 +1118,34 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   void cancelTransfer() {
-    unawaited(endTransferSession());
-    if (sending) _outgoing?.cancel();
-    if (receiving) {
-      receivingBatchRemaining = 0;
+    final current = _session;
+    if (current == null || !current.active) return;
+    current.cancel();
+    if (current.incoming) {
       server?.cancelIncoming();
-      receiving = false;
-      activeProgress = null;
-      receivingOffer = null;
       status = '已取消接收';
-      unawaited(_keepAwake());
-      _notify();
+      _incomingCompletion = _finishSession(
+        current,
+        SessionPhase.cancelled,
+      ).whenComplete(_notify);
     }
+    _notify();
   }
 
   Future<void> _keepAwake() async {
     if (_isAndroid || _isIOS || _usesDesktopFolders) {
+      final current = _session;
+      if (current == null) return;
       try {
-        await platform.invokeMethod<void>('keepAwake', sending || receiving);
-      } on PlatformException {
-        /* Transfer still works while the screen is awake. */
+        await current.acquire(
+          () => platform
+              .invokeMethod<void>('keepAwake', true)
+              .timeout(const Duration(seconds: 5)),
+        );
+      } on TransferCancelled {
+        // Cancellation before acquisition needs no matching native start.
+      } on Object catch (error, stack) {
+        _recordCleanupFailure(error, stack);
       }
     }
   }
@@ -1215,27 +1296,32 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   Future<void> shutdown() async {
+    if (_disposed) return;
     _disposed = true;
     _networkDebounce?.cancel();
-    _outgoing?.cancel();
+    _session?.cancel();
     answerOffer(false);
+    await _outgoingSettled?.future;
     for (final subscription in _subscriptions) {
       await subscription.cancel();
     }
     await discovery?.close();
     await server?.close();
+    await _incomingCompletion;
+    final current = _session;
+    if (current != null) await _finishSession(current, SessionPhase.cancelled);
     await client.close();
     await _historyWrite;
     platform.setMethodCallHandler(null);
-    if (_usesDesktopFolders) {
-      await platform.invokeMethod<void>('keepAwake', false);
-    }
     if (_isAndroid || _isIOS || _isMacOS) {
-      await endTransferSession();
-      await platform.invokeMethod<void>('stopDiscovery');
-      if (!_isMacOS) {
-        await platform.invokeMethod<void>('keepAwake', false);
+      try {
+        await platform.invokeMethod<void>('stopDiscovery');
+      } on Object catch (error, stack) {
+        _recordCleanupFailure(error, stack);
       }
     }
+    await diagnostics.close();
+    await _logSubscription?.cancel();
+    await _logWriter?.close();
   }
 }

@@ -101,7 +101,16 @@ void main() {
       final target = await AndroidReceiveTarget.create(channel, 'id', offer);
       await expectLater(
         target.addStream(Stream.value(Uint8List(10))),
-        throwsA(isA<PlatformException>()),
+        throwsA(
+          isA<TransferFailure>()
+              .having((e) => e.kind, 'kind', TransferFailureKind.storage)
+              .having((e) => e.platformCode, 'platformCode', 'DISK_FULL')
+              .having(
+                (e) => e.cause,
+                'original cause',
+                isA<PlatformException>(),
+              ),
+        ),
       );
       await target.close();
       await target.discard();

@@ -1,162 +1,147 @@
 # Dukto2
 
-一个希望延续 Dukto 简单、直接体验的跨平台局域网文件与文本传输项目，使用 Flutter / Dart 重新实现。不需要账户或互联网中继，发送前核对设备身份，接收后校验内容。
+English | [简体中文](README.zh-CN.md)
 
-当前源码为 **0.1.6+7 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，尚未发布正式安装包。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
+Cross-platform LAN file and text sharing, rebuilt with Flutter and Dart to carry forward Dukto's simple, direct experience. No account or internet relay is required. Verify the receiving device before sending; transferred content is checked before completion.
 
-| 平台 | 已完成验证 | 尚未覆盖或完成 |
+The source is a **0.1.6+7 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; application localization is planned and is not yet implemented.
+
+| Platform | Verified | Not yet covered |
 | --- | --- | --- |
-| macOS | Apple Silicon 真机，文件与文本、接收目录、批量传输 | Intel、所有最低系统版本 |
-| Android | Android 16 真机，文件与文本；部分大文件、锁屏、后台和中断场景 | 跨厂商与老系统；后台不保证永久运行 |
-| iPhone / iPad | iPhone 与 iPad 模拟器文件、文本互传；iPad 真机与 Mac 互传 | iPhone 真机、所有旧系统和后台场景 |
-| Windows | Windows 11 x64 构建、启动，与 Mac 双向文件和文本 | Windows 10、ARM64、大文件及新版共享代码完整复验 |
-| Linux | Ubuntu 24.04.3 x64 构建、启动，与 Mac 双向文件 | 文本互传、新增目录设置与通知的桌面复验、其他发行版和 ARM64 |
+| macOS | Apple Silicon hardware; files, text, receiving folders and batches | Intel and all minimum OS versions |
+| Android | Android 16 hardware; files, text and selected large-file, screen-off, background and interruption scenarios | Other vendors and older devices; indefinite background execution |
+| iPhone / iPad | File and text exchange in simulators; physical iPad ↔ Mac | Physical iPhone, older OS versions and background scenarios |
+| Windows | Windows 11 x64 builds, desktop launch and bidirectional files / text with Mac | Windows 10, ARM64, large files and full revalidation of current shared code |
+| Linux | Ubuntu 24.04.3 x64 builds and bidirectional files with Mac; 0.1.6 receiving folders, opening folders, notifications and sleep inhibition | Text, full revalidation of current GUI sending, other distributions and ARM64 |
 
-这张表区分实际验证与目标兼容范围，不表示覆盖所有设备。详见 [验证记录](docs/validation.md)。
+These are tested environments, not a guarantee for every device. See [validation coverage](docs/en/validation.md).
 
-## 界面
+## Screenshots
 
-![macOS 主界面](docs/screenshots/macos-main-015.jpg)
+![macOS main window](docs/screenshots/macos-main-015.jpg)
 
-更多实际设备及模拟器图片见 [截图说明](docs/screenshots/README.md)，其中 Windows、Linux 图片保留了测试时的原始桌面环境。
+See [screenshots](docs/screenshots/README.en.md) for other devices and simulators. Windows and Linux images retain their original test desktops.
 
-## 致敬 Dukto
+## A tribute to Dukto
 
-感谢 **Emanuele Colombo** 创作了 [Dukto](https://www.msec.it/blog/dukto/)，让不同系统之间的局域网传输变得简单。也感谢 [xuzhen/dukto](https://github.com/xuzhen/dukto) 及社区贡献者持续维护和移植这个项目。
+Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/dukto/), and to [xuzhen/dukto](https://github.com/xuzhen/dukto) and the community for maintaining and porting the project.
 
-Dukto2 的目标是延续原作的实用精神，用现代框架继续探索跨系统文件互传。目前是独立重写项目；名称表达致敬与延续意愿，尚不代表原作者授予的官方继任身份或背书。项目发起人计划与原作者沟通，相关关系将以实际沟通结果更新。
+Dukto2 aims to continue the original's practical spirit with a modern implementation. Its name expresses a tribute and an intention to continue that experience; it does not imply official successor status, authorization or endorsement by the original author. The initiator plans to contact the author, and this description will be updated to reflect any actual agreement.
 
-项目以 Flutter / Dart 独立重写为目标，使用新的传输核心与协议；旧 Dukto 协议兼容留待后续实现。[首轮来源核查](docs/source-provenance-audit.md) 未发现可确认复制或翻译 Dukto / LocalSend 业务代码的明确证据；共同 Flutter 模板和 LocalSend 设计参考已列明，证书生成流程及早期历史仍有待追溯项。本说明不预先认定版权法上的衍生作品关系。
+The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. The [initial provenance review](docs/en/source-provenance-audit.md) found no clear evidence confirming copied or translated Dukto / LocalSend business implementations. Shared Flutter templates and LocalSend design references are documented; certificate-generation provenance and early development history remain unresolved. This is not a legal determination about derivative-work status. See [acknowledgements](ACKNOWLEDGEMENTS.md).
 
-详细来源与说明见 [致敬与创作说明](ACKNOWLEDGEMENTS.md)。
+## Created with AI assistance
 
-## AI 创作声明
+This project is primarily created by **OpenAI Codex under human direction**, including code, UI proposals, tests and documentation. The human initiator sets goals, chooses approaches and reviews results. Development used GPT-6.1 Sol and design guidance including UI UX Pro Max. We disclose that process rather than presenting AI-generated work as wholly handwritten.
 
-本项目主要由 **OpenAI Codex** 在人的指导下创作：代码、UI 提案、测试与文档由 AI 生成并迭代；发起人提出目标、选择方案并审阅结果。开发过程中使用了 GPT-6.1 Sol，以及 UI UX Pro Max 等设计辅助工具。我们选择公开说明这一创作方式，而非将 AI 生成的工作表述为纯人工编写。
+Executed checks and device tests, including their limits, are listed in [validation coverage](docs/en/validation.md).
 
-本仓库记录了已执行的自动检查与真机验证；结果和未覆盖范围见 [验证记录](docs/validation.md)。
+Dukto2's own code is licensed under [Apache License 2.0](LICENSE) (`Apache-2.0`). Third-party code, templates and dependencies retain their licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Dukto2 自身代码采用 [Apache License 2.0](LICENSE)（`Apache-2.0`）。第三方代码、模板和依赖保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。致谢与 AI 创作说明见 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md)。
+## Requirements
 
-## 环境
+- Flutter **3.47.7 stable** / Dart **3.13.5**; exact dependencies are locked in both `pubspec.lock` files.
+- macOS: minimum macOS 12, full Xcode and its initial setup. Apple Silicon is tested; Intel is not. Follow `flutter doctor` and build output for plugin toolchain requirements.
+- Android: Java 17+, Android SDK 36 / Build Tools 36 and adb; minimum Android 7 (API 24). Flutter / Gradle downloads the required NDK as needed.
+- iPhone / iPad: minimum iOS / iPadOS 15 and full Xcode. Physical devices require your own signing setup; see [iOS](docs/en/ios.md).
+- Windows: Windows with the Visual Studio C++ desktop toolchain and Windows SDK; see [Windows](docs/en/windows.md).
+- Linux: Linux, Clang, CMake, Ninja and GTK3 development libraries; see [Linux](docs/en/linux.md).
+- Devices on the same LAN, with communication between devices allowed by the router.
 
-- Flutter **3.47.7 stable** / Dart **3.13.5**，具体依赖版本见两个 `pubspec.lock`。
-- macOS：最低 macOS 12；当前已验证 Apple Silicon，Intel 尚未实测。需要完整 Xcode，按 Flutter doctor 提示完成首次初始化；插件需要的 CocoaPods / Swift 工具链以 doctor 和实际构建结果为准。
-- Android：Java 17+，Android SDK 36 / Build Tools 36，adb；最低 Android 7（API 24）。NDK 由 Flutter/Gradle 按需安装。
-- iPhone / iPad：最低 iOS / iPadOS 15，需要完整 Xcode。模拟器可直接编译，真机需自行配置 Apple 签名；接入与验证范围见 [iOS 说明](docs/ios.md)。
-- Windows：已验证 Windows 11 x64，Windows 10 尚未实测。编译需要 Windows、Visual Studio C++ 桌面工具链与 Windows SDK；见 [Windows 说明](docs/windows.md)。
-- Linux：已验证 Ubuntu 24.04.3 x64，编译需要 Linux、Clang、CMake、Ninja、GTK3 开发库；见 [Linux 说明](docs/linux.md)。
-- 手机与电脑连接同一局域网，路由器允许设备间通信。
+Use Flutter on PATH or set `FLUTTER_BIN`. SDKs and personal signing material are not part of the repository.
 
-当前工作区的工具链位于项目相邻的 `../.toolchains/`；这些是本机依赖，不属于本仓库。其他电脑可直接使用 PATH 中的 Flutter，或设置 `FLUTTER_BIN`。
-
-## 启动
+## Run
 
 ```sh
 ./tool/flutterw pub get
 ./tool/flutterw doctor -v
 ./tool/flutterw run -d macos
-# 查看 Android 真机 ID 后运行：
+# Find an Android device ID, then run:
 ./tool/flutterw devices
 ./tool/flutterw run -d <android-device-id>
 ```
 
-生成 Android 测试安装包：
+Build an Android development package:
 
 ```sh
 ./tool/flutterw build apk --debug
 adb install -r build/app/outputs/flutter-apk/app-debug.apk
 ```
 
-调试包使用开发签名，不代表正式商店发行版本。发布签名与自动更新尚未配置。
+Debug packages use development signing. Android release signing uses separate application and upload keys; see [channel signing](docs/en/android-signing.md). Initial Play enrollment and real cross-channel upgrades remain outstanding. Production Apple signing and automatic updates are not configured.
 
-## 使用
+## Use
 
-1. 两台设备打开应用，在前台选择设备与确认收发。允许 macOS 的本地网络访问/防火墙接入。Android 新版已接入传输前台服务，真机后台验收状态见下文。
-2. 在「附近设备」选择目标。如果未发现，可输入对方「本机信息」中显示的 IPv4 地址与端口。
-3. **实际查看接收设备上的本机核对码**，与连接对话框中的 16 位十六进制码核对一致后确认。名称和自动发现信息不是可信身份凭据。
-4. 点击「选择文件」，核对文件名与大小后点击「发送文件」。接收方确认后传输，双方 SHA-256 一致且接收方确认落盘后显示完成。
-5. Android 10+ 默认直接保存到「下载 / Dukto2」，可通过「设置 → 接收位置」改用系统授权文件夹。Android 7–9 授权文件夹后可直接接收；未授权时保留应用内接收与「保存到…」。macOS 和 Windows 默认保存到「下载 / Dukto2」，可更改并记住目录，也可恢复默认。iPhone / iPad 默认保存至「文件 → Dukto2 → 接收文件」，可更改目录并记住授权。Linux 当前源码也接入「下载 / Dukto2」及目录设置；旧 0.1.4 测试包使用系统文档目录下的 `Dukto2 Received`，新版仍需桌面复验。
+1. Open the app on both devices and select / approve transfers in the foreground. Allow the required local-network access. Android provides a foreground transfer service; see its [tested limits](docs/en/validation.md).
+2. Select a nearby device, or enter the IPv4 address and port shown in the other device's local information.
+3. **Read the verification code on the receiving device itself** and compare the 16 hexadecimal characters with the connection dialog. Names and discovery messages do not prove identity.
+4. Select files, review names and sizes, and explicitly send. The receiver approves; completion requires matching SHA-256 and a successful save acknowledgement.
+5. Change the destination in Settings. macOS, Windows, Linux and Android 10+ default to Downloads / Dukto2. Android 7–9 can use an authorized SAF folder; otherwise files remain in app storage for export. iPhone / iPad default to Files → Dukto2 → 接收文件 (Received files). Directory access is remembered. Changing folders does not move or delete existing files.
 
-应用内及 SAF 文件夹接收使用独立子目录；Android 系统下载目录由 MediaStore 创建新条目处理重名，不覆盖旧文件。未完成的文件不显示为成功，重启时会清理上次遗留的临时文件。接收记录保存于本机，保留最近 100 条。
+App-storage and SAF transfers use separate subdirectories; MediaStore creates new download entries. Existing files are not overwritten. Incomplete files are not reported as successful and app-owned temporary data is cleaned up after restart. The last 100 completed history entries are stored locally.
 
-## 设置
+## Settings and history
 
-主界面点击齿轮进入设置，统一管理接收位置、设备名称、通知和外观。主界面不再展示接收位置或提供更改入口。「关于 Dukto2」位于设置页底部，主界面右上角只保留设置等常用入口。
+The gear opens receiving location, read-only system device name, completion notifications, appearance and About. Folder controls live in Settings. Notification display also depends on system permission; Android's ongoing service notification is separate. Appearance can follow the system or use light / dark mode.
 
-- **接收位置**：更改授权文件夹或恢复默认，保留原有目录记忆。
-- **设备名称**：只读展示系统名称，系统名称变化后更新附近设备中的名称；不提供应用内改名。
-- **通知**：开关传输完成提醒，并查看或请求系统通知权限。系统未授权时不会弹出完成通知；Android 传输过程中的状态通知由系统管理。
-- **外观**：跟随系统、浅色、深色，重启后恢复所选模式。
+Recent transfers can be filtered by historical device name, including offline devices, and show up to 20 matching entries. Names, direction and device are grouped separately from completion time and duration. Each row has one action: view text or open the file's folder. Copying happens in text details. Duration starts with payload transfer and excludes approval waiting; missing durations in old history are not invented. See [settings](docs/en/settings.md) and [batch transfers and history](docs/en/batch-and-history.md).
 
-最近传输支持按历史设备名称筛选，包括离线设备；筛选后展示最近 20 条记录。左侧显示收发状态、完成时间及已记录的耗时，右侧仅保留一个操作：文本「查看文本」，文件「打开目录」。耗时从上传开始计至校验完成，不包含等待接收确认；旧记录没有耗时时不补造数值。复制文本或预览在查看窗口中完成。没有可用本机位置的文件记录会禁用目录按钮。详细说明和验证范围见 [设置与通知](docs/settings.md)。
+## Batch files
 
-## 批量文件
+The system picker supports multiple files. Review the list and send; the receiver approves the exact manifest once. Files are streamed, verified and committed sequentially. Cancellation or failure stops remaining items; completed files stay saved. Continue sends only unfinished items and requests fresh consent. Both peers need batch support (0.1.4 or later). Selecting another device resets the sending state. Queues are not persisted across restarts.
 
-「选择文件」支持系统选择器一次多选，确认清单后点击发送。接收方查看文件清单与总大小后点击一次「接收全部」，本批文件按顺序传输并逐项校验，不会整批读入内存。授权仅限本批清单，取消或失败停止余下队列；「继续发送」只发送未完成项，并重新请求确认剩余清单。两端需更新至 0.1.4 或支持 `batch` 能力的版本。切换接收设备后整份清单重新准备发送。队列仅在当前应用会话保留，未实现跨重启队列或断点续传。
+## Text
 
-## 文本发送
+Select and verify a device, choose text, type or explicitly paste, then send. The receiver approves before the UTF-8 payload is transferred and checked. Received text can be viewed and copied; there is no automatic clipboard access or synchronization.
 
-选择并核对设备后，切换到「文本」，输入内容或点击粘贴图标，再点击「发送」。接收方确认后，经 UTF-8、长度及 SHA-256 校验完成，文本进入最近传输，可查看与复制。不会自动读取或覆盖剪贴板。手机端点击输入框后进入紧凑编辑态，发送工具栏位于键盘上方；收起键盘返回主界面并保留草稿及页面位置。
+The limit is **16 MiB (16,777,216 UTF-8 bytes)**. The editor accepts up to 1 MiB; larger text can be loaded from a file and streamed. Received text above 1 MiB is saved to the destination with a bounded history preview and actions to copy the preview or open the full text. Clipboard capacity is controlled by the OS. Text and previews are stored in private app history; large bodies are stored in the chosen folder.
 
-文本上限 **16 MiB（16,777,216 个 UTF-8 字节）**。编辑区适合 1 MiB 以内的文本；更长的日志、代码等使用「更多文本操作 → 载入文本文件」，以流式方式发送。超过 1 MiB 的接收文本直接保存到接收位置，历史只保留有界预览，提供「复制预览」和「打开完整文本」。系统剪贴板容量仍由操作系统决定。文本与文本预览保存在本机应用私有历史中；大文本正文位于所选接收文件夹。
+On mobile, focusing the editor switches to a compact keyboard layout; closing the keyboard preserves the draft and scroll position. Peers without text capability are asked to update. See [receiving folders and text](docs/en/receive-and-text.md).
 
-旧版未声明文本能力时，发送入口会提示更新对方应用。文件传输保持兼容。
+## Transfer behavior and limits
 
-## 当前范围
+- HTTPS confirms UDP / Bonjour candidates; peers are deduplicated by certificate and removed when stale. Interface changes refresh discovery. Bounded private IPv4 /24 probing and manual IPv4 remain available when multicast fails.
+- Each installation has its own TLS identity. After code comparison, the sender pins the full certificate fingerprint.
+- Single-file, batch and text transfers use bounded streams, progress, cancellation, explicit approval, size checks, SHA-256 and temporary targets committed only after validation.
+- The UI adapts between desktop columns and mobile layouts, supports light / dark themes and requires foreground approval. Back / Escape declines the current request.
+- Android provides a dataSync foreground service, progress / cancellation notification, MediaStore / SAF storage and legacy-file export. Apple discovery includes Bonjour; see [iOS](docs/en/ios.md).
 
-- Apple 端增加 Bonjour 候选发现，iOS 使用系统 Bonjour 与 UDP 单播，避免依赖受限自定义组播权限。候选仍由 HTTPS 确认；详见 [iOS 说明](docs/ios.md)。
-- UDP 候选经 HTTPS 确认后展示；按接口公告、启动重发、切网重新订阅、证书去重和过期移除。组播不可用时限流探测直接连接的私有 IPv4 /24 网段，保留手动 IPv4 连接。
-- 每个安装生成独立 TLS 身份；核对码确认后固定目标证书指纹。
-- 每次单文件流式上传，独立选择与发送步骤；另支持 UTF-8 文本与大文本文件载入，双向收发、进度和取消。
-- 蓝色极简界面、宽窗口双栏 / 手机单列，跟随系统深浅色并支持手动切换。
-- 接收请求前台弹层，返回键 / Esc 拒收，请求过期只关闭对应弹层。
-- 接收确认、大小验证、SHA-256、临时文件提交、跨目录/非法文件名防护。
-- macOS 沙箱网络权限与文件选择权限；Android 多播锁、dataSync 前台服务、进度 / 取消通知、直接接收至系统下载目录或已授权文件夹，保留历史文件导出。
+Not implemented: folders, automatic clipboard sync, resumable transfers, IPv6, concurrent task queues or legacy Dukto compatibility. Network loss or process termination requires restarting the transfer. Background execution is limited by OS and vendor policies; it does not imply indefinite listening or automatic acceptance. Cancellation cannot retract already committed files.
 
-0.1.0 基线已实机验证 macOS 图形版 ↔ Android 16 双向文件收发与 SHA-256 一致。0.1.2 已验证两端接收目录选择与记忆、Mac 默认下载目录落盘、双向文本与显式复制粘贴，以及 macOS 图形版 → Android 自定义目录的 16 MiB 文本传输，见 [接收位置与文本验收](docs/receive-and-text.md)。这些结果不覆盖 Android 锁屏、切后台或进程死亡场景。0.1.1 的后台机制及本机超过 4 GiB 的 TLS 流式落盘验证范围，详见 [可靠性改进与验证](docs/reliability.md)。
-
-0.1.3 的大文件与后台真机验收已覆盖双向 1 GiB + 17 字节图形版传输、Android Home 后台接收、锁屏发送及限速 128 MiB 锁屏接收，并测试进程终止、强行停止和断网清理。首轮锁屏出现过连接重置，后续对照尚未复现；具体证据、重发结果和边界见 [大文件、后台与中断验收](docs/large-background-validation.md)。
-
-尚未实现：文件夹传输、自动剪贴板同步、断点续传、IPv6、多任务队列、旧 Dukto 兼容。后台继续传输与进程死亡后继续传输不同：强行停止应用或网络中断后仍需从头重试。Android 后台服务受系统时间及厂商省电限制，未承诺永久驻留或后台自动接受新请求。取消不是撤回：已完成并提交的文件会保留。
-
-## 测试
+## Tests and CLI
 
 ```sh
 ./tool/check.sh
 ```
 
-包含核心的真实 TLS/UDP 测试及手机/桌面布局测试。实际跨系统验收应包含 Mac → Android 和 Android → Mac，检查接收端落盘文件的大小与 SHA-256。
+Checks include real TLS / UDP core tests and mobile / desktop widget tests. Device validation separately checks both directions and independently hashes saved files.
 
-macOS 图形工具链尚未齐全时，可运行**同一核心**的 CLI 与 Android App 互传：
+For controlled development use, the same core provides a CLI:
 
 ```sh
 cd packages/dukto2_core
-# dart 可以使用 Flutter SDK bin/cache/dart-sdk/bin/dart。
 dart pub get
 dart run bin/dukto2.dart receive --dir ./received --name Mac
-# probe 只读取身份，发送前仍必须核对接收设备上的码：
+# Probe only reads identity; compare the code on the receiver before sending:
 dart run bin/dukto2.dart probe --host 192.168.1.20 --port 54321
 dart run bin/dukto2.dart send --host 192.168.1.20 --port 54321 \
   --code 'AAAA BBBB CCCC DDDD' --file ./example.bin
 ```
 
-`receive --auto-accept` 仅供受控本地测试，图形应用始终要求接收确认。
+`receive --auto-accept` is for controlled local tests only. The GUI always requires receiving consent.
 
-## 目录
+## Repository layout
 
-- `lib/`：Flutter 界面、状态和平台集成。
-- `packages/dukto2_core/`：不依赖 Flutter 的发现、身份、收发与 CLI。
-- `android/`、`macos/`、`ios/`、`windows/`、`linux/`：Flutter 平台工程及原生适配。
-- `apple/`：Apple 平台共用的 Bonjour 发现适配。
-- `docs/protocol-v1.md`：协议和信任边界。
-- `docs/validation.md`：基线实际验证结果及未完成项。
-- `docs/reliability.md`：0.1.1 对 LocalSend 的借鉴、实现与分层验收状态。
+- `lib/`: Flutter UI, application state and platform integration.
+- `packages/dukto2_core/`: Flutter-independent discovery, identity, transfers and CLI.
+- `android/`, `macos/`, `ios/`, `windows/`, `linux/`: platform projects and native adapters.
+- `apple/`: shared Apple Bonjour integration.
+- [Protocol](docs/en/protocol-v1.md), [reliability](docs/en/reliability.md), [validation](docs/en/validation.md) and [documentation index](docs/en/README.md).
 
-Flutter 的生成模板在中文目录中读取 SDK 路径时存在编码问题，`android/settings.gradle.kts` 已显式按 UTF-8 读取并传递路径。静态检查使用 `dart analyze`，避开当前 Flutter LSP 初始化在中文路径下的异常。
+Android settings explicitly read SDK paths as UTF-8. Checks use `dart analyze` to avoid the current Flutter LSP's Unicode-path initialization issue.
 
-## 参与开发
+## Contributing
 
-贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全边界与漏洞反馈见 [SECURITY.md](SECURITY.md)。文档导航见 [docs/README.md](docs/README.md)，版本变更见 [CHANGELOG.md](CHANGELOG.md)，社区提交前的剩余工作见 [准备清单](docs/community-release.md)。
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CHANGELOG.md](CHANGELOG.md) and [Release CI](docs/en/release-ci.md). Issues and pull requests are welcome in English or Simplified Chinese.
 
-已添加 GitHub Actions 配置，在 Ubuntu 上运行分析、测试和 Linux 原生构建；工作流尚未在公共仓库实际运行，不代替真实设备验收。项目当前没有签名发行、应用商店发布或自动更新流程。
+GitHub Actions provides analysis, tests and native builds for five platforms; version tags can create draft releases. Successful builds do not replace device validation. Android APK / AAB signing is configured; initial Play enrollment, store delivery, production Apple signing and automatic updates remain outstanding.

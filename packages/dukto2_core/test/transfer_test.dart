@@ -133,7 +133,13 @@ void main() {
       final subscription = server.received.listen(delivered.add);
       await expectLater(
         client.sendText(peer: server.localPeer, text: 'private', sender: 'Mac'),
-        throwsA(isA<HttpException>()),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
       );
       expect(approvals, 1);
       expect(delivered, isEmpty);
@@ -213,7 +219,13 @@ void main() {
           sender: 'Mac',
           kind: TransferKind.text,
         ),
-        throwsA(isA<HttpException>()),
+        throwsA(
+          isA<TransferFailure>().having(
+            (f) => f.cause,
+            'cause',
+            isA<HttpException>(),
+          ),
+        ),
       );
       expect(delivered, isEmpty);
       expect(await received.list().isEmpty, isTrue);
@@ -264,7 +276,13 @@ void main() {
         sender: 'Mac',
         kind: TransferKind.text,
       ),
-      throwsA(isA<HttpException>()),
+      throwsA(
+        isA<TransferFailure>().having(
+          (f) => f.cause,
+          'cause',
+          isA<HttpException>(),
+        ),
+      ),
     );
     expect(delivered, isEmpty);
     await subscription.cancel();
@@ -397,7 +415,13 @@ void main() {
     final file = await fixture('pin.txt', [1, 2, 3]);
     await expectLater(
       client.sendFile(peer: wrong, file: file, sender: 'Alice'),
-      throwsA(isA<HandshakeException>()),
+      throwsA(
+        isA<TransferFailure>().having(
+          (f) => f.cause,
+          'cause',
+          isA<HandshakeException>(),
+        ),
+      ),
     );
     expect(await received.list().toList(), isEmpty);
   });
@@ -415,7 +439,13 @@ void main() {
     final file = await fixture('rejected.txt', [7]);
     await expectLater(
       client.sendFile(peer: server.localPeer, file: file, sender: 'Alice'),
-      throwsA(isA<HttpException>()),
+      throwsA(
+        isA<TransferFailure>().having(
+          (f) => f.cause,
+          'cause',
+          isA<HttpException>(),
+        ),
+      ),
     );
     expect(await received.list().toList(), isEmpty);
   });

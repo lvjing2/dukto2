@@ -1,5 +1,7 @@
 # Dukto2 代码来源核查
 
+[English](en/source-provenance-audit.md) | 简体中文
+
 日期：2026-10-19。范围：源码与资源的静态对照、共同模板追溯、关键实现流程复核及现有开发记录。没有修改运行时实现，没有选择项目许可证，也没有推送或发布。
 
 ## 结论
@@ -95,17 +97,9 @@ Dukto2 从当前 Git 工作区复制 262 个非忽略候选文件，记录每个
 
 ## 复核资料
 
-本机完整证据在忽略目录 `artifacts/provenance/`：`snapshot.json`（版本与逐文件摘要）、`scan-results.json`、`template-matches.json`、`generated-header-proof.json`、短片段摘录及运行日志。临时上游源码不加入本项目提交。
+原始逐文件摘要、扫描结果、模板对照、短片段和运行日志仅在本地开发归档保存，不随项目分发。上表的固定版本、本文结论和待追溯项保留用于后续复核。
 
-扫描工具为 [tool/source_provenance_scan.py](../tool/source_provenance_scan.py)，复跑命令：
-
-```sh
-python3 tool/source_provenance_scan.py \
-  --manifest artifacts/provenance/snapshot.json \
-  --output artifacts/provenance/repro-results.json
-```
-
-复跑需要原清单指向的本地快照；临时目录丢失后，应按上表固定提交重新导出，并用原 Dukto2 逐文件清单核对。不能用持续变化的工作区代替受审快照。
+扫描工具为 [tool/source_provenance_scan.py](../tool/source_provenance_scan.py)，通过 `--manifest` 提供受审快照清单、`--output` 指定结果路径。复核需要匹配的本地快照；不能用持续变化的工作区代替受审版本。
 
 ## 核查后的许可证决定
 
