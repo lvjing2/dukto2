@@ -45,3 +45,9 @@ Both packages use `pubspec.yaml`'s version name and build suffix. For `0.1.6+7`,
 Checks cover APK signing, AAB JAR signature / structure, pinned application ID, version and certificates. Digest-verified Google bundletool derives an application-key-signed universal APK from the AAB and compares its update identity with the GitHub APK. Debug keys, upload-key APK signing, ABI version offsets or modified signed files prevent packaging. Reports omit private keys, passwords and keystore paths.
 
 Local derivation is not a substitute for real validation after Play key import. Future Play application-key upgrades require a corresponding GitHub signing / rotation plan. Existing debug packages use a different identity and cannot serve as an upgrade baseline for the release channels. Testing must not automatically uninstall apps or delete user data.
+
+## Verified CI record
+
+On 2026-10-19, the [Android signed build](https://github.com/lvjing2/dukto2/actions/runs/39201426782) passed at commit `f6bdcca`: 69 application tests, 46 core tests, 11 build-tool tests, static analysis, formatting, native APK/AAB builds and cross-channel update-identity checks. The artifacts are `0.1.6+7`; both APK and AAB use versionCode `7`.
+
+This verifies builds and the signing identity of a locally derived APK. The Google Play app has not been created; PEPK key import and real Play ↔ GitHub upgrade tests remain pending.
