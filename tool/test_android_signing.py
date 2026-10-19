@@ -38,6 +38,24 @@ class AndroidSigningTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.check(apk=dict(self.apk, **{field: value}))
 
+    def test_apksigner_numbered_and_sdk_range_output(self):
+        digest = 'a' * 64
+        for labels in [('Signer #1',), (
+            'Signer (minSdkVersion=33, maxSdkVersion=2147483647)',
+            'Signer (minSdkVersion=24, maxSdkVersion=32)',
+        )]:
+            output = 'Number of signers: 1\n' + ''.join(
+                label + ' certificate SHA-256 digest: ' + digest + '\n' for label in labels)
+            self.assertEqual(android.verified_apk_certificate(output), digest)
+
+    def test_multiple_signing_identities_or_missing_output_is_rejected(self):
+        for output in ['', 'Number of signers: 1\n',
+                       'Number of signers: 2\nSigner #1 certificate SHA-256 digest: ' + 'a' * 64,
+                       'Number of signers: 1\nSigner (minSdkVersion=33, maxSdkVersion=2147483647) certificate SHA-256 digest: ' + 'a' * 64 +
+                       '\nSigner (minSdkVersion=24, maxSdkVersion=32) certificate SHA-256 digest: ' + 'b' * 64]:
+            with self.assertRaises(ValueError):
+                android.verified_apk_certificate(output)
+
     def test_committed_public_certificates_match_pins(self):
         root = Path(__file__).resolve().parent.parent
         config = json.loads((root / 'tool/ci/android-signing.json').read_text())

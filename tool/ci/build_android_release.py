@@ -45,10 +45,21 @@ def apk_identity(apk, aapt, signer):
     if not header:
         raise ValueError('Cannot read APK package/version')
     verification = run([signer, 'verify', '--verbose', '--print-certs', apk], capture_output=True, text=True).stdout
-    hashes = re.findall(r'^Signer #\d+ certificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$', verification, re.M)
-    if len(hashes) != 1:
-        raise ValueError('Expected one verified APK signing certificate')
-    return {'applicationId': header[1], 'versionCode': int(header[2]), 'versionName': header[3], 'certificateSha256': hashes[0].lower()}
+    fingerprint = verified_apk_certificate(verification)
+    return {'applicationId': header[1], 'versionCode': int(header[2]), 'versionName': header[3], 'certificateSha256': fingerprint}
+
+
+def verified_apk_certificate(verification):
+    # v3.1 reports certificates by SDK range rather than numbered signer.
+    labels = r'Signer (?:#\d+|\(minSdkVersion=\d+(?: \(dev release=true\))?, maxSdkVersion=\d+\))'
+    hashes = {value.lower() for value in re.findall(
+        r'^' + labels + r' certificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$', verification, re.M)}
+    signer_counts = re.findall(r'^Number of signers:\s*(\d+)\s*$', verification, re.M)
+    if signer_counts != ['1'] or len(hashes) != 1:
+        # apksigner output contains public certificates only; retain diagnostics.
+        raise ValueError('Expected one verified APK signing identity. apksigner output:\n' + verification)
+    return hashes.pop()
+
 
 
 def validate_contract(apk, bundle, equivalent, config, expected_code, expected_name):
