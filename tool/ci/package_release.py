@@ -43,6 +43,12 @@ def legal(stage):
     shutil.copytree(ROOT / 'licenses', stage / 'licenses')
 
 
+def validate_apple_bundle(app, target):
+    plist = app / ('Contents/Info.plist' if target == 'macos' else 'Info.plist')
+    if not plist.is_file():
+        raise ValueError('Missing built Apple app bundle: ' + str(plist))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('target', choices=['check', 'linux', 'windows', 'macos', 'android', 'ios'])
@@ -92,8 +98,7 @@ def main():
                 output = dest / (prefix + '-unsigned.zip')
             else:
                 app = ROOT / ('build/macos/Build/Products/Release/Dukto2.app' if args.target == 'macos' else 'build/ios/iphoneos/Runner.app')
-                if not (app / 'Info.plist').is_file():
-                    raise ValueError('Missing built Apple app bundle')
+                validate_apple_bundle(app, args.target)
                 shutil.copytree(app, stage / app.name, symlinks=True)
                 if args.target == 'macos':
                     subprocess.run(['codesign', '--verify', '--deep', '--strict', str(stage / app.name)], check=True)
