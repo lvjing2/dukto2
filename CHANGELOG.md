@@ -4,6 +4,14 @@ English | [简体中文](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.1+8 — Release candidate
+
+- Freeze the first release candidate; align Android APK and Play AAB at versionCode 8, using separate application and upload signing keys.
+- Add ten UI languages and localized native notifications, plus QR device connections that verify the complete device fingerprint before connecting.
+- Include known-peer discovery, batch approval, file/text transfers, remembered receiving folders and transfer-history actions.
+- Produce five-platform CI packages as a private GitHub prerelease draft. iOS remains an unsigned device build; macOS is ad-hoc signed and not notarized.
+- Google Play enrollment, production approval and real cross-channel upgrades remain pending; see the release notes for validation limits.
+
 ## 0.1.6+7 — Unreleased
 
 - Add structured transfer failures, bounded diagnostic logs and unified transfer-session cleanup.

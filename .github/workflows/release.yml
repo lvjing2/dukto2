@@ -146,5 +146,9 @@ jobs:
             gh release upload "$RELEASE_TAG" dist/* --clobber
             gh release edit "$RELEASE_TAG" --notes-file notes.md
           else
-            gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --title "Dukto2 $RELEASE_TAG" --notes-file notes.md
+            release_flags=(--draft)
+            if [[ "$RELEASE_TAG" == *-* ]]; then
+              release_flags+=(--prerelease)
+            fi
+            gh release create "$RELEASE_TAG" dist/* --verify-tag "${release_flags[@]}" --title "Dukto2 $RELEASE_TAG" --notes-file notes.md
           fi

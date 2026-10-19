@@ -44,6 +44,14 @@ class ReleasePackageTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 package.check_tag('refs/tags/v1.2.3+5')
 
+    def test_candidate_tag_preserves_prerelease_and_build_number(self):
+        with mock.patch.object(package, 'version', return_value='0.1.6-rc.1+8'):
+            package.check_tag('refs/tags/v0.1.6-rc.1')
+            package.check_tag('refs/tags/v0.1.6-rc.1+8')
+            for ref in ('refs/tags/v0.1.6', 'refs/tags/v0.1.6-rc.2', 'refs/tags/v0.1.6-rc.1+7'):
+                with self.assertRaises(ValueError):
+                    package.check_tag(ref)
+
 
 if __name__ == '__main__':
     unittest.main()
