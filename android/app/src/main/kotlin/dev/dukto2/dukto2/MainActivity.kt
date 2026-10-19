@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.Uri
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -19,8 +20,8 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     private var storage: ReceiveStorage? = null
     private var folderResult: MethodChannel.Result? = null
-    private var notificationResult: MethodChannel.Result? = null
-    private var notificationTitle = "dukto2 正在传输"
+    private var notificationTitle = "Dukto2 正在传输"
+    private var notificationPermissionResult: MethodChannel.Result? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var bridge: MethodChannel? = null
     private var multicastLock: WifiManager.MulticastLock? = null
@@ -54,26 +55,43 @@ class MainActivity : FlutterActivity() {
                         } catch (error: Exception) { folderResult = null; result.error("STORAGE", error.message, null) }
                     }
                     "startTransfer" -> {
-                        notificationTitle = call.argument<String>("title") ?: "dukto2 正在传输"
-                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
-                            !getPreferences(Context.MODE_PRIVATE).getBoolean("notificationsAsked", false)) {
-                            if (notificationResult != null) { result.error("BUSY", "Notification permission pending", null); return@setMethodCallHandler }
-                            notificationResult = result
+                        notificationTitle = call.argument<String>("title") ?: "Dukto2 正在传输"
+                        // Notification permission controls presentation, not FGS eligibility.
+                        // Never hold the transfer handshake open while the user reads a prompt.
+                        startTransferService(result)
+                    }
+                    "notificationStatus" -> result.success(notificationStatus())
+                    "requestNotifications" -> {
+                        if (notificationPermissionResult != null) { result.error("BUSY", "Permission request is open", null); return@setMethodCallHandler }
+                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            notificationPermissionResult = result
                             getPreferences(Context.MODE_PRIVATE).edit().putBoolean("notificationsAsked", true).apply()
                             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQUEST)
-                        } else startTransferService(result)
+                        } else result.success(notificationStatus())
+                    }
+                    "openNotificationSettings" -> {
+                        val intent = if (Build.VERSION.SDK_INT >= 26) Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                        else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+                        try { startActivity(intent); result.success(null) }
+                        catch (error: Exception) { result.error("NOTIFICATIONS", error.message, null) }
+                    }
+                    "notifyComplete" -> {
+                        CompletionNotifications.show(this, call.argument<String>("title") ?: "传输完成", call.argument<String>("body") ?: "内容已校验完成")
+                        result.success(null)
                     }
                     "updateTransfer" -> {
-                        TransferService.current?.update(call.argument<String>("title") ?: "dukto2 正在传输",
+                        TransferService.current?.update(call.argument<String>("title") ?: "Dukto2 正在传输",
                             call.argument<String>("text") ?: "", call.argument<Number>("progress")?.toInt() ?: -1)
                         result.success(null)
                     }
                     "stopTransfer" -> {
-                        notificationResult?.error("CANCELLED", "Transfer stopped", null)
-                        notificationResult = null
                         TransferService.stop(this)
                         result.success(null)
                     }
+                    "getDeviceType" -> result.success(
+                        if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone"
+                    )
                     "getDeviceName" -> {
                         val configured = try {
                             Settings.Global.getString(contentResolver, "device_name")
@@ -185,16 +203,17 @@ class MainActivity : FlutterActivity() {
         } catch (error: Exception) { result.error("BACKGROUND", error.message, null) }
     }
 
+    private fun notificationStatus(): String = CompletionNotifications.status(this,
+        getPreferences(Context.MODE_PRIVATE).getBoolean("notificationsAsked", false))
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == NOTIFICATION_REQUEST) {
-            val result = notificationResult ?: return
-            notificationResult = null
-            // Android permits the service when notification permission is denied;
-            // users can still see/stop it in the system's active-apps UI.
-            startTransferService(result)
+            notificationPermissionResult?.success(notificationStatus())
+            notificationPermissionResult = null
         }
     }
+
 
     private fun releaseDiscovery() {
         if (multicastLock?.isHeld == true) multicastLock?.release()
@@ -208,7 +227,8 @@ class MainActivity : FlutterActivity() {
         TransferService.stop(this)
         storage?.shutdown()
         folderResult?.error("CLOSED", "Activity closed", null)
-        notificationResult?.error("CLOSED", "Activity closed", null)
+        notificationPermissionResult?.error("CLOSED", "Activity closed", null)
+        notificationPermissionResult = null
         exportResult?.error("CLOSED", "Activity closed", null)
         exportResult = null
         super.onDestroy()

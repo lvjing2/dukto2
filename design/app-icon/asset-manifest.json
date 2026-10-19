@@ -1,0 +1,505 @@
+{
+  "version": 1,
+  "color": "#355DEB",
+  "geometry": "source/dukto2-icon.svg",
+  "assets": [
+    {
+      "path": "png/dukto2-16.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-20.png",
+      "width": 20,
+      "height": 20,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-24.png",
+      "width": 24,
+      "height": 24,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-32.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-40.png",
+      "width": 40,
+      "height": 40,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-48.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-64.png",
+      "width": 64,
+      "height": 64,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-96.png",
+      "width": 96,
+      "height": 96,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-128.png",
+      "width": 128,
+      "height": 128,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-192.png",
+      "width": 192,
+      "height": 192,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-256.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "opaque": false
+    },
+    {
+      "path": "png/dukto2-2048.png",
+      "width": 2048,
+      "height": 2048,
+      "opaque": false
+    },
+    {
+      "path": "preview.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png",
+      "width": 64,
+      "height": 64,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png",
+      "width": 128,
+      "height": 128,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png",
+      "width": 1024,
+      "height": 1024,
+      "opaque": false
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+      "width": 40,
+      "height": 40,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+      "width": 60,
+      "height": 60,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+      "width": 29,
+      "height": 29,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+      "width": 58,
+      "height": 58,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+      "width": 87,
+      "height": 87,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+      "width": 80,
+      "height": 80,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+      "width": 120,
+      "height": 120,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+      "width": 120,
+      "height": 120,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+      "width": 180,
+      "height": 180,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+      "width": 20,
+      "height": 20,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+      "width": 40,
+      "height": 40,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+      "width": 76,
+      "height": 76,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+      "width": 152,
+      "height": 152,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+      "width": 167,
+      "height": 167,
+      "opaque": true
+    },
+    {
+      "path": "ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "width": 1024,
+      "height": 1024,
+      "opaque": true
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_16x16.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_16x16@2x.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_32x32.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_32x32@2x.png",
+      "width": 64,
+      "height": 64,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_128x128.png",
+      "width": 128,
+      "height": 128,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_128x128@2x.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_256x256.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_256x256@2x.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_512x512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    },
+    {
+      "path": "macos/Dukto2.iconset/icon_512x512@2x.png",
+      "width": 1024,
+      "height": 1024,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/16.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/24.png",
+      "width": 24,
+      "height": 24,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/32.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/48.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/64.png",
+      "width": 64,
+      "height": 64,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/128.png",
+      "width": 128,
+      "height": 128,
+      "opaque": false
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico.frames/256.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "web/favicon.ico.frames/16.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "web/favicon.ico.frames/32.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "web/favicon.ico.frames/48.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "width": 72,
+      "height": 72,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+      "width": 72,
+      "height": 72,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "width": 96,
+      "height": 96,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+      "width": 96,
+      "height": 96,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "width": 144,
+      "height": 144,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "width": 144,
+      "height": 144,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "width": 192,
+      "height": 192,
+      "opaque": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "width": 192,
+      "height": 192,
+      "opaque": false
+    },
+    {
+      "path": "android/play-store-512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": true
+    },
+    {
+      "path": "android/foreground-432.png",
+      "width": 432,
+      "height": 432,
+      "opaque": false
+    },
+    {
+      "path": "android/monochrome-432.png",
+      "width": 432,
+      "height": 432,
+      "opaque": false
+    },
+    {
+      "path": "web/icon-192.png",
+      "width": 192,
+      "height": 192,
+      "opaque": true
+    },
+    {
+      "path": "web/icon-maskable-192.png",
+      "width": 192,
+      "height": 192,
+      "opaque": true
+    },
+    {
+      "path": "web/icon-512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": true
+    },
+    {
+      "path": "web/icon-maskable-512.png",
+      "width": 512,
+      "height": 512,
+      "opaque": true
+    },
+    {
+      "path": "web/apple-touch-icon.png",
+      "width": 180,
+      "height": 180,
+      "opaque": true
+    },
+    {
+      "path": "linux/hicolor/16x16/apps/dukto2.png",
+      "width": 16,
+      "height": 16,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/24x24/apps/dukto2.png",
+      "width": 24,
+      "height": 24,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/32x32/apps/dukto2.png",
+      "width": 32,
+      "height": 32,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/48x48/apps/dukto2.png",
+      "width": 48,
+      "height": 48,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/64x64/apps/dukto2.png",
+      "width": 64,
+      "height": 64,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/128x128/apps/dukto2.png",
+      "width": 128,
+      "height": 128,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/256x256/apps/dukto2.png",
+      "width": 256,
+      "height": 256,
+      "opaque": false
+    },
+    {
+      "path": "linux/hicolor/512x512/apps/dukto2.png",
+      "width": 512,
+      "height": 512,
+      "opaque": false
+    }
+  ]
+}

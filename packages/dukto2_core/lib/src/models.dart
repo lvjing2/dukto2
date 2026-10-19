@@ -14,6 +14,27 @@ String verificationCode(String fingerprint) => RegExp('.{4}')
     .map((m) => m[0])
     .join(' ');
 
+enum DeviceType {
+  unknown,
+  phone,
+  tablet,
+  computer;
+
+  static DeviceType parse(Object? value) => switch (value) {
+    'phone' => phone,
+    'tablet' => tablet,
+    'computer' => computer,
+    _ => unknown,
+  };
+
+  // iOS needs the native interface idiom to distinguish iPhone from iPad.
+  static DeviceType get hostPlatform => switch (Platform.operatingSystem) {
+    'macos' || 'windows' || 'linux' => computer,
+    'android' => phone,
+    _ => unknown,
+  };
+}
+
 class Peer {
   final String id;
   final String name;
@@ -21,6 +42,9 @@ class Peer {
   final int port;
   final String fingerprint;
   final DateTime lastSeen;
+  final bool supportsText;
+  final bool supportsBatch;
+  final DeviceType deviceType;
 
   Peer({
     required this.id,
@@ -28,6 +52,9 @@ class Peer {
     required this.host,
     required this.port,
     required this.fingerprint,
+    this.supportsText = false,
+    this.supportsBatch = false,
+    this.deviceType = DeviceType.unknown,
     DateTime? lastSeen,
   }) : lastSeen = lastSeen ?? DateTime.now();
 
@@ -38,6 +65,9 @@ class Peer {
     'name': name,
     'port': port,
     'fingerprint': fingerprint,
+    if (deviceType != DeviceType.unknown) 'deviceType': deviceType.name,
+    if (supportsText || supportsBatch)
+      'capabilities': [if (supportsText) 'text', if (supportsBatch) 'batch'],
   };
 
   factory Peer.fromJson(Map<String, dynamic> json, String host) {
@@ -65,33 +95,63 @@ class Peer {
       host: host,
       port: port,
       fingerprint: fingerprint,
+      deviceType: DeviceType.parse(json['deviceType']),
+      supportsText:
+          json['capabilities'] is List &&
+          (json['capabilities'] as List).contains('text'),
+      supportsBatch:
+          json['capabilities'] is List &&
+          (json['capabilities'] as List).contains('batch'),
     );
   }
 }
+
+const maxTextBytes = 16 * 1024 * 1024;
+const maxInlineTextBytes = 1024 * 1024;
+const maxTextPreviewCharacters = 16384;
+String textPreview(String text) {
+  if (text.length <= maxTextPreviewCharacters) return text;
+  var end = maxTextPreviewCharacters;
+  if (text.codeUnitAt(end - 1) >= 0xd800 &&
+      text.codeUnitAt(end - 1) <= 0xdbff) {
+    end--;
+  }
+  return text.substring(0, end);
+}
+
+enum TransferKind { file, text }
 
 class FileOffer {
   final String sender;
   final String name;
   final int size;
   final String remoteAddress;
+  final TransferKind kind;
+  final List<FileOffer> files;
+  bool get isText => kind == TransferKind.text;
+  bool get isBatch => files.isNotEmpty;
 
   const FileOffer({
     required this.sender,
     required this.name,
     required this.size,
     this.remoteAddress = '',
+    this.kind = TransferKind.file,
+    this.files = const [],
   });
 
   Map<String, Object> toJson() => {
     'sender': sender,
     'name': name,
     'size': size,
+    if (isText) 'kind': 'text',
   };
 
   factory FileOffer.fromJson(Map<String, dynamic> json, String address) {
     final sender = json['sender'];
     final name = json['name'];
     final size = json['size'];
+    final kind = json['kind'];
     if (sender is! String ||
         sender.isEmpty ||
         sender.length > 128 ||
@@ -99,7 +159,9 @@ class FileOffer {
         !validFileName(name) ||
         size is! int ||
         size < 0 ||
-        size > 1024 * 1024 * 1024 * 1024) {
+        size > 1024 * 1024 * 1024 * 1024 ||
+        (kind != null && kind != 'file' && kind != 'text') ||
+        (kind == 'text' && (size == 0 || size > maxTextBytes))) {
       throw const FormatException('Invalid file offer');
     }
     return FileOffer(
@@ -107,8 +169,37 @@ class FileOffer {
       name: name,
       size: size,
       remoteAddress: address,
+      kind: kind == 'text' ? TransferKind.text : TransferKind.file,
     );
   }
+}
+
+FileOffer batchOfferFromJson(Map<String, dynamic> json, String address) {
+  final raw = json['files'];
+  if (raw is! List || raw.length < 2 || raw.length > 1000) {
+    throw const FormatException('A batch must contain 2 to 1000 files');
+  }
+  final files = raw.map((item) {
+    if (item is! Map<String, dynamic> || item['kind'] != null) {
+      throw const FormatException('Invalid batch manifest');
+    }
+    return FileOffer.fromJson({
+      'sender': json['sender'],
+      'name': item['name'],
+      'size': item['size'],
+    }, address);
+  }).toList();
+  final total = files.fold(0, (sum, file) => sum + file.size);
+  if (total > 1024 * 1024 * 1024 * 1024) {
+    throw const FormatException('Batch is too large');
+  }
+  return FileOffer(
+    sender: files.first.sender,
+    name: '${files.length} 个文件',
+    size: total,
+    remoteAddress: address,
+    files: List.unmodifiable(files),
+  );
 }
 
 bool validFileName(String name) =>
@@ -146,12 +237,16 @@ class TransferReceipt {
   final String sha256;
   final File? file;
   final String? contentUri;
+  final String? text;
+  final bool textTruncated;
   const TransferReceipt({
     required this.name,
     required this.size,
     required this.sha256,
     this.file,
     this.contentUri,
+    this.text,
+    this.textTruncated = false,
   });
 }
 

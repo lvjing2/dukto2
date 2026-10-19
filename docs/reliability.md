@@ -2,6 +2,8 @@
 
 日期：2026-10-18。用户决定不迁移，研究 LocalSend 后继续在 dukto2 实现。保留 Flutter UI 和纯 Dart 协议核心；基线标签 `baseline-2026-10-18` 及其安装包不覆盖。
 
+下文保留当时的开发记录。关于“自行实现、没有复制”的表述属于开发自述，不能代替来源证明；2026-10-19 的实际静态对照、共同 Flutter 模板归因及仍需追溯的证书流程见 [来源核查](source-provenance-audit.md)。
+
 ## 借鉴来源与本项目取舍
 
 参考固定正式版 [LocalSend v1.18.2](https://github.com/localsend/localsend/tree/v1.18.2)。本轮按设计借鉴自行实现，没有引入其 Rust 核心、Dart isolate 包或复制其源码。

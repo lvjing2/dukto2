@@ -1,0 +1,29 @@
+name: Bug report / 问题反馈
+description: 报告可复现的问题，请先移除日志和截图中的个人信息。
+title: "[Bug] "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: 系统与版本
+      description: 包含发送端与接收端的系统版本、CPU 架构、Dukto2 版本和安装来源。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 说明自动发现或手动连接、网络环境，以及是否后台或锁屏。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 脱敏日志或截图
+      description: 不要包含密码、身份私钥、真实文件内容、内部地址或其他人的信息。安全漏洞请遵循 SECURITY.md。

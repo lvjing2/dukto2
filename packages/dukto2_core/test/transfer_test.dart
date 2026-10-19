@@ -70,6 +70,213 @@ void main() {
     );
   }
 
+  test(
+    'text uses pinned TLS and a checked receipt without creating a file',
+    () async {
+      const text = '你好 Dukto2 🌍\nhttps://example.org/?a=1&b=2\n  保留空格  ';
+      final completed = server.received.first;
+      final peer = await TransferClient.probe('127.0.0.1', server.port);
+      expect(peer.supportsText, isTrue);
+      final sent = await client.sendText(peer: peer, text: text, sender: 'Mac');
+      final receipt = await completed;
+      expect(receipt.text, text);
+      expect(receipt.file, isNull);
+      expect(receipt.sha256, sha256.convert(utf8.encode(text)).toString());
+      expect(sent.text, text);
+      expect(sent.sha256, receipt.sha256);
+      expect(await received.list().isEmpty, isTrue);
+    },
+  );
+
+  test(
+    'renaming updates HTTPS identity display without changing pins or port',
+    () async {
+      final before = await TransferClient.probe('127.0.0.1', server.port);
+      final discovery = PeerDiscovery(server.localPeer, subnetFallback: false);
+      server.rename('新的设备名称 🌍');
+      discovery.updateLocal(server.localPeer);
+      final after = await TransferClient.probe('127.0.0.1', server.port);
+      expect(after.name, '新的设备名称 🌍');
+      expect(after.fingerprint, before.fingerprint);
+      expect(after.id, before.id);
+      expect(after.port, before.port);
+      expect(discovery.local.name, after.name);
+      final completed = server.received.first;
+      await client.sendText(
+        peer: before,
+        text: 'rename remains pinned',
+        sender: 'Mac',
+      );
+      expect((await completed).text, 'rename remains pinned');
+      await discovery.close();
+    },
+  );
+
+  test(
+    'text must be explicitly accepted and rejected text is not delivered',
+    () async {
+      await server.close();
+      var approvals = 0;
+      server = TransferServer(
+        identity: bob,
+        name: 'Reject',
+        receiveDirectory: received,
+        bindAddress: InternetAddress.loopbackIPv4,
+        onOffer: (offer) async {
+          approvals++;
+          expect(offer.isText, isTrue);
+          return false;
+        },
+      );
+      await server.start();
+      final delivered = <TransferReceipt>[];
+      final subscription = server.received.listen(delivered.add);
+      await expectLater(
+        client.sendText(peer: server.localPeer, text: 'private', sender: 'Mac'),
+        throwsA(isA<HttpException>()),
+      );
+      expect(approvals, 1);
+      expect(delivered, isEmpty);
+      expect(await received.list().isEmpty, isTrue);
+      await subscription.cancel();
+    },
+  );
+
+  test(
+    'inline text preserves its full content and empty messages are rejected',
+    () async {
+      final text = 'a' * maxInlineTextBytes;
+      final completed = server.received.first;
+      await client.sendText(peer: server.localPeer, text: text, sender: 'Mac');
+      expect((await completed).text, text);
+      for (final invalid in ['', ' \n ']) {
+        await expectLater(
+          client.sendText(peer: server.localPeer, text: invalid, sender: 'Mac'),
+          throwsA(isA<FormatException>()),
+        );
+      }
+    },
+  );
+
+  test(
+    'large text is streamed to disk with bounded preview and strict UTF-8',
+    () async {
+      final completed = server.received.first;
+      const chunk = '中文 UTF-8 🌍\n';
+      final source = await fixture(
+        'large-text.txt',
+        utf8.encode(chunk * 100000),
+      );
+      await client.sendStream(
+        peer: server.localPeer,
+        name: 'large-text.txt',
+        size: await source.length(),
+        openRead: source.openRead,
+        sender: 'Mac',
+        kind: TransferKind.text,
+      );
+      final receipt = await completed;
+      expect(receipt.textTruncated, isTrue);
+      expect(receipt.text!.length, lessThanOrEqualTo(maxTextPreviewCharacters));
+      expect(await receipt.file!.readAsBytes(), await source.readAsBytes());
+      expect(
+        receipt.sha256,
+        sha256.convert(await source.readAsBytes()).toString(),
+      );
+      expect(
+        () => FileOffer.fromJson({
+          'sender': 'Mac',
+          'name': 'max.txt',
+          'size': maxTextBytes,
+          'kind': 'text',
+        }, ''),
+        returnsNormally,
+      );
+    },
+  );
+
+  test(
+    'invalid UTF-8 late in large text cleans storage and permits retry',
+    () async {
+      final delivered = <TransferReceipt>[];
+      final subscription = server.received.listen(delivered.add);
+      final bytes = List<int>.filled(maxInlineTextBytes + 1, 65)..last = 255;
+      await expectLater(
+        client.sendStream(
+          peer: server.localPeer,
+          name: 'invalid.txt',
+          size: bytes.length,
+          openRead: () => Stream.fromIterable([
+            bytes.sublist(0, maxInlineTextBytes),
+            bytes.sublist(maxInlineTextBytes),
+          ]),
+          sender: 'Mac',
+          kind: TransferKind.text,
+        ),
+        throwsA(isA<HttpException>()),
+      );
+      expect(delivered, isEmpty);
+      expect(await received.list().isEmpty, isTrue);
+      await subscription.cancel();
+    },
+  );
+
+  test('legacy peers cannot silently receive text as a file', () async {
+    final peer = Peer(
+      id: bob.id,
+      name: 'Old receiver',
+      host: '127.0.0.1',
+      port: server.port,
+      fingerprint: bob.fingerprint,
+    );
+    await expectLater(
+      client.sendText(peer: peer, text: 'message', sender: 'Mac'),
+      throwsA(isA<FormatException>()),
+    );
+    expect(await received.list().isEmpty, isTrue);
+    expect(Peer.fromJson(peer.toJson(), '127.0.0.1').supportsText, isFalse);
+  });
+
+  test('receiver rejects oversized text offers before consent', () async {
+    final http = pinnedClient();
+    try {
+      final (status, _) = await post(http, '/v1/offer', {
+        'sender': 'Bad',
+        'name': 'text',
+        'size': maxTextBytes + 1,
+        'kind': 'text',
+      });
+      expect(status, 400);
+    } finally {
+      http.close(force: true);
+    }
+  });
+
+  test('malformed UTF-8 cannot become a successful text receipt', () async {
+    final delivered = <TransferReceipt>[];
+    final subscription = server.received.listen(delivered.add);
+    await expectLater(
+      client.sendStream(
+        peer: server.localPeer,
+        name: 'bad text',
+        size: 2,
+        openRead: () => Stream.value([0xff, 0xff]),
+        sender: 'Mac',
+        kind: TransferKind.text,
+      ),
+      throwsA(isA<HttpException>()),
+    );
+    expect(delivered, isEmpty);
+    await subscription.cancel();
+    final completed = server.received.first;
+    await client.sendText(
+      peer: server.localPeer,
+      text: 'retry works',
+      sender: 'Mac',
+    );
+    expect((await completed).text, 'retry works');
+  });
+
   test('identity persists and exposes only public fingerprint', () async {
     final loaded = await DeviceIdentity.loadOrCreate(
       Directory(p.join(root.path, 'alice')),

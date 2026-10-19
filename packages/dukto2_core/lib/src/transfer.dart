@@ -11,7 +11,13 @@ import 'receive_target.dart';
 
 typedef OfferHandler = Future<bool> Function(FileOffer offer);
 const _idleTimeout = Duration(seconds: 30);
-const _approvalTimeout = Duration(seconds: 60);
+
+/// Time available to approve a file, text message, or exact batch manifest.
+const receiveApprovalTimeout = Duration(minutes: 5);
+
+// Leave time for the receiver's expiry response to arrive before giving up.
+final _offerResponseTimeout =
+    receiveApprovalTimeout + const Duration(seconds: 35);
 
 class _DigestSink implements Sink<crypto.Digest> {
   crypto.Digest? value;
@@ -77,19 +83,33 @@ class _Ticket {
   String? digest;
   bool uploading = false;
   bool discarded = false;
-  _Ticket(this.id, this.offer, this.target);
+  final String? batchToken;
+  _Ticket(this.id, this.offer, this.target, {this.batchToken});
+}
+
+class _Batch {
+  final String token;
+  final FileOffer offer;
+  int next = 0;
+  DateTime expires;
+  _Batch(this.token, this.offer, Duration timeout)
+    : expires = DateTime.now().add(timeout);
 }
 
 /// V1: offer -> explicit approval -> stream upload -> digest checked commit.
 /// Only a committed file appears in the receive history.
 class TransferServer {
   final DeviceIdentity identity;
-  final String name;
+  final DeviceType deviceType;
+  String _name;
+  String get name => _name;
   final Directory receiveDirectory;
   final OfferHandler onOffer;
+  final OfferHandler? onApprovedBatchFile;
   final InternetAddress? bindAddress;
   final ReceiveTargetFactory? createTarget;
   final Duration idleTimeout;
+  final Duration batchIdleTimeout;
   final _progress = StreamController<TransferProgress>.broadcast();
   final _received = StreamController<TransferReceipt>.broadcast();
   final _errors = StreamController<String>.broadcast();
@@ -97,6 +117,10 @@ class TransferServer {
   StreamSubscription<HttpRequest>? _subscription;
   Timer? _expiry;
   _Ticket? _ticket;
+  _Batch? _batch;
+  String? _pendingBatchToken;
+  String? _pendingBatchAddress;
+  Completer<void>? _batchApprovalCancellation;
   bool _awaitingApproval = false;
   bool _closed = false;
   final _shutdown = Completer<void>();
@@ -104,13 +128,24 @@ class TransferServer {
 
   TransferServer({
     required this.identity,
-    required this.name,
+    required String name,
+    DeviceType? deviceType,
     required this.receiveDirectory,
     required this.onOffer,
+    this.onApprovedBatchFile,
     this.bindAddress,
     this.createTarget,
     this.idleTimeout = _idleTimeout,
-  });
+    this.batchIdleTimeout = const Duration(minutes: 2),
+  }) : _name = name,
+       deviceType = deviceType ?? DeviceType.hostPlatform;
+  void rename(String value) {
+    if (value.trim().isEmpty || value.length > 128) {
+      throw ArgumentError.value(value, 'name', 'Invalid device name');
+    }
+    _name = value;
+  }
+
   Stream<TransferProgress> get progress => _progress.stream;
   Stream<TransferReceipt> get received => _received.stream;
   Stream<String> get errors => _errors.stream;
@@ -121,22 +156,24 @@ class TransferServer {
     host: '127.0.0.1',
     port: port,
     fingerprint: identity.fingerprint,
+    supportsText: true,
+    supportsBatch: true,
+    deviceType: deviceType,
   );
 
   Future<void> start({int port = 0}) async {
     await receiveDirectory.create(recursive: true);
     // Recover only our own staging directories after a process interruption.
-    await for (final entity in receiveDirectory.list(followLinks: false)) {
-      if (entity is Directory &&
-          RegExp(r'^[a-f0-9]{48}$').hasMatch(p.basename(entity.path))) {
-        if (await File(p.join(entity.path, '.partial')).exists() ||
-            await entity.list().isEmpty) {
-          await entity.delete(recursive: true);
-        }
-      }
-    }
+    await FileReceiveTarget.recover(receiveDirectory);
     await _listen(port);
     _expiry = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (_batch != null &&
+          _ticket == null &&
+          !_awaitingApproval &&
+          DateTime.now().isAfter(_batch!.expires)) {
+        _batch = null;
+        if (!_closed) _errors.add('Batch approval expired');
+      }
       final ticket = _ticket;
       if (ticket != null &&
           DateTime.now().isAfter(ticket.expires) &&
@@ -193,6 +230,7 @@ class TransferServer {
   }
 
   void cancelIncoming() {
+    _batch = null;
     final ticket = _ticket;
     if (ticket != null) {
       unawaited(
@@ -215,6 +253,9 @@ class TransferServer {
   }
 
   Future<void> _discard(_Ticket ticket) async {
+    if (ticket.batchToken != null && _batch?.token == ticket.batchToken) {
+      _batch = null;
+    }
     ticket.cancellation.cancel();
     // The upload handler owns the file while its stream is active.
     if (ticket.uploading || ticket.discarded) return;
@@ -230,6 +271,76 @@ class TransferServer {
         await _reply(request, 200, localPeer.toJson());
         return;
       }
+      if (request.method == 'POST' && request.uri.path == '/v1/batch') {
+        if (_awaitingApproval || _ticket != null || _batch != null) {
+          await _reply(request, 409, {'error': 'Receiver is busy'});
+          return;
+        }
+        _awaitingApproval = true;
+        try {
+          final body = await _json(request, limit: 1024 * 1024);
+          final token = body['token'];
+          if (token is! String || !RegExp(r'^[a-f0-9]{48}$').hasMatch(token)) {
+            throw const FormatException('Invalid batch request token');
+          }
+          final offer = batchOfferFromJson(
+            body,
+            request.connectionInfo!.remoteAddress.address,
+          );
+          final cancelled = Completer<void>();
+          _pendingBatchToken = token;
+          _pendingBatchAddress = offer.remoteAddress;
+          _batchApprovalCancellation = cancelled;
+          final accepted = await Future.any([
+            onOffer(offer),
+            _shutdown.future.then((_) => false),
+            cancelled.future.then((_) => false),
+          ]).timeout(receiveApprovalTimeout, onTimeout: () => false);
+          if (_closed || !accepted || cancelled.isCompleted) {
+            await _reply(request, 403, {
+              'error': 'Batch declined or approval timed out',
+            });
+            return;
+          }
+          final batch = _Batch(token, offer, batchIdleTimeout);
+          _batch = batch;
+          await _reply(request, 200, {'token': batch.token});
+        } finally {
+          _pendingBatchToken = null;
+          _pendingBatchAddress = null;
+          _batchApprovalCancellation = null;
+          _awaitingApproval = false;
+        }
+        return;
+      }
+      final route = request.uri.pathSegments;
+      if (request.method == 'DELETE' &&
+          route.length == 3 &&
+          route[0] == 'v1' &&
+          route[1] == 'batch') {
+        if (route[2] == _pendingBatchToken &&
+            request.connectionInfo!.remoteAddress.address ==
+                _pendingBatchAddress) {
+          if (_batchApprovalCancellation?.isCompleted == false) {
+            _batchApprovalCancellation!.complete();
+          }
+          if (!_closed) _errors.add('Batch cancelled');
+          await _reply(request, 200, {'cancelled': true});
+          return;
+        }
+        final batch = _batch;
+        if (batch == null ||
+            route[2] != batch.token ||
+            request.connectionInfo!.remoteAddress.address !=
+                batch.offer.remoteAddress) {
+          await _reply(request, 404, {'error': 'Unknown batch'});
+          return;
+        }
+        cancelIncoming();
+        if (!_closed) _errors.add('Batch cancelled');
+        await _reply(request, 200, {'cancelled': true});
+        return;
+      }
       if (request.method == 'POST' && request.uri.path == '/v1/offer') {
         if (_awaitingApproval || _ticket != null) {
           await _reply(request, 409, {'error': 'Receiver is busy'});
@@ -237,29 +348,67 @@ class TransferServer {
         }
         _awaitingApproval = true;
         try {
+          final body = await _json(request);
           final offer = FileOffer.fromJson(
-            await _json(request),
+            body,
             request.connectionInfo!.remoteAddress.address,
           );
+          final batch = _batch;
+          if (batch != null || body['batchToken'] != null) {
+            if (batch == null ||
+                body['batchToken'] != batch.token ||
+                body['batchIndex'] != batch.next ||
+                batch.next >= batch.offer.files.length ||
+                DateTime.now().isAfter(batch.expires) ||
+                offer.remoteAddress != batch.offer.remoteAddress ||
+                offer.sender != batch.offer.sender ||
+                offer.isText ||
+                offer.name != batch.offer.files[batch.next].name ||
+                offer.size != batch.offer.files[batch.next].size) {
+              await _reply(request, 403, {
+                'error': 'File is not in the approved batch',
+              });
+              return;
+            }
+          }
           final accepted = await Future.any([
-            onOffer(offer),
+            batch == null
+                ? onOffer(offer)
+                : (onApprovedBatchFile?.call(offer) ?? Future.value(true)),
             _shutdown.future.then((_) => false),
-          ]).timeout(_approvalTimeout, onTimeout: () => false);
-          if (_closed || !accepted) {
+          ]).timeout(receiveApprovalTimeout, onTimeout: () => false);
+          if (_closed ||
+              !accepted ||
+              (batch != null && !identical(_batch, batch))) {
+            if (batch != null && identical(_batch, batch)) _batch = null;
+            if (batch != null && !_closed) {
+              _errors.add('Batch could not continue');
+            }
             await _reply(request, 403, {
               'error': 'Transfer declined or approval timed out',
             });
             return;
           }
           final id = randomId();
-          final target =
-              await (createTarget?.call(id, offer) ??
-                  FileReceiveTarget.create(receiveDirectory, id));
+          final target = offer.isText
+              ? TextReceiveTarget(
+                  storage: offer.size > maxInlineTextBytes
+                      ? await (createTarget?.call(id, offer) ??
+                            FileReceiveTarget.create(receiveDirectory, id))
+                      : null,
+                )
+              : await (createTarget?.call(id, offer) ??
+                    FileReceiveTarget.create(receiveDirectory, id));
           if (_closed) {
             await target.discard();
             return;
           }
-          _ticket = _Ticket(id, offer, target);
+          if (batch != null && !identical(_batch, batch)) {
+            await target.discard();
+            await _reply(request, 403, {'error': 'Batch cancelled'});
+            return;
+          }
+          _ticket = _Ticket(id, offer, target, batchToken: batch?.token);
           await _reply(request, 200, {'token': id});
         } finally {
           _awaitingApproval = false;
@@ -306,6 +455,15 @@ class TransferServer {
         var succeeded = false;
         try {
           ticket.cancellation.check();
+          _progress.add(
+            TransferProgress(
+              id: ticket.id,
+              name: ticket.offer.name,
+              total: ticket.offer.size,
+              bytes: 0,
+              incoming: true,
+            ),
+          );
           await ticket.target.addStream(
             _withCancellation(
               request,
@@ -367,6 +525,12 @@ class TransferServer {
           ticket.digest!,
         );
         _ticket = null;
+        final batch = _batch;
+        if (batch != null && ticket.batchToken == batch.token) {
+          batch.next++;
+          batch.expires = DateTime.now().add(batchIdleTimeout);
+          if (batch.next == batch.offer.files.length) _batch = null;
+        }
         _received.add(receipt);
         await _reply(request, 200, {
           'committed': true,
@@ -395,6 +559,7 @@ class TransferServer {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    _batch = null;
     _shutdown.complete();
     _expiry?.cancel();
     _ticket?.cancellation.cancel();
@@ -412,6 +577,89 @@ class TransferServer {
 class TransferClient {
   final _progress = StreamController<TransferProgress>.broadcast();
   Stream<TransferProgress> get progress => _progress.stream;
+
+  Future<String> offerBatch({
+    required Peer peer,
+    required String sender,
+    required List<FileOffer> files,
+    CancellationToken? cancellation,
+  }) async {
+    if (!peer.supportsBatch) {
+      throw const FormatException('对方版本不支持整批接收，请先更新对方的 Dukto2');
+    }
+    final batchToken = randomId();
+    final body = {
+      'token': batchToken,
+      'sender': sender,
+      'files': [
+        for (final file in files) {'name': file.name, 'size': file.size},
+      ],
+    };
+    batchOfferFromJson(body, '');
+    final token = cancellation ?? CancellationToken();
+    token.check();
+    final http = _client(peer.fingerprint);
+    void abort() => http.close(force: true);
+    token.onCancel(abort);
+    try {
+      final request = await http.postUrl(
+        Uri(
+          scheme: 'https',
+          host: peer.host,
+          port: peer.port,
+          path: '/v1/batch',
+        ),
+      );
+      request.followRedirects = false;
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode(body));
+      final response = await request.close().timeout(_offerResponseTimeout);
+      final reply = await _json(response);
+      if (response.statusCode != 200) {
+        throw HttpException(reply['error']?.toString() ?? 'Batch declined');
+      }
+      final batch = reply['token'];
+      if (batch is! String || batch != batchToken) {
+        throw const FormatException('Invalid batch token');
+      }
+      return batch;
+    } on Object {
+      if (token.isCancelled) {
+        await cancelBatch(peer, batchToken);
+        throw TransferCancelled();
+      }
+      rethrow;
+    } finally {
+      token.remove(abort);
+      http.close(force: true);
+    }
+  }
+
+  Future<void> cancelBatch(Peer peer, String token) async {
+    if (!RegExp(r'^[a-f0-9]{48}$').hasMatch(token)) return;
+    final http = _client(peer.fingerprint);
+    try {
+      final request = await http
+          .deleteUrl(
+            Uri(
+              scheme: 'https',
+              host: peer.host,
+              port: peer.port,
+              path: '/v1/batch/$token',
+            ),
+          )
+          .timeout(const Duration(seconds: 2));
+      request.followRedirects = false;
+      final response = await request.close().timeout(
+        const Duration(seconds: 2),
+      );
+      await response.drain<void>().timeout(const Duration(seconds: 2));
+    } on Object {
+      // An unreachable receiver expires the in-memory grant automatically.
+    } finally {
+      http.close(force: true);
+    }
+  }
 
   static HttpClient _client(String fingerprint) {
     final client = HttpClient(context: SecurityContext(withTrustedRoots: false))
@@ -484,21 +732,60 @@ class TransferClient {
   );
 
   /// Platform file pickers can supply a stream without a filesystem path (Android SAF).
+  Future<TransferReceipt> sendText({
+    required Peer peer,
+    required String text,
+    required String sender,
+    CancellationToken? cancellation,
+  }) async {
+    final bytes = utf8.encode(text);
+    if (text.trim().isEmpty || bytes.length > maxTextBytes) {
+      throw const FormatException(
+        'Text must contain 1 byte to 16 MiB of UTF-8',
+      );
+    }
+    final receipt = await sendStream(
+      peer: peer,
+      name: '文本消息',
+      size: bytes.length,
+      openRead: () => Stream.value(bytes),
+      sender: sender,
+      kind: TransferKind.text,
+      cancellation: cancellation,
+    );
+    return TransferReceipt(
+      name: receipt.name,
+      size: receipt.size,
+      sha256: receipt.sha256,
+      text: bytes.length > maxInlineTextBytes ? textPreview(text) : text,
+      textTruncated: bytes.length > maxInlineTextBytes,
+    );
+  }
+
   Future<TransferReceipt> sendStream({
     required Peer peer,
     required String name,
     required int size,
     required Stream<List<int>> Function() openRead,
     required String sender,
+    TransferKind kind = TransferKind.file,
     CancellationToken? cancellation,
+    String? batchToken,
+    int? batchIndex,
   }) async {
     final token = cancellation ?? CancellationToken();
     token.check();
+    if (kind == TransferKind.text && !peer.supportsText) {
+      throw const FormatException(
+        'Peer does not support text; update the receiver',
+      );
+    }
     final fileName = name;
     final offer = FileOffer.fromJson({
       'sender': sender,
       'name': fileName,
       'size': size,
+      if (kind == TransferKind.text) 'kind': 'text',
     }, '');
     final client = _client(peer.fingerprint);
     void abort() => client.close(force: true);
@@ -528,17 +815,26 @@ class TransferClient {
     }
 
     try {
-      final accepted = await jsonRequest(
-        '/v1/offer',
-        offer.toJson(),
-        timeout: const Duration(seconds: 95),
-      );
+      final accepted = await jsonRequest('/v1/offer', {
+        ...offer.toJson(),
+        'batchToken': ?batchToken,
+        'batchIndex': ?batchIndex,
+      }, timeout: _offerResponseTimeout);
       transferId = accepted['token'] as String;
       if (!RegExp(r'^[a-f0-9]{48}$').hasMatch(transferId)) {
         throw const FormatException('Invalid transfer token');
       }
       token.check();
       final request = await client.putUrl(uri('/v1/file/$transferId'));
+      _progress.add(
+        TransferProgress(
+          id: transferId,
+          name: fileName,
+          total: size,
+          bytes: 0,
+          incoming: false,
+        ),
+      );
       request.followRedirects = false;
       request.contentLength = size;
       request.headers.contentType = ContentType.binary;

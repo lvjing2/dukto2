@@ -51,3 +51,20 @@ app.*.map.json
 .dukto2-identity/
 received/
 /artifacts/
+
+# Machine-local credentials and signing material
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.mobileprovision
+*.provisionprofile
+*.key
+id_ed25519*
+id_rsa*
+**/LocalSigning.xcconfig
+.toolchains/
+
+# Derived icon inspection output; keep vector masters and platform assets
+**/*.ico.frames/

@@ -1,7 +1,7 @@
 name: dukto2
-description: Local encrypted file sharing for macOS and Android.
+description: Encrypted LAN file and text sharing for macOS, Windows, Linux, Android, and iOS.
 publish_to: none
-version: 0.1.1+2
+version: 0.1.6+7
 environment:
   sdk: ^3.13.5
 dependencies:
@@ -18,3 +18,5 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/dukto2.png

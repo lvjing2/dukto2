@@ -13,10 +13,12 @@ class PeerDiscovery {
   // Local-link multicast works on Android devices that reject 239.x groups.
   // This remains dukto2's own protocol and port, not LocalSend discovery.
   static final group = InternetAddress('224.0.0.167');
-  final Peer local;
+  Peer _local;
+  Peer get local => _local;
   final int port;
   final int transferPort;
   final bool subnetFallback;
+  final bool useMulticast;
   final Duration probeTimeout;
   final _changes = StreamController<List<Peer>>.broadcast();
   final _peers = <String, Peer>{};
@@ -36,12 +38,25 @@ class PeerDiscovery {
   DateTime _lastScan = DateTime.fromMillisecondsSinceEpoch(0);
 
   PeerDiscovery(
-    this.local, {
+    Peer local, {
     this.port = defaultPort,
     this.transferPort = defaultTransferPort,
     this.subnetFallback = true,
+    this.useMulticast = true,
     this.probeTimeout = const Duration(milliseconds: 800),
-  });
+  }) : _local = local;
+  void updateLocal(Peer peer) {
+    if (peer.id != local.id ||
+        peer.fingerprint != local.fingerprint ||
+        peer.port != local.port) {
+      throw ArgumentError(
+        'Changing discovery identity requires a new instance',
+      );
+    }
+    _local = peer;
+    announce();
+  }
+
   Stream<List<Peer>> get changes => _changes.stream;
   List<Peer> get peers =>
       _peers.values.toList()..sort((a, b) => a.name.compareTo(b.name));
@@ -119,14 +134,16 @@ class PeerDiscovery {
           return;
         }
         _socket = socket;
-        socket.broadcastEnabled = true;
-        socket.multicastHops = 1;
-        socket.multicastLoopback = true;
-        for (final interface in interfaces) {
-          try {
-            socket.joinMulticast(group, interface);
-          } on SocketException {
-            /* Skip unusable adapters. */
+        if (useMulticast) {
+          socket.broadcastEnabled = true;
+          socket.multicastHops = 1;
+          socket.multicastLoopback = true;
+          for (final interface in interfaces) {
+            try {
+              socket.joinMulticast(group, interface);
+            } on SocketException {
+              /* Skip unusable adapters. */
+            }
           }
         }
         _subscription = socket.listen(
@@ -182,6 +199,16 @@ class PeerDiscovery {
             host.split('.').take(3).join('.'),
       );
 
+  /// Bonjour supplies only an address. The actual HTTPS identity is still
+  /// checked here, and the UI still requires the user's code comparison.
+  Future<void> confirmEndpoint(String host, int port) async {
+    final address = InternetAddress.tryParse(host);
+    if (address?.type != InternetAddressType.IPv4 || port < 1 || port > 65535) {
+      return;
+    }
+    await _confirm(host, port);
+  }
+
   Future<void> _confirm(String host, int targetPort, {Peer? expected}) async {
     final key = '$host:$targetPort';
     final now = DateTime.now();
@@ -220,6 +247,7 @@ class PeerDiscovery {
       }
       _peers[peer.fingerprint] = peer;
       _changes.add(peers);
+      if (!useMulticast) announce();
     } on Object {
       /* Failed candidates never enter the visible device list. */
     } finally {
@@ -281,6 +309,18 @@ class PeerDiscovery {
     final socket = _socket;
     if (socket == null) return;
     final bytes = utf8.encode(jsonEncode({'app': 'dukto2', ...local.toJson()}));
+    // iOS can use system Bonjour without the restricted multicast entitlement.
+    // Announce directly to verified endpoints so Android can discover us too.
+    if (!useMulticast) {
+      for (final peer in peers) {
+        try {
+          socket.send(bytes, InternetAddress(peer.host), port);
+        } on SocketException {
+          /* A disappeared endpoint will expire normally. */
+        }
+      }
+      return;
+    }
     for (final address in _interfaces.expand((i) => i.addresses)) {
       try {
         socket.setRawOption(

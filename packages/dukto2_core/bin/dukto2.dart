@@ -14,7 +14,7 @@ Future<void> main(List<String> args) async {
     stderr.writeln('''Dukto2 CLI (same core as the Flutter app)
   receive --dir PATH [--identity PATH] [--port PORT] [--name NAME] [--auto-accept]
   probe --host IPV4 --port PORT
-  send --host IPV4 --port PORT --code CODE --file PATH [--name NAME]
+  send --host IPV4 --port PORT --code CODE (--file PATH | --text-file UTF8_PATH) [--name NAME]
 Compare --code with the code displayed on the receiving device.
 --auto-accept is only intended for controlled local testing.''');
     exitCode = 64;
@@ -49,7 +49,7 @@ Compare --code with the code displayed on the receiving device.
       }
       server.received.listen(
         (receipt) => stdout.writeln(
-          'RECEIVED ${jsonEncode({'name': receipt.name, 'size': receipt.size, 'sha256': receipt.sha256, 'path': receipt.file!.absolute.path})}',
+          'RECEIVED ${jsonEncode({'name': receipt.name, 'size': receipt.size, 'sha256': receipt.sha256, if (receipt.file != null) 'path': receipt.file!.absolute.path, if (receipt.text != null) 'text': receipt.text})}',
         ),
       );
       server.errors.listen((error) => stderr.writeln('ERROR $error'));
@@ -94,11 +94,29 @@ Compare --code with the code displayed on the receiving device.
       }
       final client = TransferClient();
       try {
-        final receipt = await client.sendFile(
-          peer: peer,
-          file: File(option(args, '--file')!),
-          sender: option(args, '--name') ?? 'Dukto2 CLI',
-        );
+        final filePath = option(args, '--file');
+        final textPath = option(args, '--text-file');
+        if ((filePath == null) == (textPath == null)) {
+          throw const FormatException('Choose --file or --text-file');
+        }
+        final TransferReceipt receipt;
+        if (textPath != null) {
+          final source = File(textPath);
+          receipt = await client.sendStream(
+            peer: peer,
+            name: source.uri.pathSegments.last,
+            size: await source.length(),
+            openRead: source.openRead,
+            kind: TransferKind.text,
+            sender: option(args, '--name') ?? 'Dukto2 CLI',
+          );
+        } else {
+          receipt = await client.sendFile(
+            peer: peer,
+            file: File(filePath!),
+            sender: option(args, '--name') ?? 'Dukto2 CLI',
+          );
+        }
         stdout.writeln(
           'SENT ${jsonEncode({'name': receipt.name, 'size': receipt.size, 'sha256': receipt.sha256})}',
         );

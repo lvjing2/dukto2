@@ -125,6 +125,40 @@ void main() {
   );
 
   test(
+    'Bonjour candidates are confirmed over HTTPS without multicast',
+    () async {
+      final server = await start();
+      final reserve = await RawDatagramSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final port = reserve.port;
+      reserve.close();
+      final discovery = PeerDiscovery(
+        Peer(
+          id: other.id,
+          name: 'iPhone',
+          host: '127.0.0.1',
+          port: 1,
+          fingerprint: other.fingerprint,
+        ),
+        port: port,
+        useMulticast: false,
+        subnetFallback: false,
+      );
+      await discovery.start();
+      addTearDown(discovery.close);
+      await discovery.confirmEndpoint('untrusted.local', server.port);
+      await discovery.confirmEndpoint('127.0.0.1', 65536);
+      expect(discovery.peers, isEmpty);
+      await discovery.confirmEndpoint('127.0.0.1', server.port);
+      expect(discovery.peers.single.id, identity.id);
+      expect(discovery.peers.single.fingerprint, identity.fingerprint);
+      expect(discovery.peers.single.name, 'Receiver');
+    },
+  );
+
+  test(
     'write/commit failures discard an external destination and publish no receipt',
     () async {
       final target = _FailingTarget();

@@ -2,6 +2,7 @@
 set -euo pipefail
 project_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$project_root"
+python3 -m unittest discover -s tool -p 'test_*.py'
 ./tool/flutterw pub get
 # Resolve the nested package before the workspace analyzer reads its context.
 (cd packages/dukto2_core && ../../tool/dartw pub get)

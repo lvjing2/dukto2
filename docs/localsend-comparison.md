@@ -1,5 +1,7 @@
 # dukto2 与 LocalSend：基线后的技术选择
 
+后续决策：用户现已暂停新增功能，先验证独立项目的必要性。当前结论见 [LocalSend 社区需求与独立方向评估](localsend-community-research.md)。下文的“不整体迁移”是当时的工程接入判断，不能作为长期独立维护的产品依据。
+
 研究日期：2026-10-18，本轮再次核对 GitHub `releases/latest` 仍指向 v1.18.2。本文只做源码、协议与正式安装包检查；未安装运行 LocalSend，未测量其速度、内存或后台稳定性。dukto2 的真机结果与未验证范围见 [验证记录](validation.md) 和 [基线](baseline.md)。暂停新增功能，未经后续决策不替换传输核心。
 
 ## 建议

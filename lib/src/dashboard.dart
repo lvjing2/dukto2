@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 
 import 'controller.dart';
+import 'manual_address.dart';
+import 'settings_page.dart';
 
 String formatBytes(int bytes) {
   if (bytes < 1024) return '$bytes B';
@@ -16,14 +18,49 @@ String formatBytes(int bytes) {
   return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
 }
 
+String formatHistoryTime(DateTime value, {DateTime? now}) {
+  final time = value.toLocal();
+  final today = (now ?? DateTime.now()).toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  final clock = '${two(time.hour)}:${two(time.minute)}';
+  final date = DateTime(time.year, time.month, time.day);
+  final current = DateTime(today.year, today.month, today.day);
+  if (date == current) return '今天 $clock';
+  if (date == DateTime(current.year, current.month, current.day - 1)) {
+    return '昨天 $clock';
+  }
+  return '${time.year == today.year ? '' : '${time.year}/'}${two(time.month)}/${two(time.day)} $clock';
+}
+
+String formatElapsed(Duration elapsed) {
+  if (elapsed.inMilliseconds < 1000) return '小于 1 秒';
+  if (elapsed.inSeconds < 60) {
+    return '${(elapsed.inMilliseconds / 1000).toStringAsFixed(1)} 秒';
+  }
+  final seconds = elapsed.inSeconds % 60;
+  final minutes = elapsed.inMinutes % 60;
+  return elapsed.inHours == 0
+      ? '$minutes 分 $seconds 秒'
+      : '${elapsed.inHours} 小时 $minutes 分 $seconds 秒';
+}
+
+IconData deviceIcon(DeviceType type) => switch (type) {
+  DeviceType.phone => Icons.smartphone_outlined,
+  DeviceType.tablet => Icons.tablet_mac_outlined,
+  DeviceType.computer => Icons.computer_outlined,
+  DeviceType.unknown => Icons.devices_outlined,
+};
+
+String deviceTypeLabel(DeviceType type) => switch (type) {
+  DeviceType.phone => '手机',
+  DeviceType.tablet => '平板',
+  DeviceType.computer => '电脑',
+  DeviceType.unknown => '设备',
+};
+
 class TransferDashboard extends StatefulWidget {
   final Dukto2Controller controller;
-  final VoidCallback? onToggleTheme;
-  const TransferDashboard({
-    super.key,
-    required this.controller,
-    this.onToggleTheme,
-  });
+  const TransferDashboard({super.key, required this.controller});
   @override
   State<TransferDashboard> createState() => _TransferDashboardState();
 }
@@ -34,6 +71,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
   Route<bool>? _offerRoute;
   FileOffer? _shownOffer;
   bool _syncScheduled = false;
+  final _text = TextEditingController();
+  final _textFocus = FocusNode();
+  final _textEditorKey = GlobalKey(debugLabel: 'text-editor');
+  String? _textIssue;
+  String? _historyDevice;
   @override
   void initState() {
     super.initState();
@@ -54,6 +96,8 @@ class _TransferDashboardState extends State<TransferDashboard> {
   @override
   void dispose() {
     c.removeListener(_scheduleOffer);
+    _textFocus.dispose();
+    _text.dispose();
     super.dispose();
   }
 
@@ -62,7 +106,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
     _syncScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncScheduled = false;
-      if (mounted) unawaited(_syncOffer());
+      if (mounted) {
+        if (_historyDevice != null &&
+            !c.history.any((entry) => entry.peerName == _historyDevice)) {
+          setState(() => _historyDevice = null);
+        }
+        unawaited(_syncOffer());
+      }
     });
   }
 
@@ -107,75 +157,109 @@ class _TransferDashboardState extends State<TransferDashboard> {
     if (identical(c.pendingOffer, offer)) c.answerOffer(accepted == true);
   }
 
-  Widget _offerContent(BuildContext context, FileOffer offer) =>
-      CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.escape): () =>
-              Navigator.pop(context, false),
-        },
-        child: Focus(
-          autofocus: true,
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _BadgeIcon(Icons.file_download_outlined),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${offer.sender} 想发送文件',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('是否接收这个文件？'),
-                  const SizedBox(height: 20),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: _FileLabel(name: offer.name, size: offer.size),
-                  ),
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-                  Text(
-                    '来源名称未经验证，仅接收你认识的文件。请求将在 60 秒后过期。',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.onSurfaceVariant,
+  Widget _offerContent(
+    BuildContext context,
+    FileOffer offer,
+  ) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.escape): () =>
+          Navigator.pop(context, false),
+    },
+    child: Focus(
+      autofocus: true,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _BadgeIcon(Icons.file_download_outlined),
+              const SizedBox(height: 16),
+              Text(
+                '${offer.sender} 想发送${offer.isBatch
+                    ? ' ${offer.files.length} 个文件'
+                    : offer.isText
+                    ? '文本'
+                    : '文件'}',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                offer.isBatch
+                    ? '确认一次，接收这批文件'
+                    : offer.isText
+                    ? '是否接收这段文本？'
+                    : '是否接收这个文件？',
+              ),
+              const SizedBox(height: 20),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: _FileLabel(name: offer.name, size: offer.size),
+              ),
+              const Divider(height: 1),
+              if (offer.isBatch) ...[
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    primary: false,
+                    itemCount: offer.files.length,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        '${index + 1}. ${offer.files[index].name} · ${formatBytes(offer.files[index].size)}',
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ),
                   ),
-                  if (c.canChooseReceiveFolder) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      '接收位置：${c.receiveLocation}',
-                      style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                '来源名称未经验证，仅接收你认识的内容。请求将在 ${receiveApprovalTimeout.inMinutes} 分钟后过期。',
+                style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+              ),
+              if (!offer.isText && c.canChooseReceiveFolder) ...[
+                const SizedBox(height: 12),
+                Text(
+                  '接收位置：${c.receiveLocation}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('拒绝'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(
+                        offer.isBatch
+                            ? '接收全部'
+                            : offer.isText
+                            ? '接收文本'
+                            : '接收文件',
+                      ),
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('拒绝'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('接收文件'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> _verify(Peer peer) async {
     if (c.busy) return;
@@ -244,7 +328,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
             ),
             const SizedBox(height: 16),
             Text(
-              '确认收发后，Android 可在后台继续传输；请勿强行停止应用。',
+              c.backgroundTransferHint,
               style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
             ),
           ],
@@ -257,50 +341,6 @@ class _TransferDashboardState extends State<TransferDashboard> {
         ),
       ],
     ),
-  );
-
-  Future<void> _about() => showDialog<void>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('关于 dukto2'),
-      scrollable: true,
-      content: const SizedBox(
-        width: 360,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'dukto2 · 0.1.1',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 16),
-            Text('致敬 Dukto 与原作者 Emanuele Colombo，感谢 xuzhen 及社区贡献者的持续维护。'),
-            SizedBox(height: 16),
-            Text('由 OpenAI Codex 在人工指导下创作代码、UI、测试与文档。'),
-            SizedBox(height: 16),
-            Text('一个希望延续 Dukto 简单、直接体验的独立重写项目。'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () =>
-              showLicensePage(context: context, applicationName: 'dukto2'),
-          child: const Text('第三方许可'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
-        ),
-      ],
-    ),
-  );
-
-  Widget _aboutButton() => IconButton(
-    tooltip: '关于 dukto2',
-    onPressed: _about,
-    icon: const Icon(Icons.more_horiz),
   );
 
   Future<void> _manual() async {
@@ -323,6 +363,8 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 const SizedBox(height: 20),
                 TextFormField(
                   autofocus: true,
+                  style: const TextStyle(fontFamily: 'monospace'),
+                  textDirection: TextDirection.ltr,
                   autocorrect: false,
                   enableSuggestions: false,
                   keyboardType: TextInputType.url,
@@ -330,22 +372,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   decoration: const InputDecoration(
                     labelText: '设备地址',
                     hintText: '192.168.1.20:45879',
+                    hintStyle: TextStyle(fontFamily: 'monospace'),
+                    helperText: '地址与端口之间使用英文冒号 :',
                   ),
-                  validator: (value) {
-                    final parts = (value?.trim() ?? '').split(':');
-                    if (parts.length != 2) return '请输入 IPv4 地址和端口';
-                    final ip = InternetAddress.tryParse(parts[0]);
-                    final port = int.tryParse(parts[1]);
-                    return ip?.type == InternetAddressType.IPv4 &&
-                            port != null &&
-                            port > 0 &&
-                            port <= 65535
-                        ? null
-                        : '请输入有效的 IPv4 地址和 1–65535 端口';
-                  },
+                  validator: (value) => validateManualAddress(value ?? ''),
                   onFieldSubmitted: (_) {
                     if (form.currentState!.validate()) {
-                      Navigator.pop(context, entered.trim());
+                      Navigator.pop(context, normalizeManualAddress(entered));
                     }
                   },
                 ),
@@ -361,7 +394,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           FilledButton(
             onPressed: () {
               if (form.currentState!.validate()) {
-                Navigator.pop(context, entered.trim());
+                Navigator.pop(context, normalizeManualAddress(entered));
               }
             },
             child: const Text('下一步'),
@@ -434,6 +467,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 ],
               );
             }
+            // Scaffold consumes the body's insets; read above it instead.
+            if (MediaQuery.viewInsetsOf(this.context).bottom > 0 &&
+                _textFocus.hasFocus &&
+                c.sendKind == TransferKind.text &&
+                c.selected != null) {
+              return _phoneTextEditor();
+            }
             return Column(
               children: [
                 Padding(
@@ -441,13 +481,12 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   child: Row(
                     children: [
                       const Expanded(child: _Brand()),
-                      if (widget.onToggleTheme != null) _themeButton(),
+                      _settingsButton(),
                       IconButton(
                         tooltip: '本机信息',
                         onPressed: _localInfo,
                         icon: const Icon(Icons.info_outline),
                       ),
-                      _aboutButton(),
                     ],
                   ),
                 ),
@@ -460,29 +499,68 @@ class _TransferDashboardState extends State<TransferDashboard> {
     ),
   );
 
-  Widget _themeButton() => IconButton(
-    tooltip: Theme.of(context).brightness == Brightness.dark ? '切换浅色' : '切换深色',
-    onPressed: widget.onToggleTheme,
-    icon: Icon(
-      Theme.of(context).brightness == Brightness.dark
-          ? Icons.light_mode_outlined
-          : Icons.dark_mode_outlined,
-    ),
+  Widget _phoneTextEditor() => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 8, 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '发送到 ${c.selected!.name}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+              ),
+            ),
+            IconButton(
+              tooltip: '收起键盘',
+              onPressed: _textFocus.unfocus,
+              icon: const Icon(Icons.keyboard_hide_outlined),
+            ),
+          ],
+        ),
+      ),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: _textComposer(expanded: true),
+        ),
+      ),
+    ],
+  );
+
+  Widget _settingsButton() => IconButton(
+    tooltip: '设置',
+    onPressed: () {
+      _textFocus.unfocus();
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => SettingsPage(controller: c)),
+      );
+    },
+    icon: const Icon(Icons.settings_outlined),
   );
 
   Widget _localFooter() => Padding(
     padding: const EdgeInsets.all(16),
     child: Row(
       children: [
-        const Icon(Icons.laptop_mac_outlined, size: 22),
+        Icon(
+          deviceIcon(c.deviceType),
+          size: 22,
+          semanticLabel: deviceTypeLabel(c.deviceType),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '这台 Mac',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              Text(
+                '本机',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 c.ready ? '可被附近设备发现' : '正在启动…',
@@ -582,7 +660,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                const _BadgeIcon(Icons.devices_outlined, size: 38),
+                _BadgeIcon(
+                  deviceIcon(peer.deviceType),
+                  size: 38,
+                  semanticLabel: deviceTypeLabel(peer.deviceType),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -619,6 +701,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
   }
 
   Widget _content(bool desktop) => ListView(
+    key: const PageStorageKey('transfer-content'),
     padding: EdgeInsets.fromLTRB(
       desktop ? 32 : 20,
       desktop ? 28 : 4,
@@ -631,17 +714,16 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                c.receiving ? '接收文件' : '发送文件',
+                c.receiving ? '接收内容' : '发送内容',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
-            if (widget.onToggleTheme != null) _themeButton(),
-            _aboutButton(),
+            _settingsButton(),
           ],
         ),
         const SizedBox(height: 4),
         Text(
-          '文件在设备之间直接传输。',
+          '文件与文本在设备之间直接传输。',
           style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 28),
@@ -683,7 +765,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
             padding: const EdgeInsets.only(top: 12, bottom: 20),
             child: Row(
               children: [
-                const _BadgeIcon(Icons.devices_outlined),
+                _BadgeIcon(
+                  deviceIcon(c.selected!.deviceType),
+                  semanticLabel: deviceTypeLabel(c.selected!.deviceType),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -726,33 +811,40 @@ class _TransferDashboardState extends State<TransferDashboard> {
           )
         else
           const SizedBox(height: 12),
-        if (c.chosenFile == null) _chooseFile() else _transferCard(),
+        SegmentedButton<TransferKind>(
+          segments: const [
+            ButtonSegment(
+              value: TransferKind.file,
+              icon: Icon(Icons.insert_drive_file_outlined),
+              label: Text('文件'),
+            ),
+            ButtonSegment(
+              value: TransferKind.text,
+              icon: Icon(Icons.notes_outlined),
+              label: Text('文本'),
+            ),
+          ],
+          selected: {c.sendKind},
+          onSelectionChanged: c.busy
+              ? null
+              : (values) => c.setSendKind(values.single),
+        ),
+        const SizedBox(height: 16),
+        if (c.sendKind == TransferKind.text)
+          _textComposer()
+        else if (c.chosenFile == null)
+          _chooseFile()
+        else
+          _transferCard(),
       ],
       if (c.receiving || c.chosenFile != null)
         Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: _note(Icons.lock_outline, '文件仅在这两台设备之间传输。'),
+          child: _note(Icons.lock_outline, '内容仅在这两台设备之间传输。'),
         ),
       const SizedBox(height: 28),
       const Divider(height: 1),
       const SizedBox(height: 20),
-      if (c.canChooseReceiveFolder) ...[
-        Text(
-          '接收位置',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          c.receiveLocation,
-          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
-        ),
-        TextButton.icon(
-          onPressed: c.busy || !c.ready ? null : c.chooseReceiveFolder,
-          icon: const Icon(Icons.folder_open_outlined),
-          label: const Text('更改接收文件夹'),
-        ),
-        const SizedBox(height: 16),
-      ],
       _history(),
       const SizedBox(height: 24),
       _note(Icons.lock_outline, '局域网直连 · 加密传输'),
@@ -792,7 +884,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         const SizedBox(height: 8),
         Text(
           c.peers.isEmpty
-              ? '让两台设备连接同一 Wi-Fi，\n并在对方设备打开 dukto2。'
+              ? '让两台设备连接同一 Wi-Fi，\n并在对方设备打开 Dukto2。'
               : '点击设备，核对屏幕上的身份码。',
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.onSurfaceVariant),
@@ -806,6 +898,249 @@ class _TransferDashboardState extends State<TransferDashboard> {
       ],
     ),
   );
+
+  Future<void> _copyText(String text) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) _message('已复制文本');
+    } on Object {
+      if (mounted) _message('无法复制，请重试');
+    }
+  }
+
+  Future<void> _showText(TransferReceipt receipt) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('文本内容'),
+      scrollable: true,
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (receipt.textTruncated ||
+                receipt.text!.length > maxTextPreviewCharacters) ...[
+              Text(
+                receipt.textTruncated
+                    ? '以下为预览。文本总大小 ${formatBytes(receipt.size)}，完整内容请打开文件查看。'
+                    : '以下为预览，可使用「复制文本」复制完整内容。',
+              ),
+              const SizedBox(height: 12),
+            ],
+            SelectableText(textPreview(receipt.text!)),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('关闭'),
+        ),
+        if (receipt.file != null || receipt.contentUri != null)
+          TextButton(
+            onPressed: () => c.export(receipt),
+            child: const Text('打开完整文本'),
+          ),
+        FilledButton.icon(
+          onPressed: () => _copyText(receipt.text!),
+          icon: const Icon(Icons.content_copy),
+          label: Text(receipt.textTruncated ? '复制预览' : '复制文本'),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _pasteText() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (!mounted || c.busy) return;
+      final pasted = data?.text;
+      if (pasted == null || pasted.isEmpty) {
+        _message('剪贴板中没有文本');
+        return;
+      }
+      final selection = _text.selection;
+      final start = selection.isValid ? selection.start : _text.text.length;
+      final end = selection.isValid ? selection.end : _text.text.length;
+      final next = _text.text.replaceRange(start, end, pasted);
+      if (utf8.encode(next).length > maxInlineTextBytes) {
+        setState(() => _textIssue = '编辑区最多 1 MiB，大文本请从文件载入（上限 16 MiB）');
+        return;
+      }
+      _text.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: start + pasted.length),
+      );
+      setState(() {
+        _textIssue = null;
+        c.sendPhase = SendPhase.idle;
+      });
+    } on Object {
+      if (mounted) _message('无法读取剪贴板，请重试');
+    }
+  }
+
+  Widget _textInput({
+    required bool expanded,
+    required bool tooLarge,
+  }) => KeyedSubtree(
+    // Keep the editor, selection and IME connection when the keyboard opens.
+    key: _textEditorKey,
+    child: TextField(
+      key: const ValueKey('text-composer'),
+      controller: _text,
+      focusNode: _textFocus,
+      minLines: expanded ? null : 4,
+      maxLines: expanded ? null : 10,
+      expands: expanded,
+      textAlignVertical: TextAlignVertical.top,
+      readOnly: c.busy,
+      keyboardType: TextInputType.multiline,
+      inputFormatters: [LengthLimitingTextInputFormatter(maxInlineTextBytes)],
+      decoration: InputDecoration(
+        labelText: '文本内容',
+        hintText: '输入文字或粘贴链接',
+        alignLabelWithHint: true,
+        errorText: tooLarge ? '编辑区最多 1 MiB，大文本请从文件载入（上限 16 MiB）' : _textIssue,
+      ),
+      onChanged: (_) => setState(() {
+        _textIssue = null;
+        c.sendPhase = SendPhase.idle;
+      }),
+    ),
+  );
+
+  Widget _textComposer({bool expanded = false}) {
+    final bytes = utf8.encode(_text.text).length;
+    final tooLarge = bytes > maxInlineTextBytes;
+    final fromFile = c.chosenTextFile != null;
+    final supported = c.selected?.supportsText == true;
+    final phase = c.sendPhase;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (fromFile) ...[
+            _FileLabel(name: c.chosenTextFile!.name, size: c.chosenTextSize!),
+            const SizedBox(height: 12),
+            Text(
+              '已载入 UTF-8 文本文件，完整内容将流式传输。',
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(textPreview(c.chosenTextPreview), maxLines: 8),
+          ] else if (expanded)
+            Expanded(child: _textInput(expanded: true, tooLarge: tooLarge))
+          else
+            _textInput(expanded: false, tooLarge: tooLarge),
+          if (!expanded) ...[
+            const SizedBox(height: 8),
+            Text(
+              '文本上限 16 MiB · 对方确认后接收',
+              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+            ),
+          ],
+          if (!supported) ...[
+            const SizedBox(height: 8),
+            const Text('对方版本暂不支持文本，请先更新对方应用。'),
+          ],
+          if (c.sending) ...[
+            const SizedBox(height: 16),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            Text(phase == SendPhase.waiting ? '等待对方接收文本…' : '正在发送并校验文本…'),
+          ] else if (!expanded && phase == SendPhase.sent) ...[
+            const SizedBox(height: 12),
+            Text('文本已发送，对方校验通过', style: TextStyle(color: colors.tertiary)),
+          ] else if (!expanded && phase == SendPhase.cancelled) ...[
+            const SizedBox(height: 12),
+            const Text('已取消发送，文本已保留'),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            key: const ValueKey('text-actions'),
+            children: [
+              if (!c.sending) ...[
+                IconButton(
+                  tooltip: '粘贴文本',
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  onPressed: c.busy || fromFile ? null : _pasteText,
+                  icon: const Icon(Icons.content_paste_outlined),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  tooltip: '更多文本操作',
+                  enabled: !c.busy,
+                  requestFocus: expanded ? false : null,
+                  offset: expanded ? const Offset(0, -112) : Offset.zero,
+                  style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+                  constraints: const BoxConstraints(minWidth: 200),
+                  icon: const Icon(Icons.more_horiz),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'load', child: Text('载入文本文件')),
+                    PopupMenuItem(
+                      value: 'clear',
+                      enabled: fromFile || _text.text.isNotEmpty,
+                      child: const Text('清空内容'),
+                    ),
+                  ],
+                  onSelected: (action) {
+                    if (action == 'load') {
+                      unawaited(c.pickTextFile());
+                    } else {
+                      setState(() {
+                        c.clearTextFile();
+                        _text.clear();
+                        _textIssue = null;
+                        c.sendPhase = SendPhase.idle;
+                      });
+                    }
+                  },
+                ),
+              ],
+              const Spacer(),
+              const SizedBox(width: 8),
+              if (c.sending)
+                OutlinedButton(
+                  onPressed: c.cancelTransfer,
+                  child: const Text('取消传输'),
+                )
+              else
+                Tooltip(
+                  message: '发送文本',
+                  child: FilledButton.icon(
+                    key: const ValueKey('send-text'),
+                    onPressed:
+                        c.ready &&
+                            !c.busy &&
+                            supported &&
+                            (fromFile ||
+                                (!tooLarge && _text.text.trim().isNotEmpty))
+                        ? () {
+                            FocusScope.of(context).unfocus();
+                            c.sendText(_text.text);
+                          }
+                        : null,
+                    icon: const Icon(Icons.near_me_outlined, size: 18),
+                    label: const Text('发送'),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _chooseFile() => Container(
     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
@@ -823,7 +1158,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         ),
         const SizedBox(height: 12),
         const Text(
-          '选择一个文件，发送给对方',
+          '选择文件，发送给对方',
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -841,7 +1176,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         ),
         const SizedBox(height: 14),
         Text(
-          '每次发送一个文件 · 保留原始内容',
+          '支持多选 · 按顺序发送',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         ),
@@ -864,9 +1199,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
         : DateTime.now().difference(c.transferStarted!).inMilliseconds / 1000;
     final phase = c.sendPhase;
     final active = incoming || c.sending;
-    final label = incoming
+    final phaseLabel = incoming
         ? (p == null
-              ? '等待发送方上传…'
+              ? c.receivingBatchRemaining > 0
+                    ? '等待本批文件上传…'
+                    : '等待发送方上传…'
               : bytes == total
               ? '正在校验文件…'
               : '正在接收')
@@ -879,6 +1216,14 @@ class _TransferDashboardState extends State<TransferDashboard> {
             SendPhase.cancelled => '已取消发送',
             SendPhase.failed => '发送失败，可重新发送',
           };
+    final batch = !incoming && c.files.length > 1;
+    final label = batch
+        ? phase == SendPhase.sent
+              ? '全部已发送，校验通过'
+              : active
+              ? '第 ${c.fileIndex + 1} / ${c.files.length} 项 · $phaseLabel'
+              : '${c.completedFiles} / ${c.files.length} 项已发送 · $phaseLabel'
+        : phaseLabel;
     final statusColor = phase == SendPhase.failed && !incoming
         ? colors.error
         : phase == SendPhase.sent && !incoming
@@ -896,7 +1241,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
           Row(
             children: [
               Expanded(
-                child: _FileLabel(name: name, size: total),
+                child: _FileLabel(
+                  name: batch ? '${c.files.length} 个文件' : name,
+                  size: batch ? c.totalFileBytes : total,
+                ),
               ),
               if (!active)
                 IconButton(
@@ -906,6 +1254,58 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 ),
             ],
           ),
+          if (batch) ...[
+            const SizedBox(height: 12),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 180),
+              child: ListView.builder(
+                shrinkWrap: true,
+                primary: false,
+                itemCount: c.files.length,
+                itemBuilder: (context, index) {
+                  final item = c.files[index];
+                  return Row(
+                    children: [
+                      ExcludeSemantics(
+                        child: Icon(
+                          item.sent
+                              ? Icons.check_circle_outline
+                              : Icons.insert_drive_file_outlined,
+                          size: 18,
+                          color: item.sent
+                              ? colors.tertiary
+                              : colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            '${item.file.name} · ${formatBytes(item.size)}${item.sent ? ' · 已发送' : ''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: active && index == c.fileIndex
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (!active)
+                        IconButton(
+                          tooltip: '移除 ${item.file.name}',
+                          onPressed: c.busy ? null : () => c.removeFile(index),
+                          icon: const Icon(Icons.close, size: 18),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,17 +1390,23 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 else if (phase == SendPhase.sent)
                   FilledButton(
                     onPressed: c.busy ? null : c.clearFile,
-                    child: const Text('发送另一个文件'),
+                    child: const Text('发送其他文件'),
                   )
                 else ...[
                   TextButton(
                     onPressed: c.busy ? null : c.pickFile,
-                    child: const Text('更换文件'),
+                    child: const Text('重新选择'),
                   ),
                   FilledButton.icon(
                     onPressed: c.ready && !c.busy ? c.sendFile : null,
                     icon: const Icon(Icons.near_me_outlined, size: 18),
-                    label: Text(phase == SendPhase.failed ? '重新发送' : '发送文件'),
+                    label: Text(
+                      c.completedFiles > 0
+                          ? '继续发送'
+                          : phase == SendPhase.failed
+                          ? '重新发送'
+                          : '发送文件',
+                    ),
                   ),
                 ],
               ],
@@ -1011,94 +1417,264 @@ class _TransferDashboardState extends State<TransferDashboard> {
     );
   }
 
-  Widget _history() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        '最近传输',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-      ),
-      const SizedBox(height: 12),
-      if (c.history.isEmpty)
-        Text(
-          '完成的文件会显示在这里。',
-          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
-        ),
-      for (final entry in c.history.take(20))
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _history() {
+    final devices = c.history.map((entry) => entry.peerName).toSet().toList();
+    final selectedDevice = devices.contains(_historyDevice)
+        ? _historyDevice
+        : null;
+    final entries = c.history.where(
+      (entry) => selectedDevice == null || entry.peerName == selectedDevice,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) => Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 8,
             children: [
-              Icon(
-                entry.incoming
-                    ? Icons.file_download_outlined
-                    : Icons.file_upload_outlined,
-                size: 22,
+              const Text(
+                '最近传输',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.receipt.name,
-                      style: const TextStyle(fontSize: 14),
+              if (devices.isNotEmpty)
+                SizedBox(
+                  width: (constraints.maxWidth * .55).clamp(120.0, 260.0),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.outlineVariant),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${entry.incoming ? '来自' : '发往'} ${entry.peerName.isEmpty ? '另一台设备' : entry.peerName} · ${formatBytes(entry.receipt.size)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.onSurfaceVariant,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          key: const ValueKey('history-device-filter'),
+                          value: selectedDevice,
+                          hint: const Text(
+                            '全部设备',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          selectedItemBuilder: (context) => [
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '全部设备',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            for (final device in devices)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  device.isEmpty ? '另一台设备' : device,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                          isExpanded: true,
+                          itemHeight: null,
+                          menuMaxHeight: 360,
+                          borderRadius: BorderRadius.circular(8),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurface,
+                          ),
+                          onChanged: (value) =>
+                              setState(() => _historyDevice = value),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: Text('全部设备'),
+                              ),
+                            ),
+                            for (final device in devices)
+                              DropdownMenuItem<String>(
+                                value: device,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Text(
+                                    device.isEmpty ? '另一台设备' : device,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    entry.incoming ? '已接收' : '已发送',
-                    style: TextStyle(fontSize: 12, color: colors.tertiary),
-                  ),
-                  if (entry.incoming)
-                    TextButton(
-                      onPressed: () => c.export(entry.receipt),
-                      child: Text(
-                        Platform.isAndroid && entry.receipt.contentUri == null
-                            ? '保存到…'
-                            : '打开',
-                      ),
-                    )
-                  else
-                    Text(
-                      '${entry.time.hour.toString().padLeft(2, '0')}:${entry.time.minute.toString().padLeft(2, '0')}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  IconButton(
-                    tooltip: '复制 SHA-256 校验值',
-                    iconSize: 16,
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(text: entry.receipt.sha256),
-                      );
-                      _message('已复制 SHA-256 校验值');
-                    },
-                    icon: const Icon(Icons.content_copy),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
-    ],
-  );
+        const SizedBox(height: 12),
+        if (c.history.isEmpty)
+          Text(
+            '完成的文件与文本会显示在这里。',
+            style: TextStyle(color: colors.onSurfaceVariant),
+          ),
+        for (final entry in entries.take(20)) _historyEntry(entry),
+      ],
+    );
+  }
+
+  Widget _historyEntry(HistoryEntry entry) {
+    final name = entry.receipt.text == null ? entry.receipt.name : '文本消息';
+    final peer = entry.peerName.isEmpty ? '另一台设备' : entry.peerName;
+    final status = entry.incoming ? '已接收' : '已发送';
+    final secondary = TextStyle(fontSize: 12, color: colors.onSurfaceVariant);
+    final title = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Tooltip(
+            message: name,
+            child: Text(
+              name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(formatBytes(entry.receipt.size), style: secondary),
+      ],
+    );
+    final device = Tooltip(
+      message: '$status · $peer',
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: status,
+              style: TextStyle(color: colors.tertiary),
+            ),
+            TextSpan(text: ' · $peer'),
+          ],
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: secondary,
+      ),
+    );
+    final time = Tooltip(
+      message: entry.time.toLocal().toString(),
+      child: Text(formatHistoryTime(entry.time), style: secondary),
+    );
+    final duration = entry.elapsed == null
+        ? null
+        : Text('耗时 ${formatElapsed(entry.elapsed!)}', style: secondary);
+    final action = entry.receipt.text != null
+        ? TextButton(
+            key: const ValueKey('history-text-actions'),
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+            onPressed: () => _showText(entry.receipt),
+            child: const Text('查看文本', maxLines: 1),
+          )
+        : Tooltip(
+            message: c.canOpenHistoryDirectory(entry)
+                ? '打开本机文件所在目录'
+                : '此记录没有可用的本机文件位置',
+            child: TextButton(
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              onPressed: c.canOpenHistoryDirectory(entry)
+                  ? () => c.openHistoryDirectory(entry)
+                  : null,
+              child: const Text('打开目录', maxLines: 1),
+            ),
+          );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide =
+              constraints.maxWidth >= 600 &&
+              MediaQuery.textScalerOf(context).scale(1) < 1.5;
+          if (wide) {
+            return Row(
+              children: [
+                ExcludeSemantics(
+                  child: Icon(
+                    entry.incoming
+                        ? Icons.file_download_outlined
+                        : Icons.file_upload_outlined,
+                    size: 22,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    key: const ValueKey('history-entry-info'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [title, const SizedBox(height: 6), device],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 180),
+                  child: Column(
+                    key: const ValueKey('history-entry-timing'),
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      time,
+                      if (duration != null) ...[
+                        const SizedBox(height: 6),
+                        duration,
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                action,
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              title,
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      key: const ValueKey('history-entry-info'),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        device,
+                        const SizedBox(height: 4),
+                        Wrap(
+                          key: const ValueKey('history-entry-timing'),
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [time, ?duration],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  action,
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   Widget _note(IconData icon, String text) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1152,23 +1728,19 @@ class _Brand extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Icon(
-          Icons.near_me_outlined,
-          color: Theme.of(context).colorScheme.onPrimary,
-          size: 20,
+      ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: Image.asset(
+          'assets/branding/dukto2.png',
+          width: 32,
+          height: 32,
+          excludeFromSemantics: true,
         ),
       ),
       const SizedBox(width: 10),
       const Flexible(
         child: Text(
-          'dukto2',
+          'Dukto2',
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w600,
@@ -1183,7 +1755,8 @@ class _Brand extends StatelessWidget {
 class _BadgeIcon extends StatelessWidget {
   final IconData icon;
   final double size;
-  const _BadgeIcon(this.icon, {this.size = 44});
+  final String? semanticLabel;
+  const _BadgeIcon(this.icon, {this.size = 44, this.semanticLabel});
   @override
   Widget build(BuildContext context) => Container(
     width: size,
@@ -1192,7 +1765,12 @@ class _BadgeIcon extends StatelessWidget {
       color: Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(10),
     ),
-    child: Icon(icon, size: 22, color: Theme.of(context).colorScheme.primary),
+    child: Icon(
+      icon,
+      size: 22,
+      color: Theme.of(context).colorScheme.primary,
+      semanticLabel: semanticLabel,
+    ),
   );
 }
 

@@ -32,15 +32,19 @@ class ReceiveStorage(private val context: Context) {
                              var bytes: Long = 0)
 
     fun handle(call: MethodCall, result: MethodChannel.Result): Boolean {
-        if (call.method !in setOf("receiveLocation", "prepareReceive", "writeReceive",
-                "closeReceive", "commitReceive", "discardReceive", "openReceived")) return false
+        if (call.method !in setOf("receiveLocation", "resetReceiveFolder", "prepareReceive", "writeReceive",
+                "closeReceive", "commitReceive", "discardReceive", "openReceived", "openHistoryDirectory")) return false
         worker.execute {
             try {
                 recover()
                 val value: Any? = when (call.method) {
                     "receiveLocation" -> location()
+                    "resetReceiveFolder" -> {
+                        check(prefs.edit().remove("tree").commit())
+                        null
+                    }
                     "prepareReceive" -> prepare(call.argument<String>("id")!!,
-                        call.argument<String>("name")!!, call.argument<Number>("size")!!.toLong())
+                        call.argument<String>("name")!!, call.argument<Number>("size")!!.toLong(), call.argument<Boolean>("text") == true)
                     "writeReceive" -> {
                         val stage = stage(call)
                         val bytes = call.argument<ByteArray>("bytes")!!
@@ -53,6 +57,31 @@ class ReceiveStorage(private val context: Context) {
                     "closeReceive" -> { close(stage(call)); null }
                     "commitReceive" -> commit(call.argument<String>("id")!!)
                     "discardReceive" -> { discard(call.argument<String>("id")!!); null }
+                    "openHistoryDirectory" -> {
+                        val received = call.argument<String>("receivedUri")
+                        val initial: Uri
+                        if (received != null) {
+                            require(prefs.getStringSet("completed", emptySet())!!.contains(received)) { "Unknown received document" }
+                            val savedParent = prefs.getString("folder:$received", null)
+                            val uri = Uri.parse(received)
+                            initial = savedParent?.let(Uri::parse) ?: if (uri.authority == "media")
+                                DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:${Environment.DIRECTORY_DOWNLOADS}/Dukto2")
+                            else uri
+                        } else {
+                            initial = Uri.parse(checkNotNull(call.argument<String>("sourceUri")))
+                            require(initial.scheme == "content") { "No browsable source directory" }
+                        }
+                        // The system browser resolves its own directory access. Never
+                        // turn a MediaStore URI into a filesystem path or grant a parent.
+                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                            if (Build.VERSION.SDK_INT >= 26) putExtra(DocumentsContract.EXTRA_INITIAL_URI, initial)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                        null
+                    }
                     "openReceived" -> {
                         val uriString = call.argument<String>("uri")!!
                         require(prefs.getStringSet("completed", emptySet())!!.contains(uriString)) { "Unknown received document" }
@@ -100,11 +129,11 @@ class ReceiveStorage(private val context: Context) {
             return mapOf("direct" to true, "label" to name, "kind" to "folder")
         }
         return if (Build.VERSION.SDK_INT >= 29)
-            mapOf("direct" to true, "label" to "下载 / dukto2", "kind" to "downloads")
+            mapOf("direct" to true, "label" to "下载 / Dukto2", "kind" to "downloads")
         else mapOf("direct" to false, "label" to "应用内（可选择接收文件夹）", "kind" to "private")
     }
 
-    private fun prepare(id: String, name: String, size: Long): Map<String, Any> {
+    private fun prepare(id: String, name: String, size: Long, text: Boolean): Map<String, Any> {
         require(Regex("^[a-f0-9]{48}$").matches(id) && !stages.containsKey(id))
         require(name.isNotEmpty() && name.length <= 240 && name != "." && name != ".." &&
             !name.contains('/') && !name.contains('\\') && name.none { it.code < 32 })
@@ -114,8 +143,8 @@ class ReceiveStorage(private val context: Context) {
         if (treeString == null && Build.VERSION.SDK_INT >= 29) {
             val values = ContentValues().apply {
                 put(MediaStore.Downloads.DISPLAY_NAME, name)
-                put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/dukto2")
+                put(MediaStore.Downloads.MIME_TYPE, if (text) "text/plain" else "application/octet-stream")
+                put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/Dukto2")
                 put(MediaStore.Downloads.IS_PENDING, 1)
             }
             val uri = checkNotNull(resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values))
@@ -129,7 +158,7 @@ class ReceiveStorage(private val context: Context) {
             val folder = checkNotNull(DocumentsContract.createDocument(resolver, parent,
                 DocumentsContract.Document.MIME_TYPE_DIR, "dukto2-$id"))
             val uri = try {
-                checkNotNull(DocumentsContract.createDocument(resolver, folder, "application/octet-stream", ".dukto2-$id.partial"))
+                checkNotNull(DocumentsContract.createDocument(resolver, folder, if (text) "text/plain" else "application/octet-stream", ".dukto2-$id.partial"))
             } catch (error: Exception) {
                 DocumentsContract.deleteDocument(resolver, folder)
                 throw error
@@ -187,7 +216,11 @@ class ReceiveStorage(private val context: Context) {
         prefs.edit().remove("pending-$id").commit()
         val completed = prefs.getStringSet("completed", emptySet())!!.toMutableSet()
         completed.add(uri.toString())
-        prefs.edit().putStringSet("completed", completed.toList().takeLast(100).toSet()).commit()
+        val retained = completed.toList().takeLast(100).toSet()
+        val edit = prefs.edit().putStringSet("completed", retained)
+        if (stage.folder != null) edit.putString("folder:$uri", stage.folder.toString())
+        for (old in completed - retained) edit.remove("folder:$old")
+        edit.commit()
         return mapOf("uri" to uri.toString(), "name" to stage.name)
     }
 

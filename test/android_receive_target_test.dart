@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dukto2/src/android_receive_target.dart';
+import 'package:dukto2/src/platform_receive_target.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +14,33 @@ void main() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+  test(
+    'iOS commit supplies the digest and accepts only its owned receipt scheme',
+    () async {
+      var uri = 'dukto2-received://owned-document';
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        if (call.method == 'commitReceive') {
+          expect((call.arguments as Map)['sha256'], 'checked-digest');
+          return {'uri': uri};
+        }
+        return null;
+      });
+      final target = await PlatformReceiveTarget.create(
+        channel,
+        'id',
+        offer,
+        uriScheme: 'dukto2-received',
+      );
+      final receipt = await target.commit(offer, 'checked-digest');
+      expect(receipt.contentUri, uri);
+      uri = 'file:///unrelated/document';
+      await expectLater(
+        target.commit(offer, 'checked-digest'),
+        throwsFormatException,
+      );
+    },
+  );
 
   test(
     'platform writes are bounded and await the native writer before advancing',
@@ -31,8 +59,9 @@ void main() {
           }
           written.add(Uint8List.fromList(bytes));
         }
-        if (call.method == 'commitReceive')
+        if (call.method == 'commitReceive') {
           return {'uri': 'content://media/external/downloads/42'};
+        }
         return null;
       });
       final target = await AndroidReceiveTarget.create(channel, 'id', offer);
@@ -63,8 +92,9 @@ void main() {
     () async {
       var discarded = false;
       messenger.setMockMethodCallHandler(channel, (call) async {
-        if (call.method == 'writeReceive')
+        if (call.method == 'writeReceive') {
           throw PlatformException(code: 'DISK_FULL');
+        }
         if (call.method == 'discardReceive') discarded = true;
         return null;
       });

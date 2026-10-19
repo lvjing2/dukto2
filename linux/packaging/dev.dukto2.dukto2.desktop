@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Dukto2
+Comment=Share files and text on your local network
+Exec=dukto2
+Icon=dev.dukto2.dukto2
+Terminal=false
+Categories=Network;FileTransfer;
+StartupWMClass=dev.dukto2.dukto2
+X-GNOME-UsesNotifications=true

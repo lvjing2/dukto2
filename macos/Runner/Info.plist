@@ -29,6 +29,10 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>dukto2 需要访问局域网，以发现附近设备并直接收发文件。</string>
+	<string>Dukto2 需要访问局域网，以发现附近设备并直接收发文件。</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dukto2._tcp</string>
+	</array>
 </dict>
 </plist>

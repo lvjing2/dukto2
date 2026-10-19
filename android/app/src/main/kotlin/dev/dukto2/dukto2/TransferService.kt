@@ -18,7 +18,7 @@ import android.os.PowerManager
 class TransferService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
-    private var title = "dukto2 正在传输"
+    private var title = "Dukto2 正在传输"
     private var text = "正在准备传输…"
     private var progress = -1
     private var stopping = false
@@ -75,13 +75,14 @@ class TransferService : Service() {
         }
         return builder.setSmallIcon(android.R.drawable.stat_sys_upload)
             .setContentTitle(title).setContentText(text).setContentIntent(open)
+            .setStyle(Notification.BigTextStyle().bigText(text))
             .setOngoing(true).setOnlyAlertOnce(true).setCategory(Notification.CATEGORY_PROGRESS)
             .setProgress(100, progress.coerceAtLeast(0), progress < 0)
             .addAction(Notification.Action.Builder(null, "取消", cancel).build()).build()
     }
 
     override fun onTimeout(startId: Int, fgsType: Int) {
-        onStopped?.invoke("Android 后台传输时间已用尽，请返回应用重新发送")
+        onStopped?.invoke("后台运行时间已用尽，请返回应用重新发送")
         finish()
     }
 

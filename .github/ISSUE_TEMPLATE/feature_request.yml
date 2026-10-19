@@ -1,0 +1,16 @@
+name: Feature request / 需求建议
+description: 描述实际使用场景和现有方案的不足。
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 遇到了什么问题
+      description: 请描述系统、设备和具体场景，以及为什么当前流程无法满足需求。
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 希望如何改善
+      description: 可补充替代方案和可以接受的取舍。

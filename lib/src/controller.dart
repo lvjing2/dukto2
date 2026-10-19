@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,19 +10,67 @@ import 'package:dukto2_core/dukto2_core.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'android_receive_target.dart';
+import 'platform_receive_target.dart';
+import 'app_settings.dart';
+import 'desktop_receive_folders.dart';
 
 class HistoryEntry {
   final TransferReceipt receipt;
   final bool incoming;
   final DateTime time;
   final String peerName;
+  final String? sourceUri;
+  final Duration? elapsed;
   HistoryEntry(
     this.receipt,
     this.incoming, {
     this.peerName = '',
+    this.sourceUri,
+    this.elapsed,
     DateTime? time,
   }) : time = time ?? DateTime.now();
+
+  factory HistoryEntry.fromJson(Map<String, dynamic> row) => HistoryEntry(
+    TransferReceipt(
+      name: row['name'] as String,
+      size: row['size'] as int,
+      sha256: row['sha256'] as String,
+      file: row['path'] == null ? null : File(row['path'] as String),
+      contentUri: row['contentUri'] as String?,
+      text: row['text'] as String?,
+      textTruncated: row['textTruncated'] == true,
+    ),
+    row['incoming'] as bool,
+    peerName: row['peerName'] as String? ?? '',
+    sourceUri: row['sourceUri'] as String?,
+    time: DateTime.tryParse(row['time'] as String? ?? ''),
+    elapsed: row['elapsedMs'] is int && (row['elapsedMs'] as int) >= 0
+        ? Duration(milliseconds: row['elapsedMs'] as int)
+        : null,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'name': receipt.name,
+    'size': receipt.size,
+    'sha256': receipt.sha256,
+    'incoming': incoming,
+    'path': receipt.file?.path,
+    'contentUri': receipt.contentUri,
+    if (receipt.text != null) 'text': receipt.text,
+    if (receipt.textTruncated) 'textTruncated': true,
+    'peerName': peerName,
+    if (sourceUri != null) 'sourceUri': sourceUri,
+    'time': time.toIso8601String(),
+    if (elapsed != null) 'elapsedMs': elapsed!.inMilliseconds,
+  };
+}
+
+class QueuedFile {
+  final PlatformFile file;
+  final int size;
+  bool _sent = false;
+  bool get sent => _sent;
+  QueuedFile(this.file, this.size);
 }
 
 enum SendPhase {
@@ -48,22 +97,81 @@ class Dukto2Controller extends ChangeNotifier {
   DeviceIdentity? identity;
   Directory? receiveDirectory;
   Directory? _support;
+  SettingsStore? _settingsStore;
+  final Future<List<PlatformFile>> Function() _pickFiles;
+  final Future<String?> Function() _pickDirectory;
+
+  @protected
+  String get operatingSystem => Platform.operatingSystem;
+  bool get _isAndroid => operatingSystem == 'android';
+  bool get _isIOS => operatingSystem == 'ios';
+  bool get _isMacOS => operatingSystem == 'macos';
+  bool get _isWindows => operatingSystem == 'windows';
+  bool get _isLinux => operatingSystem == 'linux';
+  bool get _usesDesktopFolders => _isWindows || _isLinux;
+  AppSettings settings = const AppSettings();
+  bool savingSettings = false;
+  String? settingsError;
+  String systemName = '';
+  String notificationPermission = 'unknown';
+  bool get canOpenNotificationSettings =>
+      !_isLinux || _linuxNotificationSettingsAvailable;
+  bool _linuxNotificationSettingsAvailable = false;
+  bool get canEditSettings => _settingsStore != null;
+  Dukto2Controller({
+    SettingsStore? settingsStore,
+    DesktopReceiveFolders? desktopFolders,
+    Future<List<PlatformFile>> Function()? filePicker,
+    Future<String?> Function()? directoryPicker,
+  }) : _pickFiles = filePicker ?? FilePicker.pickFiles,
+       _pickDirectory =
+           directoryPicker ??
+           (() => FilePicker.getDirectoryPath(dialogTitle: '选择接收文件夹')) {
+    _desktopFolders = desktopFolders;
+    _settingsStore = settingsStore;
+    _subscriptions.add(client.progress.listen(_progress));
+  }
   String name = '';
+  DeviceType deviceType = DeviceType.hostPlatform;
   String status = '正在准备本机身份…';
   String? error;
   bool starting = true;
   bool sending = false;
   bool receiving = false;
+  int receivingBatchRemaining = 0;
   bool picking = false;
-  PlatformFile? chosenFile;
-  int? chosenSize;
+  final _files = <QueuedFile>[];
+  List<QueuedFile> get files => UnmodifiableListView(_files);
+  int _fileIndex = 0;
+  int get fileIndex => _fileIndex;
+  int get completedFiles => _files.where((item) => item.sent).length;
+  int get totalFileBytes => _files.fold(0, (sum, item) => sum + item.size);
+  PlatformFile? get chosenFile =>
+      _files.isEmpty ? null : _files[_fileIndex].file;
+  int? get chosenSize => _files.isEmpty ? null : _files[_fileIndex].size;
   SendPhase sendPhase = SendPhase.idle;
   FileOffer? receivingOffer;
   String _incomingSender = '';
   bool _disposed = false;
   bool directReceive = false;
   String receiveLocation = '应用内';
-  bool get canChooseReceiveFolder => Platform.isAndroid;
+  bool customReceiveFolder = false;
+  Directory? _desktopReceiveDirectory;
+  DesktopReceiveFolders? _desktopFolders;
+  bool _receiveFolderAvailable = true;
+  final _receiveRoots = <String>[];
+  bool get canChooseReceiveFolder =>
+      _isAndroid || _isMacOS || _isIOS || _usesDesktopFolders;
+  bool get isAppleMobile => _isIOS;
+  String get backgroundTransferHint => switch (operatingSystem) {
+    'ios' => '传输时请保持应用在前台，切换应用或锁屏可能中断。',
+    'android' => '确认收发后可在后台继续传输，请勿强行停止应用。',
+    _ => '传输时请保持应用运行，避免设备休眠。',
+  };
+  TransferKind sendKind = TransferKind.file;
+  PlatformFile? chosenTextFile;
+  int? chosenTextSize;
+  String chosenTextPreview = '';
   Timer? _networkDebounce;
   bool _recoveringNetwork = false;
   DateTime _lastNotification = DateTime.fromMillisecondsSinceEpoch(0);
@@ -72,6 +180,8 @@ class Dukto2Controller extends ChangeNotifier {
   TransferProgress? activeProgress;
   CancellationToken? _outgoing;
   DateTime? transferStarted;
+  Stopwatch? _payloadClock;
+  Future<void>? _incomingCompletion;
   DateTime _lastProgress = DateTime.fromMillisecondsSinceEpoch(0);
   bool get ready => server != null && !starting;
   bool get busy => picking || sending || receiving || pendingOffer != null;
@@ -82,43 +192,75 @@ class Dukto2Controller extends ChangeNotifier {
 
   Future<void> start() async {
     try {
-      if (Platform.isAndroid) {
-        platform.setMethodCallHandler((call) async {
-          if (_disposed) return;
-          if (call.method == 'networkChanged') {
-            _networkDebounce?.cancel();
-            _networkDebounce = Timer(const Duration(milliseconds: 700), () {
-              if (ready) unawaited(refreshAddresses());
-            });
-          } else if (call.method == 'transferStopped' &&
-              (sending || receiving)) {
-            cancelTransfer();
-            error = call.arguments as String? ?? '后台传输已停止';
-            _notify();
+      platform.setMethodCallHandler((call) async {
+        if (_disposed) return;
+        if (call.method == 'networkChanged') {
+          _networkDebounce?.cancel();
+          _networkDebounce = Timer(const Duration(milliseconds: 700), () {
+            if (ready) unawaited(refreshAddresses());
+          });
+        } else if (call.method == 'discoveredEndpoint') {
+          final data = call.arguments as Map?;
+          final host = data?['host'];
+          final port = data?['port'];
+          if (host is String && port is int) {
+            await discovery?.confirmEndpoint(host, port);
           }
-        });
-        await _loadReceiveLocation();
+        } else if (call.method == 'discoveryUnavailable' &&
+            peers.isEmpty &&
+            !busy) {
+          error = call.arguments as String?;
+          _notify();
+        } else if (call.method == 'transferStopped' && (sending || receiving)) {
+          cancelTransfer();
+          error = call.arguments as String? ?? '后台传输已停止';
+          _notify();
+        }
+      });
+      if (_isAndroid || _isIOS) {
+        await loadReceiveLocation();
       }
       _support = await getApplicationSupportDirectory();
+      if (_usesDesktopFolders && _desktopFolders == null) {
+        final downloads = await getDownloadsDirectory();
+        if (downloads == null) {
+          throw const FileSystemException('无法找到系统下载目录');
+        }
+        _desktopFolders = DesktopReceiveFolders(
+          _support!,
+          Directory(p.join(downloads.path, 'Dukto2')),
+        );
+      }
+      _settingsStore ??= SettingsStore(_support!);
+      await loadSettings();
+      deviceType = await readDeviceType();
       identity = await DeviceIdentity.loadOrCreate(
         Directory(p.join(_support!.path, 'identity')),
       );
       if (_disposed) return;
-      name = await readDeviceName();
-      if (name.length > 128) name = name.substring(0, 128);
       receiveDirectory = Directory(
         p.join(
-          (await getApplicationDocumentsDirectory()).path,
-          'Dukto2 Received',
+          _isIOS
+              ? (await getTemporaryDirectory()).path
+              : (await getApplicationDocumentsDirectory()).path,
+          _isIOS ? 'Dukto2 Server' : 'Dukto2 Received',
         ),
       );
+      if (_isMacOS || _usesDesktopFolders) {
+        await loadReceiveLocation();
+        if (_receiveFolderAvailable && _desktopReceiveDirectory != null) {
+          await FileReceiveTarget.recover(_desktopReceiveDirectory!);
+        }
+      }
       await _loadHistory();
       server = TransferServer(
         identity: identity!,
         name: name,
+        deviceType: deviceType,
         receiveDirectory: receiveDirectory!,
-        onOffer: _offer,
-        createTarget: Platform.isAndroid ? _receiveTarget : null,
+        onOffer: receiveOffer,
+        onApprovedBatchFile: receiveApprovedBatchFile,
+        createTarget: _receiveTarget,
       );
       try {
         await server!.start(port: PeerDiscovery.defaultTransferPort);
@@ -128,25 +270,16 @@ class Dukto2Controller extends ChangeNotifier {
         await server!.start();
       }
       _subscriptions.add(server!.progress.listen(_progress));
-      _subscriptions.add(client.progress.listen(_progress));
-      _subscriptions.add(
-        server!.received.listen((receipt) async {
-          await _endForeground();
-          receiving = false;
-          activeProgress = null;
-          status = '已接收 ${receipt.name}，校验通过';
-          receivingOffer = null;
-          _addHistory(receipt, true, peerName: _incomingSender);
-          unawaited(_keepAwake());
-        }),
-      );
+      _subscriptions.add(server!.received.listen(completeReceive));
       _subscriptions.add(
         server!.errors.listen((message) {
+          if (pendingOffer?.isBatch == true) answerOffer(false);
+          receivingBatchRemaining = 0;
           receiving = false;
           activeProgress = null;
           receivingOffer = null;
           error = '接收失败：$message';
-          unawaited(_endForeground());
+          _incomingCompletion = endTransferSession();
           status = '等待文件';
           unawaited(_keepAwake());
           _notify();
@@ -154,10 +287,7 @@ class Dukto2Controller extends ChangeNotifier {
       );
       await refreshAddresses();
       if (_disposed) return;
-      if (Platform.isAndroid) {
-        await platform.invokeMethod<void>('startDiscovery');
-      }
-      discovery = PeerDiscovery(server!.localPeer);
+      discovery = PeerDiscovery(server!.localPeer, useMulticast: !_isIOS);
       _subscriptions.add(
         discovery!.changes.listen((value) {
           peers = value;
@@ -165,8 +295,9 @@ class Dukto2Controller extends ChangeNotifier {
           if (chosen != null) {
             for (final peer in value) {
               if (peer.fingerprint == chosen.fingerprint &&
-                  peer.id == chosen.id)
+                  peer.id == chosen.id) {
                 selected = peer;
+              }
             }
           }
           _notify();
@@ -174,6 +305,12 @@ class Dukto2Controller extends ChangeNotifier {
       );
       try {
         await discovery!.start();
+        if (_isAndroid || _isIOS || _isMacOS) {
+          await platform.invokeMethod<void>('startDiscovery', {
+            'id': identity!.id,
+            'port': server!.port,
+          });
+        }
       } on Object catch (exception) {
         error = '自动发现暂不可用，可使用手动连接：$exception';
       }
@@ -211,30 +348,201 @@ class Dukto2Controller extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadReceiveLocation() async {
-    final result = await platform.invokeMapMethod<String, dynamic>(
-      'receiveLocation',
+  @visibleForTesting
+  Future<void> loadSettings() async {
+    settings = await _settingsStore!.load();
+    await refreshSystemSettings();
+    _notify();
+  }
+
+  Future<void> refreshSystemSettings() async {
+    final raw = await readDeviceName();
+    if (_disposed) return;
+    systemName = String.fromCharCodes(raw.runes.take(64));
+    _applyDeviceName();
+    try {
+      notificationPermission =
+          await platform.invokeMethod<String>('notificationStatus') ??
+          'unknown';
+    } on MissingPluginException {
+      notificationPermission = 'unavailable';
+    } on PlatformException {
+      notificationPermission = 'unavailable';
+    }
+    if (_isLinux) {
+      try {
+        _linuxNotificationSettingsAvailable =
+            await platform.invokeMethod<bool>('canOpenNotificationSettings') ==
+            true;
+      } on Object {
+        _linuxNotificationSettingsAvailable = false;
+      }
+    }
+    _notify();
+  }
+
+  void _applyDeviceName() {
+    final next = systemName;
+    if (next.isEmpty || next == name) return;
+    name = next;
+    server?.rename(name);
+    if (server != null) discovery?.updateLocal(server!.localPeer);
+  }
+
+  Future<bool> _saveSettings(AppSettings next) async {
+    if (!canEditSettings || savingSettings) return false;
+    savingSettings = true;
+    settingsError = null;
+    _notify();
+    try {
+      await _settingsStore!.save(next);
+      if (_disposed) return false;
+      settings = next;
+      _applyDeviceName();
+      return true;
+    } on Object {
+      settingsError = '设置未能保存，请重试';
+      return false;
+    } finally {
+      savingSettings = false;
+      _notify();
+    }
+  }
+
+  Future<bool> setAppearance(AppAppearance value) =>
+      _saveSettings(settings.copyWith(appearance: value));
+
+  Future<bool> setCompletionNotifications(bool value) async {
+    final saved = await _saveSettings(
+      settings.copyWith(completionNotifications: value),
     );
+    if (saved && value) await requestNotifications();
+    return saved;
+  }
+
+  Future<void> requestNotifications() async {
+    try {
+      notificationPermission =
+          await platform.invokeMethod<String>('requestNotifications') ??
+          'unknown';
+    } on Object {
+      settingsError = '无法请求通知权限，请在系统设置中检查';
+    }
+    _notify();
+  }
+
+  Future<void> openNotificationSettings() async {
+    if (!canOpenNotificationSettings) return;
+    try {
+      await platform.invokeMethod<void>('openNotificationSettings');
+    } on Object {
+      settingsError = '无法打开系统设置，请手动检查 Dukto2 通知权限';
+      _notify();
+    }
+  }
+
+  @visibleForTesting
+  Future<void> notifyCompletion(
+    TransferReceipt receipt, {
+    required bool incoming,
+  }) async {
+    if (!settings.completionNotifications || _disposed) return;
+    final kind = receipt.text == null ? '文件' : '文本';
+    try {
+      await platform.invokeMethod<void>('notifyComplete', {
+        'title': incoming ? '接收完成' : '发送完成',
+        'body': incoming ? '$kind已接收并通过校验' : '$kind已发送并通过校验',
+      });
+    } on Object {
+      // A denied notification must never change a successful transfer result.
+    }
+  }
+
+  @visibleForTesting
+  Future<void> loadReceiveLocation() async {
+    final result = _usesDesktopFolders
+        ? await _desktopFolders!.location()
+        : await platform.invokeMapMethod<String, dynamic>('receiveLocation');
     directReceive = result?['direct'] == true;
     receiveLocation = result?['label'] as String? ?? '应用内';
+    customReceiveFolder =
+        result?['custom'] == true || result?['kind'] == 'folder';
+    _applyReceiveLocation(result);
+  }
+
+  void _applyReceiveLocation(Map<String, dynamic>? result) {
+    if (_isIOS && result != null) {
+      _receiveFolderAvailable = result['available'] != false;
+      if (!_receiveFolderAvailable) {
+        error = result['error'] as String? ?? '接收文件夹不可用，请重新选择';
+        settingsError = error;
+      }
+      return;
+    }
+    if (!(_isMacOS || _usesDesktopFolders) || result == null) return;
+    final path = result['path'] as String?;
+    _desktopReceiveDirectory = path == null ? null : Directory(path);
+    _receiveFolderAvailable = result['available'] == true && path != null;
+    _receiveRoots
+      ..clear()
+      ..addAll((result['roots'] as List? ?? []).whereType<String>());
+    if (path != null && _receiveFolderAvailable) _receiveRoots.add(path);
+    if (!_receiveFolderAvailable) {
+      error = result['error'] as String? ?? '接收文件夹不可用，请重新选择';
+      settingsError = error;
+    }
   }
 
   Future<void> chooseReceiveFolder() async {
-    if (!Platform.isAndroid || busy || !ready) return;
+    if (!canChooseReceiveFolder || busy || !ready) return;
     picking = true;
+    settingsError = null;
     _notify();
     try {
-      final result = await platform.invokeMapMethod<String, dynamic>(
-        'chooseReceiveFolder',
-      );
+      Map<String, dynamic>? result;
+      if (_usesDesktopFolders) {
+        final path = await _pickDirectory();
+        if (path != null) result = await _desktopFolders!.choose(path);
+      } else {
+        result = await platform.invokeMapMethod<String, dynamic>(
+          'chooseReceiveFolder',
+        );
+      }
       if (result != null) {
         directReceive = result['direct'] == true;
         receiveLocation = result['label'] as String? ?? '已授权文件夹';
+        customReceiveFolder =
+            result['custom'] == true || result['kind'] == 'folder';
+        _applyReceiveLocation(result);
         status = '接收位置已更新';
-        error = null;
+        if (_receiveFolderAvailable) error = null;
       }
     } on Object catch (exception) {
       error = '无法设置接收位置：$exception';
+      settingsError = error;
+    } finally {
+      picking = false;
+      _notify();
+    }
+  }
+
+  Future<void> resetReceiveFolder() async {
+    if (!canChooseReceiveFolder || busy || !ready) return;
+    picking = true;
+    settingsError = null;
+    _notify();
+    try {
+      if (_usesDesktopFolders) {
+        await _desktopFolders!.reset();
+      } else {
+        await platform.invokeMethod<void>('resetReceiveFolder');
+      }
+      error = null;
+      await loadReceiveLocation();
+      status = '已恢复默认接收位置';
+    } on Object catch (exception) {
+      error = '无法恢复接收位置：$exception';
+      settingsError = error;
     } finally {
       picking = false;
       _notify();
@@ -245,37 +553,86 @@ class Dukto2Controller extends ChangeNotifier {
     ReceiveTarget? target;
     try {
       await _beginForeground('正在接收 ${offer.name}');
-      target = directReceive
-          ? await AndroidReceiveTarget.create(platform, id, offer)
-          : await FileReceiveTarget.create(receiveDirectory!, id);
+      if ((_isMacOS || _isIOS || _usesDesktopFolders) &&
+          !_receiveFolderAvailable) {
+        throw const FileSystemException('接收文件夹不可用，请重新选择');
+      }
+      target = (_isAndroid || _isIOS) && directReceive
+          ? await PlatformReceiveTarget.create(
+              platform,
+              id,
+              offer,
+              uriScheme: _isIOS ? 'dukto2-received' : 'content',
+            )
+          : await FileReceiveTarget.create(
+              _desktopReceiveDirectory ?? receiveDirectory!,
+              id,
+            );
       if (_disposed || !receiving) throw TransferCancelled();
       return target;
     } on Object {
       await target?.discard();
-      await _endForeground();
+      await endTransferSession();
       rethrow;
     }
   }
 
+  Future<void> completeReceive(TransferReceipt receipt) {
+    _payloadClock?.stop();
+    final elapsed = _payloadClock?.elapsed;
+    _payloadClock = null;
+    final sender = _incomingSender;
+    // The sender may offer its next file as soon as commit is acknowledged.
+    // Keep that offer behind native cleanup and the history/state transition.
+    return _incomingCompletion = () async {
+      if (receivingBatchRemaining > 0) receivingBatchRemaining--;
+      final more = receivingBatchRemaining > 0;
+      if (!more) await endTransferSession();
+      receiving = more;
+      activeProgress = null;
+      status = receipt.text != null ? '已接收文本，校验通过' : '已接收 ${receipt.name}，校验通过';
+      receivingOffer = null;
+      _addHistory(receipt, true, peerName: sender, elapsed: elapsed);
+      if (!more) unawaited(notifyCompletion(receipt, incoming: true));
+      unawaited(_keepAwake());
+    }();
+  }
+
   Future<void> _beginForeground(String title) async {
-    if (!Platform.isAndroid) return;
+    if (!_isAndroid && !_isIOS) return;
     try {
       await platform
           .invokeMethod<void>('startTransfer', {'title': title})
           .timeout(const Duration(seconds: 20));
     } on Object {
-      await _endForeground();
+      await endTransferSession();
       rethrow;
     }
   }
 
-  Future<void> _endForeground() async {
-    if (!Platform.isAndroid) return;
+  @protected
+  Future<void> endTransferSession() async {
+    if (!_isAndroid && !_isIOS) return;
     try {
       await platform.invokeMethod<void>('stopTransfer');
     } on PlatformException {
       /* Already stopped by Android. */
     }
+  }
+
+  @visibleForTesting
+  Future<DeviceType> readDeviceType() async {
+    try {
+      final type = DeviceType.parse(
+        await platform.invokeMethod<String>('getDeviceType'),
+      );
+      if (type != DeviceType.unknown) return type;
+    } on MissingPluginException {
+      // Older native bridges can still start and transfer normally.
+    } on PlatformException {
+      // Device appearance metadata must never block startup.
+    }
+    return DeviceType.hostPlatform;
   }
 
   @visibleForTesting
@@ -293,12 +650,13 @@ class Dukto2Controller extends ChangeNotifier {
         .trim();
     return cleaned.isNotEmpty
         ? cleaned
-        : Platform.isAndroid
-        ? 'Android'
+        : _isAndroid || _isIOS
+        ? '本机'
         : Platform.localHostname;
   }
 
-  Future<bool> _offer(FileOffer offer) async {
+  Future<bool> receiveOffer(FileOffer offer) async {
+    if (_incomingCompletion != null) await _incomingCompletion;
     if (_disposed || busy) return false;
     final approval = Completer<bool>();
     _approval = approval;
@@ -307,17 +665,21 @@ class Dukto2Controller extends ChangeNotifier {
     status = '有新的接收请求';
     _notify();
     final accepted = await approval.future.timeout(
-      const Duration(seconds: 60),
+      receiveApprovalTimeout,
       onTimeout: () => false,
     );
     if (identical(_approval, approval)) {
       _approval = null;
       pendingOffer = null;
       receiving = accepted;
+      receivingBatchRemaining = accepted && offer.isBatch
+          ? offer.files.length
+          : 0;
       receivingOffer = accepted ? offer : null;
       if (accepted) _incomingSender = offer.sender;
       activeProgress = null;
       transferStarted = DateTime.now();
+      _payloadClock = null;
       status = accepted ? '等待发送方上传…' : '已拒绝接收';
       unawaited(_keepAwake());
       _notify();
@@ -329,8 +691,38 @@ class Dukto2Controller extends ChangeNotifier {
     if (_approval?.isCompleted == false) _approval!.complete(accept);
   }
 
+  Future<bool> receiveApprovedBatchFile(FileOffer offer) async {
+    if (_incomingCompletion != null) await _incomingCompletion;
+    if (_disposed ||
+        receivingBatchRemaining == 0 ||
+        sending ||
+        picking ||
+        pendingOffer != null) {
+      return false;
+    }
+    receiving = true;
+    receivingOffer = offer;
+    _incomingSender = offer.sender;
+    activeProgress = null;
+    transferStarted = null;
+    _payloadClock = null;
+    status = '正在接收本批文件：${offer.name}';
+    _notify();
+    return true;
+  }
+
   void select(Peer peer) {
     if (busy) return;
+    if (selected?.id != peer.id || selected?.fingerprint != peer.fingerprint) {
+      for (final item in _files) {
+        item._sent = false;
+      }
+      _fileIndex = 0;
+      sendPhase = chosenFile == null ? SendPhase.idle : SendPhase.ready;
+      activeProgress = null;
+      transferStarted = null;
+      status = '已选择 ${peer.name}';
+    }
     selected = peer;
     error = null;
     _notify();
@@ -339,8 +731,11 @@ class Dukto2Controller extends ChangeNotifier {
   void _progress(TransferProgress event) {
     activeProgress = event;
     final now = DateTime.now();
-    if (Platform.isAndroid &&
-        now.difference(_lastNotification).inMilliseconds >= 500) {
+    if (_payloadClock == null) {
+      _payloadClock = Stopwatch()..start();
+      transferStarted = now;
+    }
+    if (_isAndroid && now.difference(_lastNotification).inMilliseconds >= 500) {
       _lastNotification = now;
       unawaited(
         platform
@@ -374,17 +769,23 @@ class Dukto2Controller extends ChangeNotifier {
     error = null;
     _notify();
     try {
-      final picked = await FilePicker.pickFile();
-      if (picked == null || _disposed) return;
-      final size = await picked.length();
-      if (size == null) {
-        throw FileSystemException('无法读取文件大小，请先将文件下载到本机', picked.name);
+      final picked = await _pickFiles();
+      if (picked.isEmpty || _disposed) return;
+      final next = <QueuedFile>[];
+      for (final file in picked) {
+        final size = await file.length();
+        if (size == null || size < 0) {
+          throw FileSystemException('无法读取文件大小，请先将文件下载到本机', file.name);
+        }
+        next.add(QueuedFile(file, size));
       }
       if (_disposed) return;
-      chosenFile = picked;
-      chosenSize = size;
+      _files
+        ..clear()
+        ..addAll(next);
+      _fileIndex = 0;
       sendPhase = SendPhase.ready;
-      status = '准备发送 ${picked.name}';
+      status = '准备发送 ${next.length} 个文件';
     } on Object catch (exception) {
       error = '选择文件失败：$exception';
     } finally {
@@ -395,63 +796,259 @@ class Dukto2Controller extends ChangeNotifier {
 
   void clearFile() {
     if (busy) return;
-    chosenFile = null;
-    chosenSize = null;
+    _files.clear();
+    _fileIndex = 0;
     sendPhase = SendPhase.idle;
     error = null;
     _notify();
   }
 
-  Future<void> sendFile() async {
+  void removeFile(int index) {
+    if (busy || index < 0 || index >= _files.length) return;
+    _files.removeAt(index);
+    _fileIndex = _files.indexWhere((item) => !item.sent);
+    if (_fileIndex < 0) _fileIndex = 0;
+    sendPhase = _files.isEmpty
+        ? SendPhase.idle
+        : completedFiles == _files.length
+        ? SendPhase.sent
+        : SendPhase.ready;
+    error = null;
+    _notify();
+  }
+
+  void setSendKind(TransferKind kind) {
+    if (busy) return;
+    sendKind = kind;
+    sendPhase = chosenFile == null
+        ? SendPhase.idle
+        : completedFiles == _files.length
+        ? SendPhase.sent
+        : SendPhase.ready;
+    error = null;
+    _notify();
+  }
+
+  Future<void> pickTextFile() async {
+    if (busy || !ready) return;
+    picking = true;
+    _notify();
+    try {
+      final picked = await FilePicker.pickFile();
+      if (picked == null || _disposed) return;
+      final size = await picked.length();
+      if (size == null || size < 1 || size > maxTextBytes) {
+        throw const FormatException('请选择 16 MiB 以内的 UTF-8 文本文件');
+      }
+      final preview = <int>[];
+      await for (final chunk in picked.readAsByteStream()) {
+        final remaining = 64 * 1024 - preview.length;
+        preview.addAll(chunk.take(remaining));
+        if (preview.length >= 64 * 1024) break;
+      }
+      chosenTextFile = picked;
+      chosenTextSize = size;
+      chosenTextPreview = utf8.decode(preview, allowMalformed: true);
+      error = null;
+      sendPhase = SendPhase.ready;
+    } on Object catch (exception) {
+      error = '载入文本失败：$exception';
+    } finally {
+      picking = false;
+      _notify();
+    }
+  }
+
+  void clearTextFile() {
+    if (busy) return;
+    chosenTextFile = null;
+    chosenTextSize = null;
+    chosenTextPreview = '';
+    sendPhase = SendPhase.idle;
+    _notify();
+  }
+
+  Future<void> sendText(String text) async {
     final peer = selected;
-    final picked = chosenFile;
-    final size = chosenSize;
-    if (peer == null || picked == null || size == null || busy || !ready) {
+    if (peer == null || busy || !ready) return;
+    if (chosenTextFile != null && chosenTextSize != null) {
+      final picked = chosenTextFile!;
+      final size = chosenTextSize!;
+      await _sendContent(peer, picked.name, () async {
+        final receipt = await client.sendStream(
+          peer: peer,
+          name: picked.name,
+          size: size,
+          openRead: picked.readAsByteStream,
+          sender: name,
+          kind: TransferKind.text,
+          cancellation: _outgoing,
+        );
+        return TransferReceipt(
+          name: picked.name,
+          size: size,
+          sha256: receipt.sha256,
+          text: textPreview(chosenTextPreview),
+          textTruncated:
+              size > utf8.encode(textPreview(chosenTextPreview)).length,
+        );
+      });
       return;
     }
+    if (text.trim().isEmpty || utf8.encode(text).length > maxInlineTextBytes) {
+      error = '编辑区最多 1 MiB，大文本请从文件载入（上限 16 MiB）';
+      _notify();
+      return;
+    }
+    await _sendContent(
+      peer,
+      '文本',
+      () => client.sendText(
+        peer: peer,
+        text: text,
+        sender: name,
+        cancellation: _outgoing,
+      ),
+    );
+  }
+
+  Future<void> sendFile() async {
+    final peer = selected;
+    final pending = _files.where((item) => !item.sent).toList();
+    if (peer == null || pending.isEmpty || busy || !ready) {
+      return;
+    }
+    await _sendContent(
+      peer,
+      pending.length == 1 ? pending.single.file.name : '${pending.length} 个文件',
+      () async {
+        TransferReceipt? last;
+        String? batchToken;
+        var complete = false;
+        try {
+          if (pending.length > 1) {
+            batchToken = await client.offerBatch(
+              peer: peer,
+              sender: name,
+              files: [
+                for (final item in pending)
+                  FileOffer(
+                    sender: name,
+                    name: item.file.name,
+                    size: item.size,
+                  ),
+              ],
+              cancellation: _outgoing,
+            );
+          }
+          for (var index = 0; index < pending.length; index++) {
+            final item = pending[index];
+            _outgoing!.check();
+            if (_disposed) throw TransferCancelled();
+            _fileIndex = _files.indexOf(item);
+            sendPhase = batchToken == null
+                ? SendPhase.waiting
+                : SendPhase.uploading;
+            activeProgress = null;
+            transferStarted = null;
+            _payloadClock = null;
+            status = batchToken == null
+                ? '等待 ${peer.name} 确认接收 ${item.file.name}…'
+                : '正在发送本批文件 ${index + 1} / ${pending.length}';
+            _notify();
+            last = await client.sendStream(
+              peer: peer,
+              size: item.size,
+              openRead: item.file.readAsByteStream,
+              sender: name,
+              name: item.file.name,
+              cancellation: _outgoing,
+              batchToken: batchToken,
+              batchIndex: batchToken == null ? null : index,
+            );
+            _payloadClock?.stop();
+            item._sent = true;
+            _addHistory(
+              last,
+              false,
+              peerName: peer.name,
+              elapsed: _payloadClock?.elapsed,
+              // iOS exposes an imported cache, not the original source directory.
+              sourceUri: _isIOS ? null : item.file.uri.toString(),
+            );
+          }
+          complete = true;
+          return last!;
+        } finally {
+          if (!complete && batchToken != null) {
+            await client.cancelBatch(peer, batchToken);
+          }
+        }
+      },
+      recordHistory: false,
+    );
+  }
+
+  Future<void> _sendContent(
+    Peer peer,
+    String label,
+    Future<TransferReceipt> Function() send, {
+    String? sourceUri,
+    bool recordHistory = true,
+  }) async {
     sending = true;
     sendPhase = SendPhase.waiting;
     activeProgress = null;
     transferStarted = null;
+    _payloadClock = null;
     error = null;
     status = '等待 ${peer.name} 确认接收…';
     _outgoing = CancellationToken();
     _notify();
+    TransferReceipt? completed;
     try {
       await _keepAwake();
-      await _beginForeground('正在发送 ${picked.name}');
-      final receipt = await client.sendStream(
-        peer: peer,
-        size: size,
-        openRead: picked.readAsByteStream,
-        sender: name,
-        name: picked.name,
-        cancellation: _outgoing,
-      );
-      _addHistory(receipt, false, peerName: peer.name);
+      await _beginForeground('正在发送 $label');
+      final receipt = await send();
+      _payloadClock?.stop();
+      if (recordHistory) {
+        _addHistory(
+          receipt,
+          false,
+          peerName: peer.name,
+          sourceUri: sourceUri,
+          elapsed: _payloadClock?.elapsed,
+        );
+      }
       sendPhase = SendPhase.sent;
-      status = '已发送 ${receipt.name}，对方校验通过';
+      status = '已发送 $label，对方校验通过';
+      completed = receipt;
     } on TransferCancelled {
       sendPhase = SendPhase.cancelled;
       status = '已取消发送';
     } on Object catch (exception) {
       sendPhase = SendPhase.failed;
       error = '发送失败：$exception';
-      status = '可重新选择文件发送';
+      status = '可重新发送';
     } finally {
+      await endTransferSession();
       sending = false;
-      await _endForeground();
       _outgoing = null;
+      _payloadClock = null;
       activeProgress = null;
       unawaited(_keepAwake());
       _notify();
     }
+    if (completed != null) {
+      unawaited(notifyCompletion(completed, incoming: false));
+    }
   }
 
   void cancelTransfer() {
-    unawaited(_endForeground());
+    unawaited(endTransferSession());
     if (sending) _outgoing?.cancel();
     if (receiving) {
+      receivingBatchRemaining = 0;
       server?.cancelIncoming();
       receiving = false;
       activeProgress = null;
@@ -463,7 +1060,7 @@ class Dukto2Controller extends ChangeNotifier {
   }
 
   Future<void> _keepAwake() async {
-    if (Platform.isAndroid) {
+    if (_isAndroid || _isIOS || _usesDesktopFolders) {
       try {
         await platform.invokeMethod<void>('keepAwake', sending || receiving);
       } on PlatformException {
@@ -472,17 +1069,60 @@ class Dukto2Controller extends ChangeNotifier {
     }
   }
 
+  bool canOpenHistoryDirectory(HistoryEntry entry) {
+    if (entry.receipt.text != null) return false;
+    if (entry.incoming) {
+      return entry.receipt.contentUri != null ||
+          (entry.receipt.file != null && !_isAndroid);
+    }
+    final uri = Uri.tryParse(entry.sourceUri ?? '');
+    return (!_isAndroid && uri?.scheme == 'file') ||
+        (_isAndroid && uri?.scheme == 'content');
+  }
+
+  Future<void> openHistoryDirectory(HistoryEntry entry) async {
+    if (!canOpenHistoryDirectory(entry)) return;
+    try {
+      final path = entry.incoming
+          ? entry.receipt.file?.path
+          : (Uri.tryParse(entry.sourceUri ?? '')?.scheme == 'file'
+                ? Uri.parse(entry.sourceUri!).toFilePath()
+                : null);
+      if (_isMacOS) {
+        if (path == null || !await File(path).exists()) {
+          throw const FileSystemException('文件已移动或删除');
+        }
+        final result = await Process.run('open', ['-R', path]);
+        if (result.exitCode != 0) throw const FileSystemException('无法打开文件目录');
+      } else if (_usesDesktopFolders) {
+        await platform.invokeMethod<void>('openHistoryDirectory', {
+          'path': path,
+        });
+      } else if (_isIOS || _isAndroid) {
+        await platform.invokeMethod<void>('openHistoryDirectory', {
+          if (entry.incoming && entry.receipt.contentUri != null)
+            'receivedUri': entry.receipt.contentUri,
+          if (!entry.incoming) 'sourceUri': entry.sourceUri,
+          if (entry.incoming && path != null) 'path': path,
+        });
+      }
+    } on Object catch (exception) {
+      error = '打开目录失败：$exception';
+      _notify();
+    }
+  }
+
   Future<void> export(TransferReceipt receipt) async {
     final file = receipt.file;
     try {
-      if (Platform.isAndroid && receipt.contentUri != null) {
+      if ((_isAndroid || _isIOS) && receipt.contentUri != null) {
         await platform.invokeMethod<void>('openReceived', {
           'uri': receipt.contentUri,
         });
         return;
       }
       if (file == null) return;
-      if (Platform.isAndroid) {
+      if (_isAndroid) {
         final saved = await platform.invokeMethod<bool>('exportFile', {
           'path': file.path,
           'name': receipt.name,
@@ -491,11 +1131,15 @@ class Dukto2Controller extends ChangeNotifier {
           status = '已另存 ${receipt.name}';
           _notify();
         }
-      } else if (Platform.isMacOS) {
+      } else if (_isMacOS) {
         final result = await Process.run('open', ['-R', file.path]);
         if (result.exitCode != 0) {
           throw FileSystemException('无法在 Finder 显示文件', file.path);
         }
+      } else if (_usesDesktopFolders) {
+        await platform.invokeMethod<void>('openHistoryDirectory', {
+          'path': file.path,
+        });
       }
     } on Object catch (exception) {
       error = '导出失败：$exception';
@@ -513,28 +1157,24 @@ class Dukto2Controller extends ChangeNotifier {
         final incoming = row['incoming'] as bool;
         final path = row['path'] as String?;
         final uri = row['contentUri'] as String?;
-        // Only restore paths within the app's receive directory.
-        if (incoming &&
-            !((path != null && p.isWithin(receiveDirectory!.path, path)) ||
-                (Platform.isAndroid &&
-                    uri != null &&
-                    Uri.tryParse(uri)?.scheme == 'content'))) {
+        final text = row['text'] as String?;
+        if (text != null &&
+            (text.trim().isEmpty || utf8.encode(text).length > maxTextBytes)) {
           continue;
         }
-        history.add(
-          HistoryEntry(
-            TransferReceipt(
-              name: row['name'] as String,
-              size: row['size'] as int,
-              sha256: row['sha256'] as String,
-              file: path == null ? null : File(path),
-              contentUri: uri,
-            ),
-            incoming,
-            peerName: row['peerName'] as String? ?? '',
-            time: DateTime.tryParse(row['time'] as String? ?? ''),
-          ),
-        );
+        // Restore files only within app-owned or native-authorized receive roots.
+        if (incoming &&
+            (text == null || path != null || uri != null) &&
+            !((path != null && p.isWithin(receiveDirectory!.path, path)) ||
+                (path != null &&
+                    _receiveRoots.any((root) => p.isWithin(root, path))) ||
+                ((_isAndroid || _isIOS) &&
+                    uri != null &&
+                    Uri.tryParse(uri)?.scheme ==
+                        (_isIOS ? 'dukto2-received' : 'content')))) {
+          continue;
+        }
+        history.add(HistoryEntry.fromJson(row));
       }
     } on Object {
       /* A corrupt history must not prevent new transfers. */
@@ -546,25 +1186,21 @@ class Dukto2Controller extends ChangeNotifier {
     TransferReceipt receipt,
     bool incoming, {
     String peerName = '',
+    String? sourceUri,
+    Duration? elapsed,
   }) {
-    history.insert(0, HistoryEntry(receipt, incoming, peerName: peerName));
-    if (history.length > 100) history.removeLast();
-    final data = jsonEncode(
-      history
-          .map(
-            (entry) => {
-              'name': entry.receipt.name,
-              'size': entry.receipt.size,
-              'sha256': entry.receipt.sha256,
-              'incoming': entry.incoming,
-              'path': entry.receipt.file?.path,
-              'contentUri': entry.receipt.contentUri,
-              'peerName': entry.peerName,
-              'time': entry.time.toIso8601String(),
-            },
-          )
-          .toList(),
+    history.insert(
+      0,
+      HistoryEntry(
+        receipt,
+        incoming,
+        peerName: peerName,
+        sourceUri: sourceUri,
+        elapsed: elapsed,
+      ),
     );
+    if (history.length > 100) history.removeLast();
+    final data = jsonEncode(history.map((entry) => entry.toJson()).toList());
     _historyWrite = _historyWrite
         .then((_) async {
           final file = File(p.join(_support!.path, 'history.json'));
@@ -590,11 +1226,16 @@ class Dukto2Controller extends ChangeNotifier {
     await server?.close();
     await client.close();
     await _historyWrite;
-    if (Platform.isAndroid) {
-      platform.setMethodCallHandler(null);
-      await _endForeground();
-      await platform.invokeMethod<void>('stopDiscovery');
+    platform.setMethodCallHandler(null);
+    if (_usesDesktopFolders) {
       await platform.invokeMethod<void>('keepAwake', false);
+    }
+    if (_isAndroid || _isIOS || _isMacOS) {
+      await endTransferSession();
+      await platform.invokeMethod<void>('stopDiscovery');
+      if (!_isMacOS) {
+        await platform.invokeMethod<void>('keepAwake', false);
+      }
     }
   }
 }

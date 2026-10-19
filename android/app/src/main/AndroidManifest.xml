@@ -8,9 +8,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="dukto2"
+        android:label="Dukto2"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
         <service android:name=".TransferService" android:exported="false"
             android:foregroundServiceType="dataSync" android:stopWithTask="true" />
         <activity
