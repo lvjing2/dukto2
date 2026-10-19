@@ -13,3 +13,10 @@
 | Linux | [桌面](linux-main.png) | Ubuntu 24.04.3 x64，0.1.4 开发预览 |
 
 Windows 和 Linux 原图含其他桌面内容，正式宣传可重拍单独应用窗口。Android 和 iPad 真机图片待补；模拟器不代表真机 Wi-Fi 或后台验证。具体覆盖范围见 [验证说明](../validation.md)。
+
+多语言界面验收（0.1.6 当前工作区，iOS 27.0 模拟器，2026-10-19）：
+
+- iPhone：[中文](iphone-localization-zh.png) · [阿拉伯语](iphone-localization-ar.png)
+- iPad：[中文](ipad-localization-zh.png) · [阿拉伯语](ipad-localization-ar.png)
+
+图片显示实际界面和已有测试传输记录，本轮验收未新增传输记录。

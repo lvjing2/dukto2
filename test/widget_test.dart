@@ -1,3 +1,6 @@
+import 'package:dukto2/src/localization.dart';
+import 'package:dukto2/src/app_settings.dart';
+
 import 'dart:io';
 import 'dart:async';
 
@@ -32,6 +35,7 @@ class TestController extends Dukto2Controller {
 
   TestController({Future<List<PlatformFile>> Function()? filePicker})
     : super(filePicker: filePicker ?? (() async => [TestFile()])) {
+    settings = const AppSettings(language: AppLanguage.zhHans);
     starting = false;
     name = '测试 Mac';
     selected = Peer(
@@ -105,6 +109,11 @@ class StorageTestController extends TestController {
   }
 }
 
+class PhoneConnectionController extends TestController {
+  @override
+  bool get canScanQr => true;
+}
+
 void main() {
   Future<void> show(
     WidgetTester tester,
@@ -117,6 +126,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
       MaterialApp(
+        locale: AppLanguage.zhHans.locale,
+        supportedLocales: AppLanguage.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         // Flutter 3.47's InkSparkle shader has no SkSL stage for the software
         // test renderer. Keep tap feedback while testing layout and actions.
         theme: dukto2Theme(dark ? Brightness.dark : Brightness.light)
@@ -151,6 +163,50 @@ void main() {
         null,
       );
     });
+  }
+
+  for (final dark in [false, true]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'phone has one connection row and no show-QR action: dark=$dark scale=$scale',
+        (tester) async {
+          final c = PhoneConnectionController()..selected = null;
+          clean(tester, c);
+          await show(tester, c, const Size(375, 812), dark: dark, scale: scale);
+          expect(find.text('显示二维码'), findsNothing);
+          expect(find.text('扫码连接'), findsOneWidget);
+          expect(find.text('手动连接'), findsOneWidget);
+          final scan = tester.getRect(
+            find
+                .ancestor(
+                  of: find.text('扫码连接'),
+                  matching: find.byWidgetPredicate(
+                    (widget) => widget is ButtonStyleButton,
+                  ),
+                )
+                .first,
+          );
+          final manual = tester.getRect(
+            find
+                .ancestor(
+                  of: find.text('手动连接'),
+                  matching: find.byWidgetPredicate(
+                    (widget) => widget is ButtonStyleButton,
+                  ),
+                )
+                .first,
+          );
+          expect(scan.top, closeTo(manual.top, 0.1));
+          expect(scan.bottom, closeTo(manual.bottom, 0.1));
+          expect(scan.right, lessThan(manual.left));
+          expect(tester.takeException(), isNull);
+          await tester.tap(find.byTooltip('本机信息'));
+          await tester.pumpAndSettle();
+          expect(find.text('本机信息'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
   }
 
   testWidgets(
@@ -810,7 +866,7 @@ void main() {
         final action = tester.getRect(button);
         expect(find.text('已发送 · $peer'), findsOneWidget);
         expect(find.textContaining('发往'), findsNothing);
-        expect(find.text('2025/01/02 12:34'), findsOneWidget);
+        expect(find.text('2025/1/2 12:34'), findsOneWidget);
         expect(find.text('耗时 1 小时 2 分 3 秒'), findsOneWidget);
         expect(bytes.left, greaterThan(name.right));
         expect(bytes.top, closeTo(name.top, 1));

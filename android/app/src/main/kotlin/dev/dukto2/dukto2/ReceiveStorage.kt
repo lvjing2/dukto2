@@ -125,7 +125,7 @@ class ReceiveStorage(private val context: Context) {
         if (tree != null) {
             val uri = Uri.parse(tree)
             val document = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri))
-            val name = try { displayName(document) } catch (_: Exception) { "已授权文件夹（请检查访问权限）" }
+            val name = try { displayName(document) } catch (_: Exception) { "" }
             return mapOf("direct" to true, "label" to name, "kind" to "folder")
         }
         return if (Build.VERSION.SDK_INT >= 29)

@@ -51,7 +51,7 @@ final class PlatformBridge: NSObject, UIDocumentPickerDelegate, UIAdaptivePresen
         if self.backgroundTask == .invalid {
           self.backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Dukto2 transfer") { [weak self] in
             guard let self, self.backgroundTask != .invalid else { return }
-            self.channel.invokeMethod("transferStopped", arguments: "后台运行时间已用尽，请返回应用重新发送")
+            self.channel.invokeMethod("transferStopped", arguments: "expired")
             self.endBackgroundTask()
           }
           guard self.backgroundTask != .invalid else {
@@ -124,8 +124,8 @@ final class PlatformBridge: NSObject, UIDocumentPickerDelegate, UIAdaptivePresen
         }
       case "notifyComplete":
         let content = UNMutableNotificationContent()
-        content.title = args["title"] as? String ?? "传输完成"
-        content.body = args["body"] as? String ?? "内容已校验完成"
+        content.title = args["title"] as? String ?? "Transfer complete"
+        content.body = args["body"] as? String ?? "Content verified"
         content.sound = .default
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "dukto2-completion", content: content, trigger: nil)) { error in
           DispatchQueue.main.async {

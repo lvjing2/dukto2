@@ -1,3 +1,7 @@
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
+
+import 'localization.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -6,42 +10,74 @@ import 'package:flutter/services.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 
 import 'controller.dart';
+import 'connection_qr.dart';
+import 'connection_qr_card.dart';
+import 'qr_scanner_page.dart';
 import 'manual_address.dart';
 import 'settings_page.dart';
 
-String formatBytes(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+String formatBytes(int bytes, {String? locale}) {
+  // Isolate the Latin unit and number together within an RTL paragraph.
+  String directed(String value) =>
+      locale?.startsWith('ar') == true ? '\u2066$value\u2069' : value;
+  String number(num n, int digits) => locale == null
+      ? n.toStringAsFixed(digits)
+      : NumberFormat.decimalPatternDigits(
+          locale: locale,
+          decimalDigits: digits,
+        ).format(n);
+  if (bytes < 1024) return directed('$bytes B');
+  if (bytes < 1024 * 1024) return directed('${number(bytes / 1024, 1)} KB');
   if (bytes < 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return directed('${number(bytes / (1024 * 1024), 1)} MB');
   }
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  return directed('${number(bytes / (1024 * 1024 * 1024), 2)} GB');
 }
 
-String formatHistoryTime(DateTime value, {DateTime? now}) {
+String formatHistoryTime(
+  DateTime value, {
+  DateTime? now,
+  AppLocalizations? localization,
+}) {
+  final messages = localization ?? fallbackMessages;
   final time = value.toLocal();
   final today = (now ?? DateTime.now()).toLocal();
   String two(int n) => n.toString().padLeft(2, '0');
-  final clock = '${two(time.hour)}:${two(time.minute)}';
+  final clock = localization == null
+      ? '${two(time.hour)}:${two(time.minute)}'
+      : DateFormat.Hm(messages.localeName).format(time);
   final date = DateTime(time.year, time.month, time.day);
   final current = DateTime(today.year, today.month, today.day);
-  if (date == current) return '今天 $clock';
+  if (date == current) return messages.todayTime((clock).toString());
   if (date == DateTime(current.year, current.month, current.day - 1)) {
-    return '昨天 $clock';
+    return messages.yesterdayTime((clock).toString());
   }
-  return '${time.year == today.year ? '' : '${time.year}/'}${two(time.month)}/${two(time.day)} $clock';
+  if (localization == null) {
+    return '${time.year == today.year ? '' : '${time.year}/'}${two(time.month)}/${two(time.day)} $clock';
+  }
+  return '${(time.year == today.year ? DateFormat.Md(messages.localeName) : DateFormat.yMd(messages.localeName)).format(time)} $clock';
 }
 
-String formatElapsed(Duration elapsed) {
-  if (elapsed.inMilliseconds < 1000) return '小于 1 秒';
+String formatElapsed(Duration elapsed, {AppLocalizations? localization}) {
+  final messages = localization ?? fallbackMessages;
+  if (elapsed.inMilliseconds < 1000) return messages.lessThanSecond;
   if (elapsed.inSeconds < 60) {
-    return '${(elapsed.inMilliseconds / 1000).toStringAsFixed(1)} 秒';
+    return messages.secondsDuration(
+      NumberFormat.decimalPatternDigits(
+        locale: messages.localeName,
+        decimalDigits: 1,
+      ).format(elapsed.inMilliseconds / 1000),
+    );
   }
   final seconds = elapsed.inSeconds % 60;
   final minutes = elapsed.inMinutes % 60;
   return elapsed.inHours == 0
-      ? '$minutes 分 $seconds 秒'
-      : '${elapsed.inHours} 小时 $minutes 分 $seconds 秒';
+      ? messages.minutesDuration((minutes).toString(), (seconds).toString())
+      : messages.hoursDuration(
+          (elapsed.inHours).toString(),
+          (minutes).toString(),
+          (seconds).toString(),
+        );
 }
 
 IconData deviceIcon(DeviceType type) => switch (type) {
@@ -51,12 +87,15 @@ IconData deviceIcon(DeviceType type) => switch (type) {
   DeviceType.unknown => Icons.devices_outlined,
 };
 
-String deviceTypeLabel(DeviceType type) => switch (type) {
-  DeviceType.phone => '手机',
-  DeviceType.tablet => '平板',
-  DeviceType.computer => '电脑',
-  DeviceType.unknown => '设备',
-};
+String deviceTypeLabel(DeviceType type, {AppLocalizations? localization}) {
+  final messages = localization ?? fallbackMessages;
+  return switch (type) {
+    DeviceType.phone => messages.phone,
+    DeviceType.tablet => messages.tablet,
+    DeviceType.computer => messages.computer,
+    DeviceType.unknown => messages.device,
+  };
+}
 
 class TransferDashboard extends StatefulWidget {
   final Dukto2Controller controller;
@@ -74,7 +113,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
   final _text = TextEditingController();
   final _textFocus = FocusNode();
   final _textEditorKey = GlobalKey(debugLabel: 'text-editor');
-  String? _textIssue;
+  bool _textIssue = false;
   String? _historyDevice;
   @override
   void initState() {
@@ -177,26 +216,36 @@ class _TransferDashboardState extends State<TransferDashboard> {
               const _BadgeIcon(Icons.file_download_outlined),
               const SizedBox(height: 16),
               Text(
-                '${offer.sender} 想发送${offer.isBatch
-                    ? ' ${offer.files.length} 个文件'
-                    : offer.isText
-                    ? '文本'
-                    : '文件'}',
+                context.l10n.incomingOffer(
+                  (offer.sender).toString(),
+                  offer.isBatch
+                      ? context.l10n.fileCount(offer.files.length)
+                      : offer.isText
+                      ? context.l10n.text
+                      : context.l10n.file,
+                ),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
                 offer.isBatch
-                    ? '确认一次，接收这批文件'
+                    ? context.l10n.batchConsent
                     : offer.isText
-                    ? '是否接收这段文本？'
-                    : '是否接收这个文件？',
+                    ? context.l10n.textConsent
+                    : context.l10n.fileConsent,
               ),
               const SizedBox(height: 20),
               const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
-                child: _FileLabel(name: offer.name, size: offer.size),
+                child: _FileLabel(
+                  name: offer.isBatch
+                      ? context.l10n.fileCount(offer.files.length)
+                      : offer.isText
+                      ? context.l10n.textMessage
+                      : offer.name,
+                  size: offer.size,
+                ),
               ),
               const Divider(height: 1),
               if (offer.isBatch) ...[
@@ -210,7 +259,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                     itemBuilder: (context, index) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Text(
-                        '${index + 1}. ${offer.files[index].name} · ${formatBytes(offer.files[index].size)}',
+                        '${index + 1}. ${offer.files[index].name} · ${formatBytes(offer.files[index].size, locale: context.l10n.localeName)}',
                         style: const TextStyle(fontSize: 14),
                       ),
                     ),
@@ -220,35 +269,37 @@ class _TransferDashboardState extends State<TransferDashboard> {
               ],
               const SizedBox(height: 16),
               Text(
-                '来源名称未经验证，仅接收你认识的内容。请求将在 ${receiveApprovalTimeout.inMinutes} 分钟后过期。',
+                context.l10n.approvalWarning(
+                  (receiveApprovalTimeout.inMinutes).toString(),
+                ),
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
               ),
               if (!offer.isText && c.canChooseReceiveFolder) ...[
                 const SizedBox(height: 12),
                 Text(
-                  '接收位置：${c.receiveLocation}',
+                  context.l10n.receiveAt((c.receiveLocation).toString()),
                   style: const TextStyle(fontSize: 13),
                 ),
               ],
               const SizedBox(height: 24),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: Wrap(
                   spacing: 12,
                   runSpacing: 8,
                   children: [
                     OutlinedButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('拒绝'),
+                      child: Text(context.l10n.decline),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(context, true),
                       child: Text(
                         offer.isBatch
-                            ? '接收全部'
+                            ? context.l10n.receiveAll
                             : offer.isText
-                            ? '接收文本'
-                            : '接收文件',
+                            ? context.l10n.receiveText
+                            : context.l10n.receiveFile,
                       ),
                     ),
                   ],
@@ -266,7 +317,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('核对 ${peer.name}'),
+        title: Text(context.l10n.verifyPeer((peer.name).toString())),
         scrollable: true,
         content: SizedBox(
           width: 360,
@@ -274,15 +325,16 @@ class _TransferDashboardState extends State<TransferDashboard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('在对方设备打开「本机信息」，确认核对码与下方完全一致。'),
+              Text(context.l10n.verificationInstructions),
               _VerificationCode(peer.code),
               Text(
                 '${peer.host}:${peer.port}',
+                textDirection: TextDirection.ltr,
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
-              const Text(
-                '设备名称不能证明身份。请实际查看对方屏幕后再确认。',
+              Text(
+                context.l10n.verificationWarning,
                 style: TextStyle(fontSize: 13),
               ),
             ],
@@ -291,11 +343,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('一致，连接'),
+            child: Text(context.l10n.confirmConnection),
           ),
         ],
       ),
@@ -306,7 +358,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
   Future<void> _localInfo() => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('本机信息'),
+      title: Text(context.l10n.localInfo),
       scrollable: true,
       content: SizedBox(
         width: 360,
@@ -314,16 +366,28 @@ class _TransferDashboardState extends State<TransferDashboard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('让另一台设备查看此处的核对码。'),
-            _VerificationCode(c.identity?.code ?? '正在生成…'),
-            const Text('设备名称', style: TextStyle(fontSize: 13)),
+            Text(context.l10n.showLocalCode),
+            _VerificationCode(c.identity?.code ?? context.l10n.generating),
+            Text(context.l10n.deviceName, style: TextStyle(fontSize: 13)),
             const SizedBox(height: 4),
-            SelectableText(c.name.isEmpty ? '准备中…' : c.name),
+            SelectableText(c.name.isEmpty ? context.l10n.preparing : c.name),
+            if (c.server != null) ...[
+              const SizedBox(height: 20),
+              ConnectionQrCard(
+                qr: ConnectionQr.local(c.server!.localPeer, c.addresses),
+              ),
+            ],
             const SizedBox(height: 20),
-            const Text('手动连接地址', style: TextStyle(fontSize: 13)),
+            Text(
+              context.l10n.connectionAddress,
+              style: TextStyle(fontSize: 13),
+            ),
             const SizedBox(height: 4),
             SelectableText(
-              c.addresses.isEmpty ? '连接 Wi-Fi 后显示地址' : c.addresses.join('\n'),
+              c.addresses.isEmpty
+                  ? context.l10n.addressWhenConnected
+                  : c.addresses.join('\n'),
+              textDirection: c.addresses.isEmpty ? null : TextDirection.ltr,
               style: const TextStyle(fontFamily: 'monospace'),
             ),
             const SizedBox(height: 16),
@@ -337,11 +401,71 @@ class _TransferDashboardState extends State<TransferDashboard> {
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('完成'),
+          child: Text(context.l10n.done),
         ),
       ],
     ),
   );
+
+  Future<void> _scan() async {
+    final qr = await Navigator.of(context).push<ConnectionQr>(
+      MaterialPageRoute(builder: (_) => const QrScannerPage()),
+    );
+    if (qr == null || !mounted || c.busy) return;
+    if (qr.fingerprint == c.identity?.fingerprint) {
+      _message(context.l10n.qrSelf);
+      return;
+    }
+    _message(context.l10n.qrConnecting);
+    try {
+      await c.connectQr(qr);
+    } on Object {
+      if (mounted) _message(context.l10n.qrConnectionFailed);
+    }
+  }
+
+  Widget _connectionActions() {
+    final manual = OutlinedButton.icon(
+      onPressed: c.ready && !c.busy ? _manual : null,
+      icon: const Icon(Icons.add_link, size: 20),
+      label: Text(context.l10n.enterAddress),
+    );
+    if (!c.canScanQr) {
+      return Align(alignment: AlignmentDirectional.centerStart, child: manual);
+    }
+    final secondaryStyle = TextButton.styleFrom(
+      foregroundColor: colors.onSurfaceVariant,
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      textStyle: Theme.of(context).textTheme.labelMedium
+          ?.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
+    );
+    final scanAction = TextButton.icon(
+      style: secondaryStyle,
+      onPressed: c.ready && !c.busy ? _scan : null,
+      icon: const Icon(Icons.qr_code_scanner, size: 18),
+      label: Text(context.l10n.scanQr),
+    );
+    final manualAction = TextButton.icon(
+      style: secondaryStyle,
+      onPressed: c.ready && !c.busy ? _manual : null,
+      icon: const Icon(Icons.add_link, size: 18),
+      label: Text(context.l10n.enterAddress),
+    );
+    if (MediaQuery.sizeOf(context).width >= 600) {
+      return Wrap(spacing: 8, children: [scanAction, manualAction]);
+    }
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: scanAction),
+          const SizedBox(width: 8),
+          Expanded(child: manualAction),
+        ],
+      ),
+    );
+  }
 
   Future<void> _manual() async {
     var entered = '';
@@ -349,7 +473,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
     final address = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('手动连接'),
+        title: Text(context.l10n.manualConnection),
         scrollable: true,
         content: Form(
           key: form,
@@ -359,7 +483,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('在对方设备的「本机信息」中找到地址。'),
+                Text(context.l10n.findPeerAddress),
                 const SizedBox(height: 20),
                 TextFormField(
                   autofocus: true,
@@ -369,13 +493,16 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   enableSuggestions: false,
                   keyboardType: TextInputType.url,
                   onChanged: (value) => entered = value,
-                  decoration: const InputDecoration(
-                    labelText: '设备地址',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.deviceAddress,
                     hintText: '192.168.1.20:45879',
                     hintStyle: TextStyle(fontFamily: 'monospace'),
-                    helperText: '地址与端口之间使用英文冒号 :',
+                    helperText: context.l10n.addressSeparator,
                   ),
-                  validator: (value) => validateManualAddress(value ?? ''),
+                  validator: (value) => validateManualAddress(
+                    value ?? '',
+                    localization: context.l10n,
+                  ),
                   onFieldSubmitted: (_) {
                     if (form.currentState!.validate()) {
                       Navigator.pop(context, normalizeManualAddress(entered));
@@ -389,7 +516,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -397,19 +524,19 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 Navigator.pop(context, normalizeManualAddress(entered));
               }
             },
-            child: const Text('下一步'),
+            child: Text(context.l10n.next),
           ),
         ],
       ),
     );
     if (address == null || !mounted) return;
-    _message('正在连接设备…');
+    _message(context.l10n.connecting);
     try {
       final parts = address.split(':');
       final peer = await TransferClient.probe(parts[0], int.parse(parts[1]));
       if (mounted) await _verify(peer);
-    } on Object catch (error) {
-      if (mounted) _message('连接失败：$error');
+    } on Object {
+      if (mounted) _message(context.l10n.connectionFailed);
     }
   }
 
@@ -483,7 +610,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       const Expanded(child: _Brand()),
                       _settingsButton(),
                       IconButton(
-                        tooltip: '本机信息',
+                        tooltip: context.l10n.localInfo,
                         onPressed: _localInfo,
                         icon: const Icon(Icons.info_outline),
                       ),
@@ -507,14 +634,14 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                '发送到 ${c.selected!.name}',
+                context.l10n.sendToPeer((c.selected!.name).toString()),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
               ),
             ),
             IconButton(
-              tooltip: '收起键盘',
+              tooltip: context.l10n.hideKeyboard,
               onPressed: _textFocus.unfocus,
               icon: const Icon(Icons.keyboard_hide_outlined),
             ),
@@ -531,7 +658,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
   );
 
   Widget _settingsButton() => IconButton(
-    tooltip: '设置',
+    tooltip: context.l10n.settings,
     onPressed: () {
       _textFocus.unfocus();
       Navigator.of(context).push(
@@ -548,7 +675,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
         Icon(
           deviceIcon(c.deviceType),
           size: 22,
-          semanticLabel: deviceTypeLabel(c.deviceType),
+          semanticLabel: deviceTypeLabel(
+            c.deviceType,
+            localization: context.l10n,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -556,14 +686,14 @@ class _TransferDashboardState extends State<TransferDashboard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '本机',
+                context.l10n.thisDevice,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
-                c.ready ? '可被附近设备发现' : '正在启动…',
+                c.ready ? context.l10n.discoverable : context.l10n.starting,
                 style: TextStyle(
                   fontSize: 12,
                   color: c.ready ? colors.tertiary : colors.onSurfaceVariant,
@@ -573,7 +703,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           ),
         ),
         IconButton(
-          tooltip: '本机信息',
+          tooltip: context.l10n.localInfo,
           onPressed: _localInfo,
           icon: const Icon(Icons.info_outline, size: 20),
         ),
@@ -598,12 +728,12 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                '附近设备 ${c.peers.length}',
+                context.l10n.nearbyDevices((c.peers.length).toString()),
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
               ),
             ),
             IconButton(
-              tooltip: '刷新设备',
+              tooltip: context.l10n.refreshDevices,
               onPressed: c.ready ? () => unawaited(c.refreshAddresses()) : null,
               icon: const Icon(Icons.refresh, size: 21),
             ),
@@ -614,7 +744,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              c.starting ? '正在查找附近设备…' : '还没有发现设备',
+              c.starting ? context.l10n.findingDevices : context.l10n.noDevices,
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),
@@ -624,11 +754,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
             child: _peer(peer),
           ),
         const SizedBox(height: 4),
-        TextButton.icon(
-          onPressed: c.ready && !c.busy ? _manual : null,
-          icon: const Icon(Icons.add, size: 20),
-          label: const Text('手动连接'),
-        ),
+        _connectionActions(),
       ],
     );
   }
@@ -663,7 +789,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 _BadgeIcon(
                   deviceIcon(peer.deviceType),
                   size: 38,
-                  semanticLabel: deviceTypeLabel(peer.deviceType),
+                  semanticLabel: deviceTypeLabel(
+                    peer.deviceType,
+                    localization: context.l10n,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -677,8 +806,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       const SizedBox(height: 4),
                       Text(
                         selected
-                            ? (discovered ? '已核对 · 已选择' : '已核对 · 未发现')
-                            : '未核对',
+                            ? (discovered
+                                  ? context.l10n.verifiedSelected
+                                  : context.l10n.verifiedOffline)
+                            : context.l10n.unverified,
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.onSurfaceVariant,
@@ -689,7 +820,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 ),
                 if (selected)
                   Padding(
-                    padding: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsetsDirectional.only(start: 4),
                     child: Icon(Icons.check, size: 18, color: colors.primary),
                   ),
               ],
@@ -714,7 +845,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                c.receiving ? '接收内容' : '发送内容',
+                c.receiving
+                    ? context.l10n.receivingContent
+                    : context.l10n.sendingContent,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
@@ -723,7 +856,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         ),
         const SizedBox(height: 4),
         Text(
-          '文件与文本在设备之间直接传输。',
+          context.l10n.directTransfer,
           style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 28),
@@ -757,7 +890,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
         _emptyState()
       else ...[
         Text(
-          '发送到${desktop ? '' : ' ${c.selected!.name}'}',
+          context.l10n.sendTo(
+            (desktop ? '' : ' ${c.selected!.name}').toString(),
+          ),
           style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
         ),
         if (desktop)
@@ -767,7 +902,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
               children: [
                 _BadgeIcon(
                   deviceIcon(c.selected!.deviceType),
-                  semanticLabel: deviceTypeLabel(c.selected!.deviceType),
+                  semanticLabel: deviceTypeLabel(
+                    c.selected!.deviceType,
+                    localization: context.l10n,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -789,7 +927,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              '核对码已确认',
+                              context.l10n.codeVerified,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colors.tertiary,
@@ -802,7 +940,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   ),
                 ),
                 IconButton(
-                  tooltip: '查看设备核对码',
+                  tooltip: context.l10n.viewVerification,
                   onPressed: c.busy ? null : () => _verify(c.selected!),
                   icon: const Icon(Icons.info_outline, size: 20),
                 ),
@@ -812,16 +950,16 @@ class _TransferDashboardState extends State<TransferDashboard> {
         else
           const SizedBox(height: 12),
         SegmentedButton<TransferKind>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: TransferKind.file,
               icon: Icon(Icons.insert_drive_file_outlined),
-              label: Text('文件'),
+              label: Text(context.l10n.file),
             ),
             ButtonSegment(
               value: TransferKind.text,
               icon: Icon(Icons.notes_outlined),
-              label: Text('文本'),
+              label: Text(context.l10n.text),
             ),
           ],
           selected: {c.sendKind},
@@ -840,15 +978,15 @@ class _TransferDashboardState extends State<TransferDashboard> {
       if (c.receiving || c.chosenFile != null)
         Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: _note(Icons.lock_outline, '内容仅在这两台设备之间传输。'),
+          child: _note(Icons.lock_outline, context.l10n.betweenDevices),
         ),
       const SizedBox(height: 28),
       const Divider(height: 1),
       const SizedBox(height: 20),
       _history(),
       const SizedBox(height: 24),
-      _note(Icons.lock_outline, '局域网直连 · 加密传输'),
-      if (!c.sending && !c.receiving && c.status.startsWith('已'))
+      _note(Icons.lock_outline, context.l10n.encryptedLan),
+      if (!c.sending && !c.receiving && c.ready)
         Padding(
           padding: const EdgeInsets.only(top: 10),
           child: Semantics(
@@ -874,26 +1012,20 @@ class _TransferDashboardState extends State<TransferDashboard> {
         const SizedBox(height: 16),
         Text(
           c.starting
-              ? '正在准备本机身份…'
+              ? context.l10n.preparingIdentity
               : c.peers.isEmpty
-              ? '还没有发现附近设备'
-              : '选择一台设备开始',
+              ? context.l10n.noNearbyDevices
+              : context.l10n.selectDevice,
           style: Theme.of(context).textTheme.titleMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           c.peers.isEmpty
-              ? '让两台设备连接同一 Wi-Fi，\n并在对方设备打开 Dukto2。'
-              : '点击设备，核对屏幕上的身份码。',
+              ? context.l10n.qrInstructions
+              : context.l10n.selectVerifyHint,
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.onSurfaceVariant),
-        ),
-        const SizedBox(height: 20),
-        OutlinedButton.icon(
-          onPressed: c.ready && !c.busy ? _manual : null,
-          icon: const Icon(Icons.add_link),
-          label: const Text('手动输入地址'),
         ),
       ],
     ),
@@ -902,16 +1034,16 @@ class _TransferDashboardState extends State<TransferDashboard> {
   Future<void> _copyText(String text) async {
     try {
       await Clipboard.setData(ClipboardData(text: text));
-      if (mounted) _message('已复制文本');
+      if (mounted) _message(context.l10n.textCopied);
     } on Object {
-      if (mounted) _message('无法复制，请重试');
+      if (mounted) _message(context.l10n.copyFailed);
     }
   }
 
   Future<void> _showText(TransferReceipt receipt) => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('文本内容'),
+      title: Text(context.l10n.textContent),
       scrollable: true,
       content: SizedBox(
         width: 480,
@@ -923,8 +1055,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 receipt.text!.length > maxTextPreviewCharacters) ...[
               Text(
                 receipt.textTruncated
-                    ? '以下为预览。文本总大小 ${formatBytes(receipt.size)}，完整内容请打开文件查看。'
-                    : '以下为预览，可使用「复制文本」复制完整内容。',
+                    ? context.l10n.filePreviewHint(
+                        (formatBytes(
+                          receipt.size,
+                          locale: context.l10n.localeName,
+                        )).toString(),
+                      )
+                    : context.l10n.textPreviewHint,
               ),
               const SizedBox(height: 12),
             ],
@@ -935,17 +1072,21 @@ class _TransferDashboardState extends State<TransferDashboard> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child: Text(context.l10n.close),
         ),
         if (receipt.file != null || receipt.contentUri != null)
           TextButton(
             onPressed: () => c.export(receipt),
-            child: const Text('打开完整文本'),
+            child: Text(context.l10n.openFullText),
           ),
         FilledButton.icon(
           onPressed: () => _copyText(receipt.text!),
           icon: const Icon(Icons.content_copy),
-          label: Text(receipt.textTruncated ? '复制预览' : '复制文本'),
+          label: Text(
+            receipt.textTruncated
+                ? context.l10n.copyPreview
+                : context.l10n.copyText,
+          ),
         ),
       ],
     ),
@@ -957,7 +1098,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
       if (!mounted || c.busy) return;
       final pasted = data?.text;
       if (pasted == null || pasted.isEmpty) {
-        _message('剪贴板中没有文本');
+        _message(context.l10n.emptyClipboard);
         return;
       }
       final selection = _text.selection;
@@ -965,7 +1106,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
       final end = selection.isValid ? selection.end : _text.text.length;
       final next = _text.text.replaceRange(start, end, pasted);
       if (utf8.encode(next).length > maxInlineTextBytes) {
-        setState(() => _textIssue = '编辑区最多 1 MiB，大文本请从文件载入（上限 16 MiB）');
+        setState(() => _textIssue = true);
         return;
       }
       _text.value = TextEditingValue(
@@ -973,11 +1114,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
         selection: TextSelection.collapsed(offset: start + pasted.length),
       );
       setState(() {
-        _textIssue = null;
+        _textIssue = false;
         c.sendPhase = SendPhase.idle;
       });
     } on Object {
-      if (mounted) _message('无法读取剪贴板，请重试');
+      if (mounted) _message(context.l10n.clipboardFailed);
     }
   }
 
@@ -999,13 +1140,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
       keyboardType: TextInputType.multiline,
       inputFormatters: [LengthLimitingTextInputFormatter(maxInlineTextBytes)],
       decoration: InputDecoration(
-        labelText: '文本内容',
-        hintText: '输入文字或粘贴链接',
+        labelText: context.l10n.textContent,
+        hintText: context.l10n.textPlaceholder,
         alignLabelWithHint: true,
-        errorText: tooLarge ? '编辑区最多 1 MiB，大文本请从文件载入（上限 16 MiB）' : _textIssue,
+        errorText: (tooLarge || _textIssue) ? context.l10n.editorLimit : null,
       ),
       onChanged: (_) => setState(() {
-        _textIssue = null;
+        _textIssue = false;
         c.sendPhase = SendPhase.idle;
       }),
     ),
@@ -1031,7 +1172,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
             _FileLabel(name: c.chosenTextFile!.name, size: c.chosenTextSize!),
             const SizedBox(height: 12),
             Text(
-              '已载入 UTF-8 文本文件，完整内容将流式传输。',
+              context.l10n.textFileLoaded,
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
@@ -1043,25 +1184,32 @@ class _TransferDashboardState extends State<TransferDashboard> {
           if (!expanded) ...[
             const SizedBox(height: 8),
             Text(
-              '文本上限 16 MiB · 对方确认后接收',
+              context.l10n.textLimit,
               style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
             ),
           ],
           if (!supported) ...[
             const SizedBox(height: 8),
-            const Text('对方版本暂不支持文本，请先更新对方应用。'),
+            Text(context.l10n.textUnsupported),
           ],
           if (c.sending) ...[
             const SizedBox(height: 16),
             const LinearProgressIndicator(),
             const SizedBox(height: 8),
-            Text(phase == SendPhase.waiting ? '等待对方接收文本…' : '正在发送并校验文本…'),
+            Text(
+              phase == SendPhase.waiting
+                  ? context.l10n.waitingText
+                  : context.l10n.sendingText,
+            ),
           ] else if (!expanded && phase == SendPhase.sent) ...[
             const SizedBox(height: 12),
-            Text('文本已发送，对方校验通过', style: TextStyle(color: colors.tertiary)),
+            Text(
+              context.l10n.textSent,
+              style: TextStyle(color: colors.tertiary),
+            ),
           ] else if (!expanded && phase == SendPhase.cancelled) ...[
             const SizedBox(height: 12),
-            const Text('已取消发送，文本已保留'),
+            Text(context.l10n.textCancelled),
           ],
           const SizedBox(height: 8),
           Row(
@@ -1069,7 +1217,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
             children: [
               if (!c.sending) ...[
                 IconButton(
-                  tooltip: '粘贴文本',
+                  tooltip: context.l10n.pasteText,
                   constraints: const BoxConstraints(
                     minWidth: 48,
                     minHeight: 48,
@@ -1079,7 +1227,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 ),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(
-                  tooltip: '更多文本操作',
+                  tooltip: context.l10n.moreTextActions,
                   enabled: !c.busy,
                   requestFocus: expanded ? false : null,
                   offset: expanded ? const Offset(0, -112) : Offset.zero,
@@ -1087,11 +1235,14 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   constraints: const BoxConstraints(minWidth: 200),
                   icon: const Icon(Icons.more_horiz),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'load', child: Text('载入文本文件')),
+                    PopupMenuItem(
+                      value: 'load',
+                      child: Text(context.l10n.loadTextFile),
+                    ),
                     PopupMenuItem(
                       value: 'clear',
                       enabled: fromFile || _text.text.isNotEmpty,
-                      child: const Text('清空内容'),
+                      child: Text(context.l10n.clearText),
                     ),
                   ],
                   onSelected: (action) {
@@ -1101,7 +1252,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       setState(() {
                         c.clearTextFile();
                         _text.clear();
-                        _textIssue = null;
+                        _textIssue = false;
                         c.sendPhase = SendPhase.idle;
                       });
                     }
@@ -1113,11 +1264,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
               if (c.sending)
                 OutlinedButton(
                   onPressed: c.cancelTransfer,
-                  child: const Text('取消传输'),
+                  child: Text(context.l10n.cancelTransfer),
                 )
               else
                 Tooltip(
-                  message: '发送文本',
+                  message: context.l10n.sendText,
                   child: FilledButton.icon(
                     key: const ValueKey('send-text'),
                     onPressed:
@@ -1132,7 +1283,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                           }
                         : null,
                     icon: const Icon(Icons.near_me_outlined, size: 18),
-                    label: const Text('发送'),
+                    label: Text(context.l10n.send),
                   ),
                 ),
             ],
@@ -1157,14 +1308,14 @@ class _TransferDashboardState extends State<TransferDashboard> {
           color: colors.onSurfaceVariant,
         ),
         const SizedBox(height: 12),
-        const Text(
-          '选择文件，发送给对方',
+        Text(
+          context.l10n.chooseFileHint,
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Text(
-          '对方确认接收后开始传输',
+          context.l10n.approvalBeforeTransfer,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
         ),
@@ -1172,11 +1323,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
         FilledButton.icon(
           onPressed: c.ready && !c.busy ? c.pickFile : null,
           icon: const Icon(Icons.add, size: 20),
-          label: Text(c.picking ? '正在选择…' : '选择文件'),
+          label: Text(
+            c.picking ? context.l10n.picking : context.l10n.chooseFiles,
+          ),
         ),
         const SizedBox(height: 14),
         Text(
-          '支持多选 · 按顺序发送',
+          context.l10n.multiSelectHint,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         ),
@@ -1191,7 +1344,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         ? c.receivingOffer?.size ?? p?.total ?? 0
         : c.chosenSize ?? 0;
     final name = incoming
-        ? c.receivingOffer?.name ?? p?.name ?? '接收文件'
+        ? c.receivingOffer?.name ?? p?.name ?? context.l10n.receiveFile
         : c.chosenFile!.name;
     final fraction = total == 0 ? 1.0 : (bytes / total).clamp(0.0, 1.0);
     final elapsed = c.transferStarted == null
@@ -1202,27 +1355,35 @@ class _TransferDashboardState extends State<TransferDashboard> {
     final phaseLabel = incoming
         ? (p == null
               ? c.receivingBatchRemaining > 0
-                    ? '等待本批文件上传…'
-                    : '等待发送方上传…'
+                    ? context.l10n.waitingBatch
+                    : context.l10n.waitingUpload
               : bytes == total
-              ? '正在校验文件…'
-              : '正在接收')
+              ? context.l10n.verifyingFile
+              : context.l10n.receiving)
         : switch (phase) {
-            SendPhase.idle || SendPhase.ready => '准备就绪',
-            SendPhase.waiting => '等待对方接收',
-            SendPhase.uploading => '正在发送',
-            SendPhase.verifying => '等待对方校验…',
-            SendPhase.sent => '已发送，校验通过',
-            SendPhase.cancelled => '已取消发送',
-            SendPhase.failed => '发送失败，可重新发送',
+            SendPhase.idle || SendPhase.ready => context.l10n.ready,
+            SendPhase.waiting => context.l10n.waitingReceiver,
+            SendPhase.uploading => context.l10n.sending,
+            SendPhase.verifying => context.l10n.waitingVerification,
+            SendPhase.sent => context.l10n.sentVerified,
+            SendPhase.cancelled => context.l10n.sendCancelled,
+            SendPhase.failed => context.l10n.sendFailedRetry,
           };
     final batch = !incoming && c.files.length > 1;
     final label = batch
         ? phase == SendPhase.sent
-              ? '全部已发送，校验通过'
+              ? context.l10n.batchSent
               : active
-              ? '第 ${c.fileIndex + 1} / ${c.files.length} 项 · $phaseLabel'
-              : '${c.completedFiles} / ${c.files.length} 项已发送 · $phaseLabel'
+              ? context.l10n.batchCurrent(
+                  (c.fileIndex + 1).toString(),
+                  (c.files.length).toString(),
+                  (phaseLabel).toString(),
+                )
+              : context.l10n.batchCompleted(
+                  (c.completedFiles).toString(),
+                  (c.files.length).toString(),
+                  (phaseLabel).toString(),
+                )
         : phaseLabel;
     final statusColor = phase == SendPhase.failed && !incoming
         ? colors.error
@@ -1242,13 +1403,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
             children: [
               Expanded(
                 child: _FileLabel(
-                  name: batch ? '${c.files.length} 个文件' : name,
+                  name: batch ? context.l10n.fileCount(c.files.length) : name,
                   size: batch ? c.totalFileBytes : total,
                 ),
               ),
               if (!active)
                 IconButton(
-                  tooltip: '移除已选文件',
+                  tooltip: context.l10n.removeFiles,
                   onPressed: c.busy ? null : c.clearFile,
                   icon: const Icon(Icons.close, size: 20),
                 ),
@@ -1282,7 +1443,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '${item.file.name} · ${formatBytes(item.size)}${item.sent ? ' · 已发送' : ''}',
+                            '${item.file.name} · ${formatBytes(item.size, locale: context.l10n.localeName)}${item.sent ? ' · ${context.l10n.sent}' : ''}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1296,7 +1457,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       ),
                       if (!active)
                         IconButton(
-                          tooltip: '移除 ${item.file.name}',
+                          tooltip: context.l10n.removeFile(
+                            (item.file.name).toString(),
+                          ),
                           onPressed: c.busy ? null : () => c.removeFile(index),
                           icon: const Icon(Icons.close, size: 18),
                         ),
@@ -1348,7 +1511,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
               value: p == null ? null : fraction,
               minHeight: 5,
               borderRadius: BorderRadius.circular(8),
-              semanticsLabel: incoming ? '接收进度' : '发送进度',
+              semanticsLabel: incoming
+                  ? context.l10n.receiveProgress
+                  : context.l10n.sendProgress,
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -1357,7 +1522,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
               runSpacing: 4,
               children: [
                 Text(
-                  '${formatBytes(bytes)} / ${formatBytes(total)}',
+                  '${formatBytes(bytes, locale: context.l10n.localeName)} / ${formatBytes(total, locale: context.l10n.localeName)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.onSurfaceVariant,
@@ -1365,7 +1530,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 ),
                 if (p != null && elapsed > .2)
                   Text(
-                    '${formatBytes((bytes / elapsed).round())}/s',
+                    '${formatBytes((bytes / elapsed).round(), locale: context.l10n.localeName)}/s',
                     style: TextStyle(
                       fontSize: 12,
                       color: colors.onSurfaceVariant,
@@ -1376,7 +1541,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           ],
           const SizedBox(height: 20),
           Align(
-            alignment: Alignment.centerRight,
+            alignment: AlignmentDirectional.centerEnd,
             child: Wrap(
               alignment: WrapAlignment.end,
               spacing: 8,
@@ -1385,27 +1550,27 @@ class _TransferDashboardState extends State<TransferDashboard> {
                 if (active)
                   OutlinedButton(
                     onPressed: c.cancelTransfer,
-                    child: const Text('取消传输'),
+                    child: Text(context.l10n.cancelTransfer),
                   )
                 else if (phase == SendPhase.sent)
                   FilledButton(
                     onPressed: c.busy ? null : c.clearFile,
-                    child: const Text('发送其他文件'),
+                    child: Text(context.l10n.sendOtherFiles),
                   )
                 else ...[
                   TextButton(
                     onPressed: c.busy ? null : c.pickFile,
-                    child: const Text('重新选择'),
+                    child: Text(context.l10n.chooseAgain),
                   ),
                   FilledButton.icon(
                     onPressed: c.ready && !c.busy ? c.sendFile : null,
                     icon: const Icon(Icons.near_me_outlined, size: 18),
                     label: Text(
                       c.completedFiles > 0
-                          ? '继续发送'
+                          ? context.l10n.continueSending
                           : phase == SendPhase.failed
-                          ? '重新发送'
-                          : '发送文件',
+                          ? context.l10n.resend
+                          : context.l10n.sendFiles,
                     ),
                   ),
                 ],
@@ -1435,8 +1600,8 @@ class _TransferDashboardState extends State<TransferDashboard> {
             spacing: 16,
             runSpacing: 8,
             children: [
-              const Text(
-                '最近传输',
+              Text(
+                context.l10n.recentTransfers,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
               if (devices.isNotEmpty)
@@ -1453,25 +1618,27 @@ class _TransferDashboardState extends State<TransferDashboard> {
                         child: DropdownButton<String>(
                           key: const ValueKey('history-device-filter'),
                           value: selectedDevice,
-                          hint: const Text(
-                            '全部设备',
+                          hint: Text(
+                            context.l10n.allDevices,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           selectedItemBuilder: (context) => [
-                            const Align(
-                              alignment: Alignment.centerLeft,
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
                               child: Text(
-                                '全部设备',
+                                context.l10n.allDevices,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             for (final device in devices)
                               Align(
-                                alignment: Alignment.centerLeft,
+                                alignment: AlignmentDirectional.centerStart,
                                 child: Text(
-                                  device.isEmpty ? '另一台设备' : device,
+                                  device.isEmpty
+                                      ? context.l10n.otherDevice
+                                      : device,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -1488,11 +1655,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
                           onChanged: (value) =>
                               setState(() => _historyDevice = value),
                           items: [
-                            const DropdownMenuItem<String>(
+                            DropdownMenuItem<String>(
                               value: null,
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 12),
-                                child: Text('全部设备'),
+                                child: Text(context.l10n.allDevices),
                               ),
                             ),
                             for (final device in devices)
@@ -1503,7 +1670,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
                                     vertical: 12,
                                   ),
                                   child: Text(
-                                    device.isEmpty ? '另一台设备' : device,
+                                    device.isEmpty
+                                        ? context.l10n.otherDevice
+                                        : device,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1521,7 +1690,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
         const SizedBox(height: 12),
         if (c.history.isEmpty)
           Text(
-            '完成的文件与文本会显示在这里。',
+            context.l10n.emptyHistory,
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         for (final entry in entries.take(20)) _historyEntry(entry),
@@ -1530,9 +1699,13 @@ class _TransferDashboardState extends State<TransferDashboard> {
   }
 
   Widget _historyEntry(HistoryEntry entry) {
-    final name = entry.receipt.text == null ? entry.receipt.name : '文本消息';
-    final peer = entry.peerName.isEmpty ? '另一台设备' : entry.peerName;
-    final status = entry.incoming ? '已接收' : '已发送';
+    final name = entry.receipt.text == null
+        ? entry.receipt.name
+        : context.l10n.textMessage;
+    final peer = entry.peerName.isEmpty
+        ? context.l10n.otherDevice
+        : entry.peerName;
+    final status = entry.incoming ? context.l10n.received : context.l10n.sent;
     final secondary = TextStyle(fontSize: 12, color: colors.onSurfaceVariant);
     final title = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1549,7 +1722,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
           ),
         ),
         const SizedBox(width: 12),
-        Text(formatBytes(entry.receipt.size), style: secondary),
+        Text(
+          formatBytes(entry.receipt.size, locale: context.l10n.localeName),
+          style: secondary,
+        ),
       ],
     );
     final device = Tooltip(
@@ -1571,28 +1747,39 @@ class _TransferDashboardState extends State<TransferDashboard> {
     );
     final time = Tooltip(
       message: entry.time.toLocal().toString(),
-      child: Text(formatHistoryTime(entry.time), style: secondary),
+      child: Text(
+        formatHistoryTime(entry.time, localization: context.l10n),
+        style: secondary,
+      ),
     );
     final duration = entry.elapsed == null
         ? null
-        : Text('耗时 ${formatElapsed(entry.elapsed!)}', style: secondary);
+        : Text(
+            context.l10n.durationLabel(
+              (formatElapsed(
+                entry.elapsed!,
+                localization: context.l10n,
+              )).toString(),
+            ),
+            style: secondary,
+          );
     final action = entry.receipt.text != null
         ? TextButton(
             key: const ValueKey('history-text-actions'),
             style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
             onPressed: () => _showText(entry.receipt),
-            child: const Text('查看文本', maxLines: 1),
+            child: Text(context.l10n.viewText, maxLines: 1),
           )
         : Tooltip(
             message: c.canOpenHistoryDirectory(entry)
-                ? '打开本机文件所在目录'
-                : '此记录没有可用的本机文件位置',
+                ? context.l10n.openFolderHint
+                : context.l10n.noLocalFile,
             child: TextButton(
               style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
               onPressed: c.canOpenHistoryDirectory(entry)
                   ? () => c.openHistoryDirectory(entry)
                   : null,
-              child: const Text('打开目录', maxLines: 1),
+              child: Text(context.l10n.openFolder, maxLines: 1),
             ),
           );
     return Padding(
@@ -1712,6 +1899,7 @@ class _VerificationCode extends StatelessWidget {
       ),
       child: SelectableText(
         text,
+        textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontFamily: 'monospace',
@@ -1790,7 +1978,7 @@ class _FileLabel extends StatelessWidget {
             Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(
-              formatBytes(size),
+              formatBytes(size, locale: context.l10n.localeName),
               style: TextStyle(
                 fontSize: 13,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

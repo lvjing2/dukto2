@@ -6,8 +6,13 @@ As of 2026-10-19. Current-workspace checks and prior device tests are separate; 
 
 ## Current source
 
-- `tool/check.sh`: 69 application tests, 46 core tests and 4 script tests passed; both analyzers reported no issues.
-- macOS debug and iOS simulator debug builds passed.
+- `tool/check.sh`: 116 application tests, 49 core tests and 14 script tests passed; both analyzers reported no issues.
+- Current macOS, Android and iOS simulator multilingual debug builds passed. UI acceptance and previous simulator transfer checks are distinguished below.
+- QR dialogs cover ten languages, light/dark themes, large text and Arabic RTL layout. QR connection tests cover full fingerprint and device ID matching, rejection of mismatched identities, and direct peer selection without a second code comparison. File reception still requires separate consent.
+- REDMI K90 physically scanned the Mac screen and directly selected the verified Mac without a second code comparison. Actual GUI file selection, sending and receiver consent then transferred 1 MiB + 17 bytes in each direction. Independent receiver-side sizes and SHA-256 hashes matched both sources across routable private subnets. Large files and background operation were not repeated in this round.
+- Final compact connection actions and the Manual connection label were installed on Mac and Android. The Mac scanner page opens and returns; the iOS simulator build passed. Actual camera decoding on Mac and physical iPhone / iPad scanning remain unverified.
+- UI acceptance: all ten languages were selected on iPhone. Arabic survived a force-close and relaunch on iPhone; English survived an update and cold launch on iPad. German and Arabic landscape layouts and English portrait layout were checked on iPad. Language changes and rotation retained a numeric text draft and the selected peer. Both devices were restored to system language.
+- Fixed reversed Latin byte units found in Arabic simulator layouts by isolating each number/unit pair as LTR. A text-layout regression covers B, KB, MB and GB; the rebuilt app was visually rechecked on both simulators. Manual addresses and device codes remain LTR. Current Chinese and Arabic captures are indexed under [screenshots](../screenshots/README.en.md). This round did not add cross-device transfer tests.
 - iPhone 18 Pro and iPad Pro 13-inch (M5), iOS 27.0 simulators: each approved one batch containing a UTF-8 file, empty file and 4 MiB binary. Including retries and pacing controls, all nine saved files independently matched source size and SHA-256.
 - Cancelling an iPhone receive produced no success entry or temporary / pending residue. Resending succeeded, and diagnostics retained a structured upload-stage cancellation.
 - Both simulators sent text through the Flutter UI; viewing, copying and pasting preserved exact content and hashes in both directions. New history entries contained time and duration.
@@ -34,4 +39,4 @@ Native Release CI built and packaged five platforms. See [Release CI](release-ci
 
 ## Revalidation
 
-Run `./tool/check.sh` for shared code. For device tests, compare the receiver's actual code, select and approve in the UI, and independently read the saved length and SHA-256. Large-file / background changes should also cover cancellation, network loss, process termination, resource release and a fresh send. Report OS, architecture and the actual tested version.
+Run `./tool/check.sh` for shared code. For device tests, verify identity through the actual screen QR code or compare the receiver's code manually, select and approve in the UI, and independently read the saved length and SHA-256. Large-file / background changes should also cover cancellation, network loss, process termination, resource release and a fresh send. Report OS, architecture and the actual tested version.

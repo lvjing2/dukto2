@@ -1,18 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_language.dart';
+export 'app_language.dart';
+
 enum AppAppearance { system, light, dark }
 
 class AppSettings {
   final AppAppearance appearance;
+  final AppLanguage language;
   final bool completionNotifications;
   const AppSettings({
     this.appearance = AppAppearance.system,
+    this.language = AppLanguage.system,
     this.completionNotifications = true,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> data) {
     return AppSettings(
+      language: AppLanguage.parse(data['language']),
       appearance: AppAppearance.values.firstWhere(
         (value) => value.name == data['appearance'],
         orElse: () => AppAppearance.system,
@@ -25,9 +31,11 @@ class AppSettings {
 
   AppSettings copyWith({
     AppAppearance? appearance,
+    AppLanguage? language,
     bool? completionNotifications,
   }) => AppSettings(
     appearance: appearance ?? this.appearance,
+    language: language ?? this.language,
     completionNotifications:
         completionNotifications ?? this.completionNotifications,
   );
@@ -35,6 +43,7 @@ class AppSettings {
   Map<String, dynamic> toJson() => {
     'version': 1,
     'appearance': appearance.name,
+    'language': language.tag,
     'completionNotifications': completionNotifications,
   };
 }

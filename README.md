@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Cross-platform LAN file and text sharing, rebuilt with Flutter and Dart to carry forward Dukto's simple, direct experience. No account or internet relay is required. Verify the receiving device before sending; transferred content is checked before completion.
 
-The source is a **0.1.6+7 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; application localization is planned and is not yet implemented.
+The source is a **0.1.6+7 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
 | Platform | Verified | Not yet covered |
 | --- | --- | --- |
@@ -101,6 +101,8 @@ On mobile, focusing the editor switches to a compact keyboard layout; closing th
 ## Transfer behavior and limits
 
 - HTTPS confirms UDP / Bonjour candidates; peers are deduplicated by certificate and removed when stale. Interface changes refresh discovery. Bounded private IPv4 /24 probing and manual IPv4 remain available when multicast fails.
+- For reachable routed subnets, manually connect and compare codes once. Up to 32 confirmed endpoints are cached locally and retried after restart against their original identities. Unicast announcements allow reciprocal discovery where UDP and reverse HTTPS are permitted. Changed addresses or network isolation may still require manual connection. First-time discovery across subnets requires network discovery forwarding or an additional discovery service; the app does not scan entire private address ranges.
+- To connect without typing an IP, show the QR code in the other device's information panel and choose Scan to connect. Android, Mac and iPhone / iPad provide the scanner. It tries the private IPv4 endpoints and matches the full QR certificate fingerprint before connecting directly, without a second code comparison. File reception still requires consent. Different subnets on the same network work when direct communication is allowed. QR display stays in device information; the home screen has compact Scan to connect and Manual connection actions. Android bundles the scanner model for offline use. Camera access is used only on the scan page. See [validation coverage](docs/en/validation.md) for Apple hardware limits.
 - Each installation has its own TLS identity. After code comparison, the sender pins the full certificate fingerprint.
 - Single-file, batch and text transfers use bounded streams, progress, cancellation, explicit approval, size checks, SHA-256 and temporary targets committed only after validation.
 - The UI adapts between desktop columns and mobile layouts, supports light / dark themes and requires foreground approval. Back / Escape declines the current request.

@@ -1,3 +1,5 @@
+import 'localization.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -24,9 +26,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _about() => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('关于 Dukto2'),
+      title: Text(context.l10n.about),
       scrollable: true,
-      content: const SizedBox(
+      content: SizedBox(
         width: 360,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -37,11 +39,11 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
-            Text('致敬 Dukto 与原作者 Emanuele Colombo，感谢 xuzhen 及社区贡献者的持续维护。'),
+            Text(context.l10n.aboutTribute),
             SizedBox(height: 16),
-            Text('由 OpenAI Codex 在人工指导下创作代码、UI、测试与文档。'),
+            Text(context.l10n.aboutAi),
             SizedBox(height: 16),
-            Text('一个希望延续 Dukto 简单、直接体验的独立重写项目。'),
+            Text(context.l10n.aboutProject),
           ],
         ),
       ),
@@ -49,15 +51,51 @@ class _SettingsPageState extends State<SettingsPage> {
         TextButton(
           onPressed: () =>
               showLicensePage(context: context, applicationName: 'Dukto2'),
-          child: const Text('第三方许可'),
+          child: Text(context.l10n.licenses),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child: Text(context.l10n.close),
         ),
       ],
     ),
   );
+
+  Future<void> _chooseLanguage() async {
+    final selected = await showDialog<AppLanguage>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(context.l10n.language),
+        children: [
+          for (final language in AppLanguage.values)
+            SimpleDialogOption(
+              key: ValueKey('language-${language.tag}'),
+              onPressed: () => Navigator.pop(context, language),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        language == AppLanguage.system
+                            ? context.l10n.followSystem
+                            : language.nativeName,
+                        textDirection: language == AppLanguage.ar
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                      ),
+                    ),
+                    if (language == c.settings.language)
+                      const Icon(Icons.check, size: 20),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (selected != null && mounted) await c.setLanguage(selected);
+  }
 
   Widget _section(String title, IconData icon, List<Widget> children) {
     final colors = Theme.of(context).colorScheme;
@@ -103,15 +141,15 @@ class _SettingsPageState extends State<SettingsPage> {
         fontSize: 13,
       );
       final permission = switch (c.notificationPermission) {
-        'granted' => '系统通知已允许',
-        'denied' => '系统通知已关闭',
-        'notDetermined' => '尚未授权',
-        'managed' => '通知由系统管理',
-        'unavailable' => '暂时无法读取系统通知状态',
-        _ => '正在检查系统通知…',
+        'granted' => context.l10n.notificationsAllowed,
+        'denied' => context.l10n.notificationsDenied,
+        'notDetermined' => context.l10n.notificationsUndetermined,
+        'managed' => context.l10n.notificationsManaged,
+        'unavailable' => context.l10n.notificationsUnavailable,
+        _ => context.l10n.notificationsChecking,
       };
       return Scaffold(
-        appBar: AppBar(title: const Text('设置')),
+        appBar: AppBar(title: Text(context.l10n.settings)),
         body: SafeArea(
           top: false,
           child: Align(
@@ -137,67 +175,94 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (c.busy && !c.picking)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: Text('传输中，暂不可更改接收目录。', style: secondary),
+                      child: Text(context.l10n.folderBusy, style: secondary),
                     ),
-                  _section('接收位置', Icons.folder_open_outlined, [
-                    SelectableText(c.receiveLocation),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        TextButton.icon(
-                          onPressed: canChangeFolder && c.canChooseReceiveFolder
-                              ? c.chooseReceiveFolder
-                              : null,
-                          icon: const Icon(
-                            Icons.folder_open_outlined,
-                            size: 20,
-                          ),
-                          label: const Text('更改目录'),
-                        ),
-                        if (c.customReceiveFolder)
-                          TextButton(
-                            onPressed: canChangeFolder
-                                ? c.resetReceiveFolder
+                  _section(
+                    context.l10n.receiveLocation,
+                    Icons.folder_open_outlined,
+                    [
+                      SelectableText(c.receiveLocation),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          TextButton.icon(
+                            onPressed:
+                                canChangeFolder && c.canChooseReceiveFolder
+                                ? c.chooseReceiveFolder
                                 : null,
-                            child: const Text('恢复默认'),
+                            icon: const Icon(
+                              Icons.folder_open_outlined,
+                              size: 20,
+                            ),
+                            label: Text(context.l10n.changeFolder),
                           ),
-                      ],
-                    ),
-                  ]),
-                  _section('设备名称', Icons.devices_outlined, [
-                    Text(c.name.isEmpty ? '正在读取设备名称…' : c.name),
-                  ]),
-                  _section('通知', Icons.notifications_outlined, [
-                    SwitchListTile.adaptive(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('传输完成通知'),
-                      value: c.settings.completionNotifications,
-                      onChanged: enabled
-                          ? (value) =>
-                                unawaited(c.setCompletionNotifications(value))
-                          : null,
-                    ),
-                    if (c.notificationPermission != 'granted')
-                      Text(permission, style: secondary),
-                    if (c.notificationPermission == 'notDetermined')
-                      TextButton(
-                        onPressed: enabled ? c.requestNotifications : null,
-                        child: const Text('允许通知'),
-                      )
-                    else if (c.canOpenNotificationSettings &&
-                        (c.notificationPermission == 'granted' ||
-                            c.notificationPermission == 'denied' ||
-                            c.notificationPermission == 'managed'))
-                      TextButton(
-                        onPressed: c.openNotificationSettings,
-                        child: const Text('系统通知设置'),
+                          if (c.customReceiveFolder)
+                            TextButton(
+                              onPressed: canChangeFolder
+                                  ? c.resetReceiveFolder
+                                  : null,
+                              child: Text(context.l10n.restoreDefault),
+                            ),
+                        ],
                       ),
-                    if (Platform.isAndroid &&
-                        !c.settings.completionNotifications)
-                      Text('传输中的状态通知仍会保留。', style: secondary),
+                    ],
+                  ),
+                  _section(context.l10n.deviceName, Icons.devices_outlined, [
+                    Text(
+                      c.name.isEmpty ? context.l10n.readingDeviceName : c.name,
+                    ),
                   ]),
-                  _section('外观', Icons.palette_outlined, [
+                  _section(
+                    context.l10n.notifications,
+                    Icons.notifications_outlined,
+                    [
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(context.l10n.completionNotifications),
+                        value: c.settings.completionNotifications,
+                        onChanged: enabled
+                            ? (value) =>
+                                  unawaited(c.setCompletionNotifications(value))
+                            : null,
+                      ),
+                      if (c.notificationPermission != 'granted')
+                        Text(permission, style: secondary),
+                      if (c.notificationPermission == 'notDetermined')
+                        TextButton(
+                          onPressed: enabled ? c.requestNotifications : null,
+                          child: Text(context.l10n.allowNotifications),
+                        )
+                      else if (c.canOpenNotificationSettings &&
+                          (c.notificationPermission == 'granted' ||
+                              c.notificationPermission == 'denied' ||
+                              c.notificationPermission == 'managed'))
+                        TextButton(
+                          onPressed: c.openNotificationSettings,
+                          child: Text(context.l10n.systemNotificationSettings),
+                        ),
+                      if (Platform.isAndroid &&
+                          !c.settings.completionNotifications)
+                        Text(
+                          context.l10n.ongoingNotificationHint,
+                          style: secondary,
+                        ),
+                    ],
+                  ),
+                  _section(context.l10n.language, Icons.language_outlined, [
+                    ListTile(
+                      key: const ValueKey('settings-language'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        c.settings.language == AppLanguage.system
+                            ? context.l10n.followSystem
+                            : c.settings.language.nativeName,
+                      ),
+                      trailing: const Icon(Icons.expand_more),
+                      onTap: enabled ? _chooseLanguage : null,
+                    ),
+                  ]),
+                  _section(context.l10n.appearance, Icons.palette_outlined, [
                     RadioGroup<AppAppearance>(
                       groupValue: c.settings.appearance,
                       onChanged: (value) {
@@ -208,9 +273,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         children: [
                           for (final (value, label) in [
-                            (AppAppearance.system, '跟随系统'),
-                            (AppAppearance.light, '浅色'),
-                            (AppAppearance.dark, '深色'),
+                            (AppAppearance.system, context.l10n.followSystem),
+                            (AppAppearance.light, context.l10n.light),
+                            (AppAppearance.dark, context.l10n.dark),
                           ])
                             RadioListTile<AppAppearance>(
                               contentPadding: EdgeInsets.zero,
@@ -243,7 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                      title: const Text('关于 Dukto2'),
+                      title: Text(context.l10n.about),
                       trailing: const ExcludeSemantics(
                         child: Icon(Icons.chevron_right),
                       ),

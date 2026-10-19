@@ -312,7 +312,7 @@ void main() {
         );
         panelFails = true;
         await c.openNotificationSettings();
-        expect(c.settingsError, contains('无法打开系统设置'));
+        expect(c.settingsError, c.strings.notificationSettingsFailed);
       } finally {
         await c.shutdown();
         c.dispose();

@@ -159,6 +159,131 @@ void main() {
   );
 
   test(
+    'remembered endpoints reconnect after restart without subnet scanning',
+    () async {
+      final server = await start();
+      final cache = File('${root.path}/${randomId()}/known-peers.json');
+      final local = Peer(
+        id: other.id,
+        name: 'Local',
+        host: '127.0.0.1',
+        port: 1,
+        fingerprint: other.fingerprint,
+      );
+      final first = PeerDiscovery(
+        local,
+        knownPeersFile: cache,
+        useMulticast: false,
+        subnetFallback: false,
+      );
+      await first.rememberPeer(
+        await TransferClient.probe('127.0.0.1', server.port),
+      );
+      await first.close();
+      final reserve = await RawDatagramSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final port = reserve.port;
+      reserve.close();
+      final next = PeerDiscovery(
+        local,
+        port: port,
+        knownPeersFile: cache,
+        useMulticast: false,
+        subnetFallback: false,
+      );
+      addTearDown(next.close);
+      final found = next.changes.firstWhere((peers) => peers.isNotEmpty);
+      await next.start();
+      final peers = await found.timeout(const Duration(seconds: 5));
+      expect(peers.single.fingerprint, identity.fingerprint);
+      expect(peers.single.host, '127.0.0.1');
+    },
+  );
+
+  test('confirmed endpoints receive a unicast return announcement', () async {
+    final server = await start();
+    final receiver = await RawDatagramSocket.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+      reuseAddress: true,
+      reusePort: !Platform.isAndroid && !Platform.isWindows,
+    );
+    addTearDown(receiver.close);
+    final received = Completer<Map<String, dynamic>>();
+    final subscription = receiver.listen((event) {
+      if (event != RawSocketEvent.read) return;
+      Datagram? packet;
+      while ((packet = receiver.receive()) != null) {
+        final value =
+            jsonDecode(utf8.decode(packet!.data)) as Map<String, dynamic>;
+        if (!received.isCompleted) received.complete(value);
+      }
+    });
+    addTearDown(subscription.cancel);
+    final discovery = PeerDiscovery(
+      Peer(
+        id: other.id,
+        name: 'Local',
+        host: '127.0.0.1',
+        port: 12345,
+        fingerprint: other.fingerprint,
+      ),
+      port: receiver.port,
+      subnetFallback: false,
+    );
+    addTearDown(discovery.close);
+    await discovery.start();
+    await discovery.confirmEndpoint('127.0.0.1', server.port);
+    final message = await received.future.timeout(const Duration(seconds: 3));
+    expect(message['app'], 'dukto2');
+    expect(message['id'], other.id);
+    expect(message['port'], 12345);
+  });
+
+  test(
+    'remembered endpoint rejects an IP reused by a different identity',
+    () async {
+      final server = await start();
+      final cache = File('${root.path}/${randomId()}.json');
+      final candidate = await TransferClient.probe('127.0.0.1', server.port);
+      await cache.writeAsString(
+        jsonEncode([
+          {
+            ...candidate.toJson(),
+            'host': candidate.host,
+            'fingerprint': 'a' * 64,
+          },
+        ]),
+      );
+      final reserve = await RawDatagramSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final port = reserve.port;
+      reserve.close();
+      final discovery = PeerDiscovery(
+        Peer(
+          id: other.id,
+          name: 'Local',
+          host: '127.0.0.1',
+          port: 1,
+          fingerprint: other.fingerprint,
+        ),
+        port: port,
+        knownPeersFile: cache,
+        useMulticast: false,
+        subnetFallback: false,
+      );
+      addTearDown(discovery.close);
+      await discovery.start();
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      expect(discovery.peers, isEmpty);
+    },
+  );
+
+  test(
     'write/commit failures discard an external destination and publish no receipt',
     () async {
       final target = _FailingTarget();

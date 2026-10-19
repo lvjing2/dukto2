@@ -8,15 +8,21 @@ dependencies:
   file_picker: ^13.1.0
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.3
   dukto2_core:
     path: packages/dukto2_core
   path: ^1.9.1
   path_provider: ^2.1.6
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.4.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/branding/dukto2.png

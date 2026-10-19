@@ -6,6 +6,7 @@ import 'src/controller.dart';
 import 'src/app_settings.dart';
 import 'src/dashboard.dart';
 import 'src/theme.dart';
+import 'src/localization.dart';
 export 'src/dashboard.dart' show TransferDashboard;
 export 'src/theme.dart' show dukto2Theme;
 
@@ -23,21 +24,32 @@ class Dukto2App extends StatefulWidget {
 class _Dukto2AppState extends State<Dukto2App> with WidgetsBindingObserver {
   final controller = Dukto2Controller();
   ThemeMode mode = ThemeMode.system;
+  AppLanguage language = AppLanguage.system;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    controller.addListener(_syncAppearance);
+    controller.addListener(_syncPreferences);
     unawaited(controller.start());
   }
 
-  void _syncAppearance() {
+  void _syncPreferences() {
     final next = switch (controller.settings.appearance) {
       AppAppearance.system => ThemeMode.system,
       AppAppearance.light => ThemeMode.light,
       AppAppearance.dark => ThemeMode.dark,
     };
-    if (mounted && next != mode) setState(() => mode = next);
+    if (mounted && (next != mode || language != controller.settings.language)) {
+      setState(() {
+        mode = next;
+        language = controller.settings.language;
+      });
+    }
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    controller.systemLocaleChanged();
   }
 
   @override
@@ -51,7 +63,7 @@ class _Dukto2AppState extends State<Dukto2App> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    controller.removeListener(_syncAppearance);
+    controller.removeListener(_syncPreferences);
     unawaited(controller.shutdown());
     controller.dispose();
     super.dispose();
@@ -60,6 +72,11 @@ class _Dukto2AppState extends State<Dukto2App> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Dukto2',
+    locale: language.locale,
+    supportedLocales: AppLanguage.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localeListResolutionCallback: (preferred, _) =>
+        AppLanguage.resolve(preferred ?? []),
     debugShowCheckedModeBanner: false,
     theme: dukto2Theme(Brightness.light),
     darkTheme: dukto2Theme(Brightness.dark),

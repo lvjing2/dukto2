@@ -144,7 +144,7 @@ void main() {
     expect(c.notificationPermission, 'denied');
     await c.notifyCompletion(receipt, incoming: true);
     final payload = calls.last.arguments as Map;
-    expect(payload['body'], '文本已接收并通过校验');
+    expect(payload['body'], c.strings.receivedVerified(c.strings.text));
     expect(payload.values.join(), isNot(contains('secret')));
     messenger.setMockMethodCallHandler(Dukto2Controller.platform, (_) async {
       throw PlatformException(code: 'DENIED');

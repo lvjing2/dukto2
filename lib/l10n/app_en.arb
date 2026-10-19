@@ -1,0 +1,1249 @@
+{
+  "@@locale": "en",
+  "todayTime": "Today {arg0}",
+  "@todayTime": {
+    "description": "Dukto2 todayTime. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "yesterdayTime": "Yesterday {arg0}",
+  "@yesterdayTime": {
+    "description": "Dukto2 yesterdayTime. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "lessThanSecond": "Less than 1 second",
+  "@lessThanSecond": {
+    "description": "Dukto2 lessThanSecond. Keep names, paths and codes unchanged."
+  },
+  "secondsDuration": "{arg0} s",
+  "@secondsDuration": {
+    "description": "Dukto2 secondsDuration. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "minutesDuration": "{arg0} min {arg1} s",
+  "@minutesDuration": {
+    "description": "Dukto2 minutesDuration. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      }
+    }
+  },
+  "hoursDuration": "{arg0} h {arg1} min {arg2} s",
+  "@hoursDuration": {
+    "description": "Dukto2 hoursDuration. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      },
+      "arg2": {
+        "type": "String"
+      }
+    }
+  },
+  "phone": "Phone",
+  "@phone": {
+    "description": "Dukto2 phone. Keep names, paths and codes unchanged."
+  },
+  "tablet": "Tablet",
+  "@tablet": {
+    "description": "Dukto2 tablet. Keep names, paths and codes unchanged."
+  },
+  "computer": "Computer",
+  "@computer": {
+    "description": "Dukto2 computer. Keep names, paths and codes unchanged."
+  },
+  "device": "Device",
+  "@device": {
+    "description": "Dukto2 device. Keep names, paths and codes unchanged."
+  },
+  "incomingOffer": "{arg0} wants to send {arg1}",
+  "@incomingOffer": {
+    "description": "Dukto2 incomingOffer. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      }
+    }
+  },
+  "batchConsent": "Approve once to receive this batch",
+  "@batchConsent": {
+    "description": "Dukto2 batchConsent. Keep names, paths and codes unchanged."
+  },
+  "textConsent": "Receive this text?",
+  "@textConsent": {
+    "description": "Dukto2 textConsent. Keep names, paths and codes unchanged."
+  },
+  "fileConsent": "Receive this file?",
+  "@fileConsent": {
+    "description": "Dukto2 fileConsent. Keep names, paths and codes unchanged."
+  },
+  "approvalWarning": "The sender name is unverified. Only accept content you recognize. This request expires in {arg0} minutes.",
+  "@approvalWarning": {
+    "description": "Dukto2 approvalWarning. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveAt": "Save to: {arg0}",
+  "@receiveAt": {
+    "description": "Dukto2 receiveAt. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "decline": "Decline",
+  "@decline": {
+    "description": "Dukto2 decline. Keep names, paths and codes unchanged."
+  },
+  "receiveAll": "Receive all",
+  "@receiveAll": {
+    "description": "Dukto2 receiveAll. Keep names, paths and codes unchanged."
+  },
+  "receiveText": "Receive text",
+  "@receiveText": {
+    "description": "Dukto2 receiveText. Keep names, paths and codes unchanged."
+  },
+  "receiveFile": "Receive file",
+  "@receiveFile": {
+    "description": "Dukto2 receiveFile. Keep names, paths and codes unchanged."
+  },
+  "verifyPeer": "Verify {arg0}",
+  "@verifyPeer": {
+    "description": "Dukto2 verifyPeer. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "verificationInstructions": "Open Local information on the other device and compare its code with the one below.",
+  "@verificationInstructions": {
+    "description": "Dukto2 verificationInstructions. Keep names, paths and codes unchanged."
+  },
+  "verificationWarning": "A device name does not prove identity. Check the other screen before confirming.",
+  "@verificationWarning": {
+    "description": "Dukto2 verificationWarning. Keep names, paths and codes unchanged."
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Dukto2 cancel. Keep names, paths and codes unchanged."
+  },
+  "confirmConnection": "Codes match, connect",
+  "@confirmConnection": {
+    "description": "Dukto2 confirmConnection. Keep names, paths and codes unchanged."
+  },
+  "localInfo": "Local information",
+  "@localInfo": {
+    "description": "Dukto2 localInfo. Keep names, paths and codes unchanged."
+  },
+  "showLocalCode": "Compare this code for manual connections. Scanning verifies the device identity automatically.",
+  "@showLocalCode": {
+    "description": "Dukto2 showLocalCode. Keep names, paths and codes unchanged."
+  },
+  "generating": "Generating…",
+  "@generating": {
+    "description": "Dukto2 generating. Keep names, paths and codes unchanged."
+  },
+  "deviceName": "Device name",
+  "@deviceName": {
+    "description": "Dukto2 deviceName. Keep names, paths and codes unchanged."
+  },
+  "preparing": "Preparing…",
+  "@preparing": {
+    "description": "Dukto2 preparing. Keep names, paths and codes unchanged."
+  },
+  "connectionAddress": "Connection address",
+  "@connectionAddress": {
+    "description": "Dukto2 connectionAddress. Keep names, paths and codes unchanged."
+  },
+  "addressWhenConnected": "Connect to a network to see addresses",
+  "@addressWhenConnected": {
+    "description": "Dukto2 addressWhenConnected. Keep names, paths and codes unchanged."
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Dukto2 done. Keep names, paths and codes unchanged."
+  },
+  "manualConnection": "Manual connection",
+  "@manualConnection": {
+    "description": "Dukto2 manualConnection. Keep names, paths and codes unchanged."
+  },
+  "findPeerAddress": "Find the address in the other device's Local information.",
+  "@findPeerAddress": {
+    "description": "Dukto2 findPeerAddress. Keep names, paths and codes unchanged."
+  },
+  "deviceAddress": "Device address",
+  "@deviceAddress": {
+    "description": "Dukto2 deviceAddress. Keep names, paths and codes unchanged."
+  },
+  "addressSeparator": "Separate address and port with a colon :",
+  "@addressSeparator": {
+    "description": "Dukto2 addressSeparator. Keep names, paths and codes unchanged."
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Dukto2 next. Keep names, paths and codes unchanged."
+  },
+  "connecting": "Connecting…",
+  "@connecting": {
+    "description": "Dukto2 connecting. Keep names, paths and codes unchanged."
+  },
+  "connectionFailed": "Could not connect. Check the address and network.",
+  "@connectionFailed": {
+    "description": "Dukto2 connectionFailed. Keep names, paths and codes unchanged."
+  },
+  "sendToPeer": "Send to {arg0}",
+  "@sendToPeer": {
+    "description": "Dukto2 sendToPeer. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "hideKeyboard": "Hide keyboard",
+  "@hideKeyboard": {
+    "description": "Dukto2 hideKeyboard. Keep names, paths and codes unchanged."
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Dukto2 settings. Keep names, paths and codes unchanged."
+  },
+  "thisDevice": "This device",
+  "@thisDevice": {
+    "description": "Dukto2 thisDevice. Keep names, paths and codes unchanged."
+  },
+  "discoverable": "Visible to nearby devices",
+  "@discoverable": {
+    "description": "Dukto2 discoverable. Keep names, paths and codes unchanged."
+  },
+  "starting": "Starting…",
+  "@starting": {
+    "description": "Dukto2 starting. Keep names, paths and codes unchanged."
+  },
+  "nearbyDevices": "Nearby devices: {arg0}",
+  "@nearbyDevices": {
+    "description": "Dukto2 nearbyDevices. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "refreshDevices": "Refresh devices",
+  "@refreshDevices": {
+    "description": "Dukto2 refreshDevices. Keep names, paths and codes unchanged."
+  },
+  "findingDevices": "Looking for nearby devices…",
+  "@findingDevices": {
+    "description": "Dukto2 findingDevices. Keep names, paths and codes unchanged."
+  },
+  "noDevices": "No devices found",
+  "@noDevices": {
+    "description": "Dukto2 noDevices. Keep names, paths and codes unchanged."
+  },
+  "verifiedSelected": "Verified · Selected",
+  "@verifiedSelected": {
+    "description": "Dukto2 verifiedSelected. Keep names, paths and codes unchanged."
+  },
+  "verifiedOffline": "Verified · Offline",
+  "@verifiedOffline": {
+    "description": "Dukto2 verifiedOffline. Keep names, paths and codes unchanged."
+  },
+  "unverified": "Unverified",
+  "@unverified": {
+    "description": "Dukto2 unverified. Keep names, paths and codes unchanged."
+  },
+  "receivingContent": "Receiving",
+  "@receivingContent": {
+    "description": "Dukto2 receivingContent. Keep names, paths and codes unchanged."
+  },
+  "sendingContent": "Send content",
+  "@sendingContent": {
+    "description": "Dukto2 sendingContent. Keep names, paths and codes unchanged."
+  },
+  "directTransfer": "Files and text transfer directly between devices.",
+  "@directTransfer": {
+    "description": "Dukto2 directTransfer. Keep names, paths and codes unchanged."
+  },
+  "sendTo": "Send to{arg0}",
+  "@sendTo": {
+    "description": "Dukto2 sendTo. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "codeVerified": "Device identity verified",
+  "@codeVerified": {
+    "description": "Dukto2 codeVerified. Keep names, paths and codes unchanged."
+  },
+  "viewVerification": "View device code",
+  "@viewVerification": {
+    "description": "Dukto2 viewVerification. Keep names, paths and codes unchanged."
+  },
+  "file": "File",
+  "@file": {
+    "description": "Dukto2 file. Keep names, paths and codes unchanged."
+  },
+  "text": "Text",
+  "@text": {
+    "description": "Dukto2 text. Keep names, paths and codes unchanged."
+  },
+  "betweenDevices": "Content transfers only between these two devices.",
+  "@betweenDevices": {
+    "description": "Dukto2 betweenDevices. Keep names, paths and codes unchanged."
+  },
+  "encryptedLan": "Direct LAN · Encrypted",
+  "@encryptedLan": {
+    "description": "Dukto2 encryptedLan. Keep names, paths and codes unchanged."
+  },
+  "statusPrefix": "Completed",
+  "@statusPrefix": {
+    "description": "Dukto2 statusPrefix. Keep names, paths and codes unchanged."
+  },
+  "preparingIdentity": "Preparing device identity…",
+  "@preparingIdentity": {
+    "description": "Dukto2 preparingIdentity. Keep names, paths and codes unchanged."
+  },
+  "noNearbyDevices": "No nearby devices found",
+  "@noNearbyDevices": {
+    "description": "Dukto2 noNearbyDevices. Keep names, paths and codes unchanged."
+  },
+  "selectDevice": "Select a device to start",
+  "@selectDevice": {
+    "description": "Dukto2 selectDevice. Keep names, paths and codes unchanged."
+  },
+  "sameWifiHint": "Connect both devices to the same network,\nand open Dukto2 on the other device.",
+  "@sameWifiHint": {
+    "description": "Dukto2 sameWifiHint. Keep names, paths and codes unchanged."
+  },
+  "selectVerifyHint": "Select a device and compare its verification code.",
+  "@selectVerifyHint": {
+    "description": "Dukto2 selectVerifyHint. Keep names, paths and codes unchanged."
+  },
+  "enterAddress": "Manual connection",
+  "@enterAddress": {
+    "description": "Dukto2 enterAddress. Keep names, paths and codes unchanged."
+  },
+  "textCopied": "Text copied",
+  "@textCopied": {
+    "description": "Dukto2 textCopied. Keep names, paths and codes unchanged."
+  },
+  "copyFailed": "Could not copy. Try again.",
+  "@copyFailed": {
+    "description": "Dukto2 copyFailed. Keep names, paths and codes unchanged."
+  },
+  "textContent": "Text content",
+  "@textContent": {
+    "description": "Dukto2 textContent. Keep names, paths and codes unchanged."
+  },
+  "filePreviewHint": "Preview only. Total size: {arg0}. Open the file to view the full text.",
+  "@filePreviewHint": {
+    "description": "Dukto2 filePreviewHint. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "textPreviewHint": "Preview only. Copy text to copy the full content.",
+  "@textPreviewHint": {
+    "description": "Dukto2 textPreviewHint. Keep names, paths and codes unchanged."
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Dukto2 close. Keep names, paths and codes unchanged."
+  },
+  "openFullText": "Open full text",
+  "@openFullText": {
+    "description": "Dukto2 openFullText. Keep names, paths and codes unchanged."
+  },
+  "copyPreview": "Copy preview",
+  "@copyPreview": {
+    "description": "Dukto2 copyPreview. Keep names, paths and codes unchanged."
+  },
+  "copyText": "Copy text",
+  "@copyText": {
+    "description": "Dukto2 copyText. Keep names, paths and codes unchanged."
+  },
+  "emptyClipboard": "No text in the clipboard",
+  "@emptyClipboard": {
+    "description": "Dukto2 emptyClipboard. Keep names, paths and codes unchanged."
+  },
+  "editorLimit": "The editor supports 1 MiB. Load larger text from a file (up to 16 MiB).",
+  "@editorLimit": {
+    "description": "Dukto2 editorLimit. Keep names, paths and codes unchanged."
+  },
+  "clipboardFailed": "Could not read the clipboard. Try again.",
+  "@clipboardFailed": {
+    "description": "Dukto2 clipboardFailed. Keep names, paths and codes unchanged."
+  },
+  "textPlaceholder": "Enter text or paste a link",
+  "@textPlaceholder": {
+    "description": "Dukto2 textPlaceholder. Keep names, paths and codes unchanged."
+  },
+  "textFileLoaded": "UTF-8 text loaded. The full file will be streamed.",
+  "@textFileLoaded": {
+    "description": "Dukto2 textFileLoaded. Keep names, paths and codes unchanged."
+  },
+  "textLimit": "Up to 16 MiB · Receiver approval required",
+  "@textLimit": {
+    "description": "Dukto2 textLimit. Keep names, paths and codes unchanged."
+  },
+  "textUnsupported": "This device does not support text. Update its app first.",
+  "@textUnsupported": {
+    "description": "Dukto2 textUnsupported. Keep names, paths and codes unchanged."
+  },
+  "waitingText": "Waiting for the receiver…",
+  "@waitingText": {
+    "description": "Dukto2 waitingText. Keep names, paths and codes unchanged."
+  },
+  "sendingText": "Sending and verifying text…",
+  "@sendingText": {
+    "description": "Dukto2 sendingText. Keep names, paths and codes unchanged."
+  },
+  "textSent": "Text sent and verified",
+  "@textSent": {
+    "description": "Dukto2 textSent. Keep names, paths and codes unchanged."
+  },
+  "textCancelled": "Sending cancelled. Text kept.",
+  "@textCancelled": {
+    "description": "Dukto2 textCancelled. Keep names, paths and codes unchanged."
+  },
+  "pasteText": "Paste text",
+  "@pasteText": {
+    "description": "Dukto2 pasteText. Keep names, paths and codes unchanged."
+  },
+  "moreTextActions": "More text actions",
+  "@moreTextActions": {
+    "description": "Dukto2 moreTextActions. Keep names, paths and codes unchanged."
+  },
+  "loadTextFile": "Load text file",
+  "@loadTextFile": {
+    "description": "Dukto2 loadTextFile. Keep names, paths and codes unchanged."
+  },
+  "clearText": "Clear content",
+  "@clearText": {
+    "description": "Dukto2 clearText. Keep names, paths and codes unchanged."
+  },
+  "cancelTransfer": "Cancel transfer",
+  "@cancelTransfer": {
+    "description": "Dukto2 cancelTransfer. Keep names, paths and codes unchanged."
+  },
+  "sendText": "Send text",
+  "@sendText": {
+    "description": "Dukto2 sendText. Keep names, paths and codes unchanged."
+  },
+  "send": "Send",
+  "@send": {
+    "description": "Dukto2 send. Keep names, paths and codes unchanged."
+  },
+  "chooseFileHint": "Choose files to send",
+  "@chooseFileHint": {
+    "description": "Dukto2 chooseFileHint. Keep names, paths and codes unchanged."
+  },
+  "approvalBeforeTransfer": "Transfer starts after the receiver approves",
+  "@approvalBeforeTransfer": {
+    "description": "Dukto2 approvalBeforeTransfer. Keep names, paths and codes unchanged."
+  },
+  "picking": "Choosing…",
+  "@picking": {
+    "description": "Dukto2 picking. Keep names, paths and codes unchanged."
+  },
+  "chooseFiles": "Choose files",
+  "@chooseFiles": {
+    "description": "Dukto2 chooseFiles. Keep names, paths and codes unchanged."
+  },
+  "multiSelectHint": "Select multiple · Send in order",
+  "@multiSelectHint": {
+    "description": "Dukto2 multiSelectHint. Keep names, paths and codes unchanged."
+  },
+  "waitingBatch": "Waiting for batch upload…",
+  "@waitingBatch": {
+    "description": "Dukto2 waitingBatch. Keep names, paths and codes unchanged."
+  },
+  "waitingUpload": "Waiting for the sender…",
+  "@waitingUpload": {
+    "description": "Dukto2 waitingUpload. Keep names, paths and codes unchanged."
+  },
+  "verifyingFile": "Verifying file…",
+  "@verifyingFile": {
+    "description": "Dukto2 verifyingFile. Keep names, paths and codes unchanged."
+  },
+  "receiving": "Receiving",
+  "@receiving": {
+    "description": "Dukto2 receiving. Keep names, paths and codes unchanged."
+  },
+  "ready": "Ready",
+  "@ready": {
+    "description": "Dukto2 ready. Keep names, paths and codes unchanged."
+  },
+  "waitingReceiver": "Waiting for approval",
+  "@waitingReceiver": {
+    "description": "Dukto2 waitingReceiver. Keep names, paths and codes unchanged."
+  },
+  "sending": "Sending",
+  "@sending": {
+    "description": "Dukto2 sending. Keep names, paths and codes unchanged."
+  },
+  "waitingVerification": "Waiting for verification…",
+  "@waitingVerification": {
+    "description": "Dukto2 waitingVerification. Keep names, paths and codes unchanged."
+  },
+  "sentVerified": "Sent and verified",
+  "@sentVerified": {
+    "description": "Dukto2 sentVerified. Keep names, paths and codes unchanged."
+  },
+  "sendCancelled": "Sending cancelled",
+  "@sendCancelled": {
+    "description": "Dukto2 sendCancelled. Keep names, paths and codes unchanged."
+  },
+  "sendFailedRetry": "Sending failed. Try again.",
+  "@sendFailedRetry": {
+    "description": "Dukto2 sendFailedRetry. Keep names, paths and codes unchanged."
+  },
+  "batchSent": "All files sent and verified",
+  "@batchSent": {
+    "description": "Dukto2 batchSent. Keep names, paths and codes unchanged."
+  },
+  "batchCurrent": "Item {arg0} / {arg1} · {arg2}",
+  "@batchCurrent": {
+    "description": "Dukto2 batchCurrent. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      },
+      "arg2": {
+        "type": "String"
+      }
+    }
+  },
+  "batchCompleted": "{arg0} / {arg1} sent · {arg2}",
+  "@batchCompleted": {
+    "description": "Dukto2 batchCompleted. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      },
+      "arg2": {
+        "type": "String"
+      }
+    }
+  },
+  "fileCount": "{arg0, plural, one{{arg0} file} other{{arg0} files}}",
+  "@fileCount": {
+    "description": "Dukto2 fileCount. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "int"
+      }
+    }
+  },
+  "removeFiles": "Remove selected files",
+  "@removeFiles": {
+    "description": "Dukto2 removeFiles. Keep names, paths and codes unchanged."
+  },
+  "fileSummary": "{arg0} · {arg1}{arg2}",
+  "@fileSummary": {
+    "description": "Dukto2 fileSummary. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      },
+      "arg2": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFile": "Remove {arg0}",
+  "@removeFile": {
+    "description": "Dukto2 removeFile. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveProgress": "Receiving progress",
+  "@receiveProgress": {
+    "description": "Dukto2 receiveProgress. Keep names, paths and codes unchanged."
+  },
+  "sendProgress": "Sending progress",
+  "@sendProgress": {
+    "description": "Dukto2 sendProgress. Keep names, paths and codes unchanged."
+  },
+  "sendOtherFiles": "Send other files",
+  "@sendOtherFiles": {
+    "description": "Dukto2 sendOtherFiles. Keep names, paths and codes unchanged."
+  },
+  "chooseAgain": "Choose again",
+  "@chooseAgain": {
+    "description": "Dukto2 chooseAgain. Keep names, paths and codes unchanged."
+  },
+  "continueSending": "Continue",
+  "@continueSending": {
+    "description": "Dukto2 continueSending. Keep names, paths and codes unchanged."
+  },
+  "resend": "Resend",
+  "@resend": {
+    "description": "Dukto2 resend. Keep names, paths and codes unchanged."
+  },
+  "sendFiles": "Send files",
+  "@sendFiles": {
+    "description": "Dukto2 sendFiles. Keep names, paths and codes unchanged."
+  },
+  "recentTransfers": "Recent transfers",
+  "@recentTransfers": {
+    "description": "Dukto2 recentTransfers. Keep names, paths and codes unchanged."
+  },
+  "allDevices": "All devices",
+  "@allDevices": {
+    "description": "Dukto2 allDevices. Keep names, paths and codes unchanged."
+  },
+  "otherDevice": "Another device",
+  "@otherDevice": {
+    "description": "Dukto2 otherDevice. Keep names, paths and codes unchanged."
+  },
+  "emptyHistory": "Completed files and text will appear here.",
+  "@emptyHistory": {
+    "description": "Dukto2 emptyHistory. Keep names, paths and codes unchanged."
+  },
+  "textMessage": "Text message",
+  "@textMessage": {
+    "description": "Dukto2 textMessage. Keep names, paths and codes unchanged."
+  },
+  "received": "Received",
+  "@received": {
+    "description": "Dukto2 received. Keep names, paths and codes unchanged."
+  },
+  "sent": "Sent",
+  "@sent": {
+    "description": "Dukto2 sent. Keep names, paths and codes unchanged."
+  },
+  "durationLabel": "Duration: {arg0}",
+  "@durationLabel": {
+    "description": "Dukto2 durationLabel. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "viewText": "View text",
+  "@viewText": {
+    "description": "Dukto2 viewText. Keep names, paths and codes unchanged."
+  },
+  "openFolderHint": "Open the local file's folder",
+  "@openFolderHint": {
+    "description": "Dukto2 openFolderHint. Keep names, paths and codes unchanged."
+  },
+  "noLocalFile": "No local file location is available",
+  "@noLocalFile": {
+    "description": "Dukto2 noLocalFile. Keep names, paths and codes unchanged."
+  },
+  "openFolder": "Open folder",
+  "@openFolder": {
+    "description": "Dukto2 openFolder. Keep names, paths and codes unchanged."
+  },
+  "about": "About Dukto2",
+  "@about": {
+    "description": "Dukto2 about. Keep names, paths and codes unchanged."
+  },
+  "aboutTribute": "A tribute to Dukto and its creator Emanuele Colombo. Thanks to xuzhen and the community for their continued maintenance.",
+  "@aboutTribute": {
+    "description": "Dukto2 aboutTribute. Keep names, paths and codes unchanged."
+  },
+  "aboutAi": "Code, UI, tests and documentation created with OpenAI Codex under human direction.",
+  "@aboutAi": {
+    "description": "Dukto2 aboutAi. Keep names, paths and codes unchanged."
+  },
+  "aboutProject": "An independent rewrite carrying forward Dukto's simple, direct experience.",
+  "@aboutProject": {
+    "description": "Dukto2 aboutProject. Keep names, paths and codes unchanged."
+  },
+  "licenses": "Third-party licenses",
+  "@licenses": {
+    "description": "Dukto2 licenses. Keep names, paths and codes unchanged."
+  },
+  "notificationsAllowed": "System notifications allowed",
+  "@notificationsAllowed": {
+    "description": "Dukto2 notificationsAllowed. Keep names, paths and codes unchanged."
+  },
+  "notificationsDenied": "System notifications disabled",
+  "@notificationsDenied": {
+    "description": "Dukto2 notificationsDenied. Keep names, paths and codes unchanged."
+  },
+  "notificationsUndetermined": "Not authorized yet",
+  "@notificationsUndetermined": {
+    "description": "Dukto2 notificationsUndetermined. Keep names, paths and codes unchanged."
+  },
+  "notificationsManaged": "Notifications managed by the system",
+  "@notificationsManaged": {
+    "description": "Dukto2 notificationsManaged. Keep names, paths and codes unchanged."
+  },
+  "notificationsUnavailable": "Notification status unavailable",
+  "@notificationsUnavailable": {
+    "description": "Dukto2 notificationsUnavailable. Keep names, paths and codes unchanged."
+  },
+  "notificationsChecking": "Checking notifications…",
+  "@notificationsChecking": {
+    "description": "Dukto2 notificationsChecking. Keep names, paths and codes unchanged."
+  },
+  "folderBusy": "The receiving folder cannot change during a transfer.",
+  "@folderBusy": {
+    "description": "Dukto2 folderBusy. Keep names, paths and codes unchanged."
+  },
+  "receiveLocation": "Receiving location",
+  "@receiveLocation": {
+    "description": "Dukto2 receiveLocation. Keep names, paths and codes unchanged."
+  },
+  "changeFolder": "Change folder",
+  "@changeFolder": {
+    "description": "Dukto2 changeFolder. Keep names, paths and codes unchanged."
+  },
+  "restoreDefault": "Restore default",
+  "@restoreDefault": {
+    "description": "Dukto2 restoreDefault. Keep names, paths and codes unchanged."
+  },
+  "readingDeviceName": "Reading device name…",
+  "@readingDeviceName": {
+    "description": "Dukto2 readingDeviceName. Keep names, paths and codes unchanged."
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Dukto2 notifications. Keep names, paths and codes unchanged."
+  },
+  "completionNotifications": "Transfer completion notifications",
+  "@completionNotifications": {
+    "description": "Dukto2 completionNotifications. Keep names, paths and codes unchanged."
+  },
+  "allowNotifications": "Allow notifications",
+  "@allowNotifications": {
+    "description": "Dukto2 allowNotifications. Keep names, paths and codes unchanged."
+  },
+  "systemNotificationSettings": "System notification settings",
+  "@systemNotificationSettings": {
+    "description": "Dukto2 systemNotificationSettings. Keep names, paths and codes unchanged."
+  },
+  "ongoingNotificationHint": "The ongoing transfer notification stays enabled.",
+  "@ongoingNotificationHint": {
+    "description": "Dukto2 ongoingNotificationHint. Keep names, paths and codes unchanged."
+  },
+  "appearance": "Appearance",
+  "@appearance": {
+    "description": "Dukto2 appearance. Keep names, paths and codes unchanged."
+  },
+  "followSystem": "Follow system",
+  "@followSystem": {
+    "description": "Dukto2 followSystem. Keep names, paths and codes unchanged."
+  },
+  "light": "Light",
+  "@light": {
+    "description": "Dukto2 light. Keep names, paths and codes unchanged."
+  },
+  "dark": "Dark",
+  "@dark": {
+    "description": "Dukto2 dark. Keep names, paths and codes unchanged."
+  },
+  "chooseFolder": "Choose receiving folder",
+  "@chooseFolder": {
+    "description": "Dukto2 chooseFolder. Keep names, paths and codes unchanged."
+  },
+  "appStorage": "App storage",
+  "@appStorage": {
+    "description": "Dukto2 appStorage. Keep names, paths and codes unchanged."
+  },
+  "backgroundIos": "Keep the app in the foreground. Switching apps or locking the screen may interrupt a transfer.",
+  "@backgroundIos": {
+    "description": "Dukto2 backgroundIos. Keep names, paths and codes unchanged."
+  },
+  "backgroundAndroid": "Approved transfers can continue in the background. Do not force-stop the app.",
+  "@backgroundAndroid": {
+    "description": "Dukto2 backgroundAndroid. Keep names, paths and codes unchanged."
+  },
+  "backgroundDesktop": "Keep the app running and avoid sleep during transfers.",
+  "@backgroundDesktop": {
+    "description": "Dukto2 backgroundDesktop. Keep names, paths and codes unchanged."
+  },
+  "backgroundStopped": "Background transfer stopped",
+  "@backgroundStopped": {
+    "description": "Dukto2 backgroundStopped. Keep names, paths and codes unchanged."
+  },
+  "downloadsUnavailable": "System Downloads folder unavailable",
+  "@downloadsUnavailable": {
+    "description": "Dukto2 downloadsUnavailable. Keep names, paths and codes unchanged."
+  },
+  "discoveryUnavailable": "Discovery unavailable. Try a manual connection.",
+  "@discoveryUnavailable": {
+    "description": "Dukto2 discoveryUnavailable. Keep names, paths and codes unchanged."
+  },
+  "readyLan": "Ready · Transfer on the same network",
+  "@readyLan": {
+    "description": "Dukto2 readyLan. Keep names, paths and codes unchanged."
+  },
+  "startupFailed": "Could not start. Check network permissions.",
+  "@startupFailed": {
+    "description": "Dukto2 startupFailed. Keep names, paths and codes unchanged."
+  },
+  "checkNetworkPermissions": "Check network permissions and reopen the app",
+  "@checkNetworkPermissions": {
+    "description": "Dukto2 checkNetworkPermissions. Keep names, paths and codes unchanged."
+  },
+  "networkRecoveryFailed": "Could not restore networking. Refresh again.",
+  "@networkRecoveryFailed": {
+    "description": "Dukto2 networkRecoveryFailed. Keep names, paths and codes unchanged."
+  },
+  "settingsSaveFailed": "Could not save settings. Try again.",
+  "@settingsSaveFailed": {
+    "description": "Dukto2 settingsSaveFailed. Keep names, paths and codes unchanged."
+  },
+  "notificationRequestFailed": "Could not request permission. Check system settings.",
+  "@notificationRequestFailed": {
+    "description": "Dukto2 notificationRequestFailed. Keep names, paths and codes unchanged."
+  },
+  "notificationSettingsFailed": "Could not open settings. Check Dukto2 notification permissions manually.",
+  "@notificationSettingsFailed": {
+    "description": "Dukto2 notificationSettingsFailed. Keep names, paths and codes unchanged."
+  },
+  "receiveComplete": "Receiving complete",
+  "@receiveComplete": {
+    "description": "Dukto2 receiveComplete. Keep names, paths and codes unchanged."
+  },
+  "sendComplete": "Sending complete",
+  "@sendComplete": {
+    "description": "Dukto2 sendComplete. Keep names, paths and codes unchanged."
+  },
+  "receivedVerified": "{arg0} received and verified",
+  "@receivedVerified": {
+    "description": "Dukto2 receivedVerified. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "sentContentVerified": "{arg0} sent and verified",
+  "@sentContentVerified": {
+    "description": "Dukto2 sentContentVerified. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "folderUnavailable": "Receiving folder unavailable. Select it again.",
+  "@folderUnavailable": {
+    "description": "Dukto2 folderUnavailable. Keep names, paths and codes unchanged."
+  },
+  "authorizedFolder": "Authorized folder",
+  "@authorizedFolder": {
+    "description": "Dukto2 authorizedFolder. Keep names, paths and codes unchanged."
+  },
+  "folderUpdated": "Receiving location updated",
+  "@folderUpdated": {
+    "description": "Dukto2 folderUpdated. Keep names, paths and codes unchanged."
+  },
+  "folderChangeFailed": "Could not change the receiving location",
+  "@folderChangeFailed": {
+    "description": "Dukto2 folderChangeFailed. Keep names, paths and codes unchanged."
+  },
+  "folderReset": "Default receiving location restored",
+  "@folderReset": {
+    "description": "Dukto2 folderReset. Keep names, paths and codes unchanged."
+  },
+  "folderResetFailed": "Could not restore the receiving location",
+  "@folderResetFailed": {
+    "description": "Dukto2 folderResetFailed. Keep names, paths and codes unchanged."
+  },
+  "receivingName": "Receiving {arg0}",
+  "@receivingName": {
+    "description": "Dukto2 receivingName. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "textReceived": "Text received and verified",
+  "@textReceived": {
+    "description": "Dukto2 textReceived. Keep names, paths and codes unchanged."
+  },
+  "receivedName": "Received {arg0} and verified",
+  "@receivedName": {
+    "description": "Dukto2 receivedName. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveFailed": "Receiving failed: {arg0}",
+  "@receiveFailed": {
+    "description": "Dukto2 receiveFailed. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveCancelled": "Receiving cancelled",
+  "@receiveCancelled": {
+    "description": "Dukto2 receiveCancelled. Keep names, paths and codes unchanged."
+  },
+  "waitingFiles": "Waiting for files",
+  "@waitingFiles": {
+    "description": "Dukto2 waitingFiles. Keep names, paths and codes unchanged."
+  },
+  "newRequest": "New receiving request",
+  "@newRequest": {
+    "description": "Dukto2 newRequest. Keep names, paths and codes unchanged."
+  },
+  "receiveDeclined": "Receiving declined",
+  "@receiveDeclined": {
+    "description": "Dukto2 receiveDeclined. Keep names, paths and codes unchanged."
+  },
+  "receivingBatchName": "Receiving batch file: {arg0}",
+  "@receivingBatchName": {
+    "description": "Dukto2 receivingBatchName. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedPeer": "Selected {arg0}",
+  "@selectedPeer": {
+    "description": "Dukto2 selectedPeer. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "receivingFiles": "Receiving files",
+  "@receivingFiles": {
+    "description": "Dukto2 receivingFiles. Keep names, paths and codes unchanged."
+  },
+  "sendingFiles": "Sending files",
+  "@sendingFiles": {
+    "description": "Dukto2 sendingFiles. Keep names, paths and codes unchanged."
+  },
+  "sendingName": "Sending {arg0}",
+  "@sendingName": {
+    "description": "Dukto2 sendingName. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSizeUnavailable": "Could not read file size. Download the file to this device first.",
+  "@fileSizeUnavailable": {
+    "description": "Dukto2 fileSizeUnavailable. Keep names, paths and codes unchanged."
+  },
+  "preparingFiles": "Preparing {arg0}",
+  "@preparingFiles": {
+    "description": "Dukto2 preparingFiles. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "filePickerFailed": "Could not choose files",
+  "@filePickerFailed": {
+    "description": "Dukto2 filePickerFailed. Keep names, paths and codes unchanged."
+  },
+  "textFileLimit": "Choose a UTF-8 text file up to 16 MiB",
+  "@textFileLimit": {
+    "description": "Dukto2 textFileLimit. Keep names, paths and codes unchanged."
+  },
+  "textLoadFailed": "Could not load text. Check the file and UTF-8 encoding.",
+  "@textLoadFailed": {
+    "description": "Dukto2 textLoadFailed. Keep names, paths and codes unchanged."
+  },
+  "waitingPeerFile": "Waiting for {arg0} to accept {arg1}…",
+  "@waitingPeerFile": {
+    "description": "Dukto2 waitingPeerFile. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      }
+    }
+  },
+  "sendingBatchIndex": "Sending batch file {arg0} / {arg1}",
+  "@sendingBatchIndex": {
+    "description": "Dukto2 sendingBatchIndex. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      },
+      "arg1": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingPeer": "Waiting for {arg0} to accept…",
+  "@waitingPeer": {
+    "description": "Dukto2 waitingPeer. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "sentName": "Sent {arg0} and verified",
+  "@sentName": {
+    "description": "Dukto2 sentName. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "sendFailed": "Sending failed: {arg0}",
+  "@sendFailed": {
+    "description": "Dukto2 sendFailed. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "canResend": "You can send again",
+  "@canResend": {
+    "description": "Dukto2 canResend. Keep names, paths and codes unchanged."
+  },
+  "fileMissing": "File moved or deleted",
+  "@fileMissing": {
+    "description": "Dukto2 fileMissing. Keep names, paths and codes unchanged."
+  },
+  "folderOpenUnavailable": "Could not open the file's folder",
+  "@folderOpenUnavailable": {
+    "description": "Dukto2 folderOpenUnavailable. Keep names, paths and codes unchanged."
+  },
+  "folderOpenFailed": "Could not open the folder",
+  "@folderOpenFailed": {
+    "description": "Dukto2 folderOpenFailed. Keep names, paths and codes unchanged."
+  },
+  "savedCopy": "Saved a copy of {arg0}",
+  "@savedCopy": {
+    "description": "Dukto2 savedCopy. Keep names, paths and codes unchanged.",
+    "placeholders": {
+      "arg0": {
+        "type": "String"
+      }
+    }
+  },
+  "finderFailed": "Could not reveal the file in Finder",
+  "@finderFailed": {
+    "description": "Dukto2 finderFailed. Keep names, paths and codes unchanged."
+  },
+  "exportFailed": "Could not export the file",
+  "@exportFailed": {
+    "description": "Dukto2 exportFailed. Keep names, paths and codes unchanged."
+  },
+  "failurePlatform": "Could not start the transfer. Check app permissions.",
+  "@failurePlatform": {
+    "description": "Dukto2 failurePlatform. Keep names, paths and codes unchanged."
+  },
+  "failureCancelled": "Transfer cancelled",
+  "@failureCancelled": {
+    "description": "Dukto2 failureCancelled. Keep names, paths and codes unchanged."
+  },
+  "failureDeclined": "The receiver declined or approval timed out",
+  "@failureDeclined": {
+    "description": "Dukto2 failureDeclined. Keep names, paths and codes unchanged."
+  },
+  "failureBusy": "The receiver is busy. Try again later.",
+  "@failureBusy": {
+    "description": "Dukto2 failureBusy. Keep names, paths and codes unchanged."
+  },
+  "failureExpired": "Transfer expired. Send again.",
+  "@failureExpired": {
+    "description": "Dukto2 failureExpired. Keep names, paths and codes unchanged."
+  },
+  "failureTimeout": "Connection or transfer timed out. Check the network.",
+  "@failureTimeout": {
+    "description": "Dukto2 failureTimeout. Keep names, paths and codes unchanged."
+  },
+  "failureNetwork": "Connection interrupted. Check both devices.",
+  "@failureNetwork": {
+    "description": "Dukto2 failureNetwork. Keep names, paths and codes unchanged."
+  },
+  "failureCertificate": "Device verification failed. Compare codes again.",
+  "@failureCertificate": {
+    "description": "Dukto2 failureCertificate. Keep names, paths and codes unchanged."
+  },
+  "failureData": "Invalid data or incompatible app version",
+  "@failureData": {
+    "description": "Dukto2 failureData. Keep names, paths and codes unchanged."
+  },
+  "failureIntegrity": "File size or checksum mismatch",
+  "@failureIntegrity": {
+    "description": "Dukto2 failureIntegrity. Keep names, paths and codes unchanged."
+  },
+  "failureStorage": "Could not read or write. Check folder access and free space.",
+  "@failureStorage": {
+    "description": "Dukto2 failureStorage. Keep names, paths and codes unchanged."
+  },
+  "failureUnexpected": "Transfer incomplete. Try again.",
+  "@failureUnexpected": {
+    "description": "Dukto2 failureUnexpected. Keep names, paths and codes unchanged."
+  },
+  "addressRequired": "Enter an IPv4 address and port",
+  "@addressRequired": {
+    "description": "Dukto2 addressRequired. Keep names, paths and codes unchanged."
+  },
+  "addressInvalid": "Enter a valid IPv4 address and port from 1 to 65535",
+  "@addressInvalid": {
+    "description": "Dukto2 addressInvalid. Keep names, paths and codes unchanged."
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Dukto2 language. Keep names, paths and codes unchanged."
+  },
+  "languageChoice": "Language",
+  "@languageChoice": {
+    "description": "Dukto2 languageChoice. Keep names, paths and codes unchanged."
+  },
+  "downloadsLocation": "Downloads / Dukto2",
+  "@downloadsLocation": {
+    "description": "Dukto2 downloadsLocation. Keep names, paths and codes unchanged."
+  },
+  "iosLocation": "Files / Dukto2 / Received files",
+  "@iosLocation": {
+    "description": "Dukto2 iosLocation. Keep names, paths and codes unchanged."
+  },
+  "transferChannel": "File transfers",
+  "@transferChannel": {
+    "description": "Dukto2 transferChannel. Keep names, paths and codes unchanged."
+  },
+  "transferNotification": "Dukto2 transfer",
+  "@transferNotification": {
+    "description": "Dukto2 transferNotification. Keep names, paths and codes unchanged."
+  },
+  "preparingTransfer": "Preparing transfer…",
+  "@preparingTransfer": {
+    "description": "Dukto2 preparingTransfer. Keep names, paths and codes unchanged."
+  },
+  "backgroundExpired": "Background time expired. Return to the app and send again.",
+  "@backgroundExpired": {
+    "description": "Dukto2 backgroundExpired. Keep names, paths and codes unchanged."
+  },
+  "notificationCancelled": "Cancelled from notification",
+  "@notificationCancelled": {
+    "description": "Dukto2 notificationCancelled. Keep names, paths and codes unchanged."
+  },
+  "networkPermission": "Dukto2 discovers and connects to devices on your local network to transfer files and text you choose to send or receive.",
+  "@networkPermission": {
+    "description": "Dukto2 networkPermission. Keep names, paths and codes unchanged."
+  },
+  "qrSelf": "This is this device’s QR code. Scan another device instead.",
+  "@qrSelf": {
+    "description": "Dukto2 qrSelf. Keep names, paths and codes unchanged."
+  },
+  "qrConnecting": "Trying the device addresses in the QR code…",
+  "@qrConnecting": {
+    "description": "Dukto2 qrConnecting. Keep names, paths and codes unchanged."
+  },
+  "qrConnectionFailed": "Unable to connect. Check that the other app is open, the devices can communicate, and the QR code is still valid.",
+  "@qrConnectionFailed": {
+    "description": "Dukto2 qrConnectionFailed. Keep names, paths and codes unchanged."
+  },
+  "showQr": "Show QR code",
+  "@showQr": {
+    "description": "Dukto2 showQr. Keep names, paths and codes unchanged."
+  },
+  "scanQr": "Scan to connect",
+  "@scanQr": {
+    "description": "Dukto2 scanQr. Keep names, paths and codes unchanged."
+  },
+  "qrInstructions": "Open Dukto2 on the other device.\nIf you share network but use different subnets, try scanning its QR code.",
+  "@qrInstructions": {
+    "description": "Dukto2 qrInstructions. Keep names, paths and codes unchanged."
+  },
+  "connectionQr": "Connection QR code",
+  "@connectionQr": {
+    "description": "Dukto2 connectionQr. Keep names, paths and codes unchanged."
+  },
+  "qrAfterWifi": "Connect to a network to show the QR code",
+  "@qrAfterWifi": {
+    "description": "Dukto2 qrAfterWifi. Keep names, paths and codes unchanged."
+  },
+  "qrSemantic": "Dukto2 device connection QR code",
+  "@qrSemantic": {
+    "description": "Dukto2 qrSemantic. Keep names, paths and codes unchanged."
+  },
+  "qrVerify": "On the same network, even across different subnets, if the devices can communicate directly, tap “Scan to connect” and scan this QR code to connect.",
+  "@qrVerify": {
+    "description": "Dukto2 qrVerify. Keep names, paths and codes unchanged."
+  },
+  "cameraUnavailable": "Camera unavailable. Allow camera access for Dukto2 in system settings, then open the scanner again.",
+  "@cameraUnavailable": {
+    "description": "Dukto2 cameraUnavailable. Keep names, paths and codes unchanged."
+  },
+  "backToConnection": "Back to connection",
+  "@backToConnection": {
+    "description": "Dukto2 backToConnection. Keep names, paths and codes unchanged."
+  },
+  "qrAim": "Point the camera at the connection QR code in the other device’s “This device” panel.",
+  "@qrAim": {
+    "description": "Dukto2 qrAim. Keep names, paths and codes unchanged."
+  },
+  "subnetHint": "QR connection also works across subnets on the same network, provided the devices can communicate directly.",
+  "@subnetHint": {
+    "description": "Dukto2 subnetHint. Keep names, paths and codes unchanged."
+  },
+  "qrExpected": "Scan a Dukto2 connection QR code",
+  "@qrExpected": {
+    "description": "Dukto2 qrExpected. Keep names, paths and codes unchanged."
+  },
+  "qrInvalid": "Invalid QR code. Open “This device” again on the other device.",
+  "@qrInvalid": {
+    "description": "Dukto2 qrInvalid. Keep names, paths and codes unchanged."
+  },
+  "qrUnreachable": "Unable to reach or verify this device. Check that Dukto2 is open and the network allows device communication, then scan again.",
+  "@qrUnreachable": {
+    "description": "Dukto2 qrUnreachable. Keep names, paths and codes unchanged."
+  }
+}

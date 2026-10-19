@@ -20,6 +20,12 @@ class PeerDiscovery {
   final bool subnetFallback;
   final bool useMulticast;
   final Duration probeTimeout;
+
+  /// Optional local cache of addresses explicitly confirmed by the user.
+  final File? knownPeersFile;
+  final _knownPeers = <String, Peer>{};
+  Future<void> _cacheWrites = Future.value();
+  bool _reconnecting = false;
   final _changes = StreamController<List<Peer>>.broadcast();
   final _peers = <String, Peer>{};
   final _pending = <String>{};
@@ -44,6 +50,7 @@ class PeerDiscovery {
     this.subnetFallback = true,
     this.useMulticast = true,
     this.probeTimeout = const Duration(milliseconds: 800),
+    this.knownPeersFile,
   }) : _local = local;
   void updateLocal(Peer peer) {
     if (peer.id != local.id ||
@@ -63,6 +70,7 @@ class PeerDiscovery {
 
   Future<void> start() async {
     if (_closed || _timer != null) return;
+    await _loadKnownPeers();
     await refresh(force: true);
     if (_closed) return;
     _timer = Timer.periodic(const Duration(seconds: 3), (_) {
@@ -76,6 +84,7 @@ class PeerDiscovery {
         unawaited(_confirm(peer.host, peer.port, expected: peer));
       }
       announce();
+      unawaited(_reconnectKnown());
       if (DateTime.now().difference(_lastInterfaces).inSeconds >= 5) {
         unawaited(refresh());
       }
@@ -122,6 +131,7 @@ class PeerDiscovery {
         _changes.add(peers);
       }
       _lastProbe.clear();
+      unawaited(_reconnectKnown());
       try {
         final socket = await RawDatagramSocket.bind(
           InternetAddress.anyIPv4,
@@ -209,6 +219,84 @@ class PeerDiscovery {
     await _confirm(host, port);
   }
 
+  /// Remember an endpoint after code comparison, without granting future sends
+  /// or receiver consent. A reused IP must still match this identity.
+  Future<void> rememberPeer(Peer peer) async {
+    if (_closed ||
+        InternetAddress.tryParse(peer.host)?.type != InternetAddressType.IPv4 ||
+        peer.port < 1 ||
+        peer.port > 65535) {
+      return;
+    }
+    _knownPeers.remove(peer.fingerprint);
+    _knownPeers[peer.fingerprint] = peer;
+    while (_knownPeers.length > 32) {
+      _knownPeers.remove(_knownPeers.keys.first);
+    }
+    await _confirm(peer.host, peer.port, expected: peer);
+    announce();
+    final file = knownPeersFile;
+    if (file == null) return;
+    final data = jsonEncode([
+      for (final value in _knownPeers.values)
+        {...value.toJson(), 'host': value.host},
+    ]);
+    _cacheWrites = _cacheWrites.then((_) async {
+      try {
+        await file.parent.create(recursive: true);
+        final temporary = File('${file.path}.tmp');
+        await temporary.writeAsString(data, flush: true);
+        await temporary.rename(file.path);
+      } on FileSystemException {
+        // A cache failure must not block the current connection.
+      }
+    });
+    await _cacheWrites;
+  }
+
+  Future<void> _loadKnownPeers() async {
+    final file = knownPeersFile;
+    if (file == null) return;
+    try {
+      if (await file.length() > 32768) return;
+      final data = jsonDecode(await file.readAsString()) as List;
+      for (final item in data.take(32)) {
+        try {
+          final value = item as Map<String, dynamic>;
+          final host = value['host'] as String;
+          if (InternetAddress.tryParse(host)?.type != InternetAddressType.IPv4) {
+            continue;
+          }
+          final peer = Peer.fromJson(value, host);
+          _knownPeers[peer.fingerprint] = peer;
+        } on Object {
+          // Ignore damaged entries independently.
+        }
+      }
+    } on Object {
+      // Missing or damaged caches do not disable local discovery.
+    }
+  }
+
+  Future<void> _reconnectKnown() async {
+    if (_closed || _reconnecting) return;
+    _reconnecting = true;
+    try {
+      final pending = _knownPeers.values.toList();
+      var index = 0;
+      Future<void> worker() async {
+        while (!_closed && index < pending.length) {
+          final peer = pending[index++];
+          await _confirm(peer.host, peer.port, expected: peer);
+        }
+      }
+
+      await Future.wait(List.generate(4, (_) => worker()));
+    } finally {
+      _reconnecting = false;
+    }
+  }
+
   Future<void> _confirm(String host, int targetPort, {Peer? expected}) async {
     final key = '$host:$targetPort';
     final now = DateTime.now();
@@ -247,7 +335,7 @@ class PeerDiscovery {
       }
       _peers[peer.fingerprint] = peer;
       _changes.add(peers);
-      if (!useMulticast) announce();
+      if (previous == null || !useMulticast) announce();
     } on Object {
       /* Failed candidates never enter the visible device list. */
     } finally {
@@ -309,18 +397,16 @@ class PeerDiscovery {
     final socket = _socket;
     if (socket == null) return;
     final bytes = utf8.encode(jsonEncode({'app': 'dukto2', ...local.toJson()}));
-    // iOS can use system Bonjour without the restricted multicast entitlement.
-    // Announce directly to verified endpoints so Android can discover us too.
-    if (!useMulticast) {
-      for (final peer in peers) {
-        try {
-          socket.send(bytes, InternetAddress(peer.host), port);
-        } on SocketException {
-          /* A disappeared endpoint will expire normally. */
-        }
+    // Unicast can cross routed subnets even when multicast cannot. This also
+    // lets a manually connected device discover the initiator in return.
+    for (final peer in peers) {
+      try {
+        socket.send(bytes, InternetAddress(peer.host), port);
+      } on SocketException {
+        /* A disappeared endpoint will expire normally. */
       }
-      return;
     }
+    if (!useMulticast) return;
     for (final address in _interfaces.expand((i) => i.addresses)) {
       try {
         socket.setRawOption(
@@ -353,6 +439,7 @@ class PeerDiscovery {
     }
     await _subscription?.cancel();
     _socket?.close();
+    await _cacheWrites;
     await _changes.close();
   }
 }

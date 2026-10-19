@@ -20,7 +20,7 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     private var storage: ReceiveStorage? = null
     private var folderResult: MethodChannel.Result? = null
-    private var notificationTitle = "Dukto2 正在传输"
+    private var notificationTitle = "Dukto2 transfer"
     private var notificationPermissionResult: MethodChannel.Result? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var bridge: MethodChannel? = null
@@ -42,6 +42,10 @@ class MainActivity : FlutterActivity() {
         channel.setMethodCallHandler { call, result ->
                 if (storage!!.handle(call, result)) return@setMethodCallHandler
                 when (call.method) {
+                    "configureLocalization" -> {
+                        NativeLocalization.configure(this, call.arguments as? Map<*, *> ?: emptyMap<String, String>())
+                        result.success(null)
+                    }
                     "chooseReceiveFolder" -> {
                         if (folderResult != null) { result.error("BUSY", "Folder picker is open", null); return@setMethodCallHandler }
                         folderResult = result
@@ -55,7 +59,7 @@ class MainActivity : FlutterActivity() {
                         } catch (error: Exception) { folderResult = null; result.error("STORAGE", error.message, null) }
                     }
                     "startTransfer" -> {
-                        notificationTitle = call.argument<String>("title") ?: "Dukto2 正在传输"
+                        notificationTitle = call.argument<String>("title") ?: NativeLocalization.text(this, "transferTitle")
                         // Notification permission controls presentation, not FGS eligibility.
                         // Never hold the transfer handshake open while the user reads a prompt.
                         startTransferService(result)
@@ -77,11 +81,11 @@ class MainActivity : FlutterActivity() {
                         catch (error: Exception) { result.error("NOTIFICATIONS", error.message, null) }
                     }
                     "notifyComplete" -> {
-                        CompletionNotifications.show(this, call.argument<String>("title") ?: "传输完成", call.argument<String>("body") ?: "内容已校验完成")
+                        CompletionNotifications.show(this, call.argument<String>("title") ?: NativeLocalization.text(this, "receiveTitle"), call.argument<String>("body") ?: NativeLocalization.text(this, "receiveBody"))
                         result.success(null)
                     }
                     "updateTransfer" -> {
-                        TransferService.current?.update(call.argument<String>("title") ?: "Dukto2 正在传输",
+                        TransferService.current?.update(call.argument<String>("title") ?: NativeLocalization.text(this, "transferTitle"),
                             call.argument<String>("text") ?: "", call.argument<Number>("progress")?.toInt() ?: -1)
                         result.success(null)
                     }

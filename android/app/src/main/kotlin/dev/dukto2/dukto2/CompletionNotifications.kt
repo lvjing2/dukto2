@@ -26,11 +26,15 @@ object CompletionNotifications {
         return "granted"
     }
 
+    fun updateChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= 26) context.getSystemService(NotificationManager::class.java).createNotificationChannel(
+            NotificationChannel(CHANNEL, NativeLocalization.text(context, "completionChannel"), NotificationManager.IMPORTANCE_DEFAULT))
+    }
+
     fun show(context: Context, title: String, body: String) {
         if (status(context, true) != "granted") return
         val manager = context.getSystemService(NotificationManager::class.java)
-        if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(
-            NotificationChannel(CHANNEL, "传输完成", NotificationManager.IMPORTANCE_DEFAULT))
+        updateChannel(context)
         val open = PendingIntent.getActivity(context, 2,
             Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

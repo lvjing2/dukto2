@@ -13,3 +13,10 @@ Actual hardware / simulator captures use test files and text without fabricated 
 | Linux | [Desktop](linux-main.png) | Ubuntu 24.04.3 x64, 0.1.4 development preview |
 
 Windows / Linux originals include other desktop content; dedicated app-window captures can replace them for presentation. Android / physical-iPad images remain outstanding. Simulators do not establish physical Wi-Fi or background behavior. See [validation coverage](../en/validation.md).
+
+Multilingual UI acceptance (0.1.6 workspace, iOS 27.0 simulators, 2026-10-19):
+
+- iPhone: [Chinese](iphone-localization-zh.png) · [Arabic](iphone-localization-ar.png)
+- iPad: [Chinese](ipad-localization-zh.png) · [Arabic](ipad-localization-ar.png)
+
+These are real UI captures with existing test-transfer history. No new transfers were performed in this acceptance round.

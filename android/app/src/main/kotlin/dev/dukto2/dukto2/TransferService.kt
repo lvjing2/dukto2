@@ -18,17 +18,19 @@ import android.os.PowerManager
 class TransferService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
-    private var title = "Dukto2 正在传输"
-    private var text = "正在准备传输…"
+    private var title = ""
+    private var text = ""
     private var progress = -1
     private var stopping = false
 
     override fun onCreate() {
         super.onCreate()
         current = this
+        title = NativeLocalization.text(this, "transferTitle")
+        text = NativeLocalization.text(this, "preparing")
         if (Build.VERSION.SDK_INT >= 26) {
             getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL, "文件传输", NotificationManager.IMPORTANCE_LOW))
+                NotificationChannel(CHANNEL, NativeLocalization.text(this, "transferChannel"), NotificationManager.IMPORTANCE_LOW))
         }
         if (Build.VERSION.SDK_INT >= 29) startForeground(ID, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         else startForeground(ID, notification())
@@ -46,7 +48,7 @@ class TransferService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == CANCEL) {
-            onStopped?.invoke("已从通知取消传输")
+            onStopped?.invoke("cancelled")
             finish()
         } else {
             title = intent?.getStringExtra("title") ?: title
@@ -60,6 +62,13 @@ class TransferService : Service() {
         if (stopping) return
         title = newTitle; text = newText; progress = newProgress
         getSystemService(NotificationManager::class.java).notify(ID, notification())
+    }
+
+    fun refreshLocalization() {
+        if (Build.VERSION.SDK_INT >= 26) getSystemService(NotificationManager::class.java).createNotificationChannel(
+            NotificationChannel(CHANNEL, NativeLocalization.text(this, "transferChannel"), NotificationManager.IMPORTANCE_LOW))
+        title = NativeLocalization.text(this, "transferTitle")
+        update(title, text, progress)
     }
 
     private fun notification(): Notification {
@@ -78,16 +87,16 @@ class TransferService : Service() {
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setOngoing(true).setOnlyAlertOnce(true).setCategory(Notification.CATEGORY_PROGRESS)
             .setProgress(100, progress.coerceAtLeast(0), progress < 0)
-            .addAction(Notification.Action.Builder(null, "取消", cancel).build()).build()
+            .addAction(Notification.Action.Builder(null, NativeLocalization.text(this, "cancel"), cancel).build()).build()
     }
 
     override fun onTimeout(startId: Int, fgsType: Int) {
-        onStopped?.invoke("后台运行时间已用尽，请返回应用重新发送")
+        onStopped?.invoke("expired")
         finish()
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        onStopped?.invoke("应用已退出，传输已停止")
+        onStopped?.invoke("stopped")
         finish()
     }
 
@@ -101,7 +110,7 @@ class TransferService : Service() {
         current = null
         if (wakeLock?.isHeld == true) wakeLock?.release()
         if (wifiLock?.isHeld == true) wifiLock?.release()
-        if (!stopping) onStopped?.invoke("后台传输服务已停止")
+        if (!stopping) onStopped?.invoke("stopped")
         super.onDestroy()
     }
 

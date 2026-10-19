@@ -38,7 +38,7 @@ class MainFlutterWindow: NSWindow {
         self?.notifications.request(result)
       } else if call.method == "notifyComplete" {
         let data = call.arguments as? [String: String] ?? [:]
-        self?.notifications.show(title: data["title"] ?? "传输完成", body: data["body"] ?? "内容已校验完成", result: result)
+        self?.notifications.show(title: data["title"] ?? "Transfer complete", body: data["body"] ?? "Content verified", result: result)
       } else if call.method == "openNotificationSettings" {
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences"), NSWorkspace.shared.open(url) {
           result(nil)
@@ -53,8 +53,9 @@ class MainFlutterWindow: NSWindow {
         result(nil)
       } else if call.method == "chooseReceiveFolder", let window = self {
         let panel = NSOpenPanel()
-        panel.title = "选择 Dukto2 接收文件夹"
-        panel.prompt = "选择文件夹"
+        let labels = call.arguments as? [String: String] ?? [:]
+        panel.title = labels["title"] ?? "Choose receiving folder"
+        panel.prompt = labels["prompt"] ?? "Choose folder"
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
