@@ -33,7 +33,13 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // CI deliberately produces unsigned release artifacts; local development
+            // keeps the template debug signing behavior until a release key is set up.
+            signingConfig = if (System.getenv("DUKTO2_ANDROID_UNSIGNED") == "true") {
+                null
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
