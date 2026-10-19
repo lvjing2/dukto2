@@ -40,7 +40,8 @@ class AndroidSigningTest(unittest.TestCase):
 
     def test_apksigner_numbered_and_sdk_range_output(self):
         digest = 'a' * 64
-        for labels in [('Signer #1',), (
+        for labels in [('Signer #1',), ('V2 Signer:',),
+                       ('V2 Signer:', 'V3 Signer:'), (
             'Signer (minSdkVersion=33, maxSdkVersion=2147483647)',
             'Signer (minSdkVersion=24, maxSdkVersion=32)',
         )]:

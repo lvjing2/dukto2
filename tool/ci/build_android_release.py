@@ -50,8 +50,9 @@ def apk_identity(apk, aapt, signer):
 
 
 def verified_apk_certificate(verification):
-    # v3.1 reports certificates by SDK range rather than numbered signer.
-    labels = r'Signer (?:#\d+|\(minSdkVersion=\d+(?: \(dev release=true\))?, maxSdkVersion=\d+\))'
+    # Older tools number signers or use SDK ranges; newer tools prefix the
+    # signature scheme (for example, `V2 Signer:`). All must pin one identity.
+    labels = r'(?:Signer (?:#\d+|\(minSdkVersion=\d+(?: \(dev release=true\))?, maxSdkVersion=\d+\))|V[1-4](?:\.\d+)? Signer[^:\r\n]*:)'
     hashes = {value.lower() for value in re.findall(
         r'^' + labels + r' certificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$', verification, re.M)}
     signer_counts = re.findall(r'^Number of signers:\s*(\d+)\s*$', verification, re.M)
