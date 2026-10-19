@@ -1,0 +1,196 @@
+{
+  "candidateTag": "v0.1.6-rc.2",
+  "candidateCommit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+  "version": "0.1.6-rc.2+9",
+  "ciRun": "https://github.com/lvjing2/dukto2/actions/runs/39209879206",
+  "checks": {
+    "applicationTests": 117,
+    "coreTests": 49,
+    "toolTests": 15,
+    "formattedDartFiles": 58,
+    "analysis": "passed"
+  },
+  "nativeBuilds": [
+    {
+      "version": "0.1.6-rc.2+9",
+      "commit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+      "target": "ios",
+      "runnerSystem": "Darwin",
+      "runnerArchitecture": "arm64",
+      "flutter": "3.47.7",
+      "signing": "unsigned",
+      "validation": "Native CI build only; does not verify device UI or LAN transfer."
+    },
+    {
+      "version": "0.1.6-rc.2+9",
+      "commit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+      "target": "linux",
+      "runnerSystem": "Linux",
+      "runnerArchitecture": "x86_64",
+      "flutter": "3.47.7",
+      "signing": "unsigned",
+      "validation": "Native CI build only; does not verify device UI or LAN transfer."
+    },
+    {
+      "version": "0.1.6-rc.2+9",
+      "commit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+      "target": "android",
+      "runnerSystem": "Linux",
+      "runnerArchitecture": "x86_64",
+      "flutter": "3.47.7",
+      "signing": {
+        "apk": "application key",
+        "aab": "upload key"
+      },
+      "validation": "Native CI build only; does not verify device UI or LAN transfer.",
+      "androidSigning": {
+        "applicationId": "dev.dukto2.dukto2",
+        "versionName": "0.1.6-rc.2",
+        "versionCode": 9,
+        "appCertificateSha256": "4f0c7dab4b81912270656b3e7c0c5cdcd11702fb2b16eca6b6b89f4aad207823",
+        "uploadCertificateSha256": "c2576e3d890f4a0c08dfcf03bae7540c77de120f2704bdf5bcc8e4f8eb2aab28",
+        "playEquivalentApkVerified": true,
+        "playAppSigningKeyImportRequired": true,
+        "artifacts": {
+          "apk": "a236749be540cffdd86be4c8826d91f8e5b530c917228b13b23181db1e784f5f",
+          "aab": "d0639161c1e8bfbc5df13406a19d797bac45612b2c01f08d0bd3557e7caa825e"
+        }
+      }
+    },
+    {
+      "version": "0.1.6-rc.2+9",
+      "commit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+      "target": "windows",
+      "runnerSystem": "Windows",
+      "runnerArchitecture": "AMD64",
+      "flutter": "3.47.7",
+      "signing": "unsigned",
+      "validation": "Native CI build only; does not verify device UI or LAN transfer."
+    },
+    {
+      "version": "0.1.6-rc.2+9",
+      "commit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+      "target": "macos",
+      "runnerSystem": "Darwin",
+      "runnerArchitecture": "arm64",
+      "flutter": "3.47.7",
+      "signing": "ad-hoc, not notarized",
+      "validation": "Native CI build only; does not verify device UI or LAN transfer.",
+      "binaryArchitectures": "x86_64 arm64"
+    }
+  ],
+  "releaseId": 416980005,
+  "repositoryVisibility": "private",
+  "isDraft": true,
+  "isPrerelease": true,
+  "assetDigestVerification": "8 uploaded binary/material digests matched their SHA-256 sidecars via GitHub API",
+  "assets": [
+    {
+      "digest": "sha256:7d8f9eeb440d9f1413d4311eddadac66627ec04694170cc8e10705c65a3bb5e0",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android-notices.zip",
+      "size": 12044
+    },
+    {
+      "digest": "sha256:89ae2471dbc6164f92ee23c8a23ba045c63aeb58f9904a9f7139f6f427a372cb",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android-notices.zip.sha256",
+      "size": 112
+    },
+    {
+      "digest": "sha256:d0639161c1e8bfbc5df13406a19d797bac45612b2c01f08d0bd3557e7caa825e",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android-play.aab",
+      "size": 67164317
+    },
+    {
+      "digest": "sha256:3892dd2005064c7f9a761a0c0c37a73edee6f318bc30c5fa1c8f7aaf3ab6b85f",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android-play.aab.sha256",
+      "size": 109
+    },
+    {
+      "digest": "sha256:a236749be540cffdd86be4c8826d91f8e5b530c917228b13b23181db1e784f5f",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android.apk",
+      "size": 76908565
+    },
+    {
+      "digest": "sha256:ca5da0dd630dcd686dd0d89a11a2aff9cee385967e557e3b3ebf666dc65eed6f",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android.apk.sha256",
+      "size": 104
+    },
+    {
+      "digest": "sha256:6e48f344bd528bc924299d02040fe7c605d5f47d28a7612cc5d0d76e0a5091b1",
+      "name": "Dukto2-0.1.6-rc.2-build.9-android.json",
+      "size": 942
+    },
+    {
+      "digest": "sha256:a34474928d4ec675b6d60ab429801c054c8e29fb1b55fb5961830148643c2e66",
+      "name": "Dukto2-0.1.6-rc.2-build.9-ios-device-unsigned.zip",
+      "size": 8513863
+    },
+    {
+      "digest": "sha256:5a1d5acd0ff658226671c050c2e513c159d821f833d0cdd5db037dc7e7e70f1d",
+      "name": "Dukto2-0.1.6-rc.2-build.9-ios-device-unsigned.zip.sha256",
+      "size": 116
+    },
+    {
+      "digest": "sha256:cd83410e59fbbf28e262aaa932d2df0d6baff79b853366ab9ba92b038eacd860",
+      "name": "Dukto2-0.1.6-rc.2-build.9-ios.json",
+      "size": 300
+    },
+    {
+      "digest": "sha256:e4a28bd9efbc069c0055c36c4f6e8a0fdf746c192d3462e56df2c4b3af328c42",
+      "name": "Dukto2-0.1.6-rc.2-build.9-linux-x64.tar.gz",
+      "size": 11089003
+    },
+    {
+      "digest": "sha256:ed12c50a0077cf16b1789ce85d298352e8383477a213d69b7b56d3d6a6fcf8fb",
+      "name": "Dukto2-0.1.6-rc.2-build.9-linux-x64.tar.gz.sha256",
+      "size": 109
+    },
+    {
+      "digest": "sha256:ffe1e2d5d1a1891c446555f4f434984c93e2ebb229d1ac89d2c2e629151056eb",
+      "name": "Dukto2-0.1.6-rc.2-build.9-linux.json",
+      "size": 302
+    },
+    {
+      "digest": "sha256:6c07ed95e3958684812b877e261f0cf893eee581597ae6640d1d2b0630cec11f",
+      "name": "Dukto2-0.1.6-rc.2-build.9-macos-adhoc.zip",
+      "size": 20383734
+    },
+    {
+      "digest": "sha256:6d0a2311663d72f59fe8cc5b06301a501301e0d2cf696b7ffa611ae12153e19e",
+      "name": "Dukto2-0.1.6-rc.2-build.9-macos-adhoc.zip.sha256",
+      "size": 108
+    },
+    {
+      "digest": "sha256:f5312f3c03f74119bec05c5b9c55587858c5f1052b085844181e5fdfa562b097",
+      "name": "Dukto2-0.1.6-rc.2-build.9-macos.json",
+      "size": 356
+    },
+    {
+      "digest": "sha256:9d8b6139dde39bbf20ca0f77151b27323c06bfc3143109caa73e36186639b2da",
+      "name": "Dukto2-0.1.6-rc.2-build.9-promotion.zip",
+      "size": 564010
+    },
+    {
+      "digest": "sha256:79f5d858f509c3dc9c6c5aedd8be0be9ef9a4a497b1f281d8fff482d54b241cd",
+      "name": "Dukto2-0.1.6-rc.2-build.9-promotion.zip.sha256",
+      "size": 106
+    },
+    {
+      "digest": "sha256:11b85c69db0357b0f133bce97b2be0fbf82f1ea59c94f02ce28e5bc1ff5f58ba",
+      "name": "Dukto2-0.1.6-rc.2-build.9-windows-x64.zip",
+      "size": 13468416
+    },
+    {
+      "digest": "sha256:79c98bafbf9da7ecdef79b9f5a25e1fb8a673ca52d4dc9d58ce84ce41e198f7a",
+      "name": "Dukto2-0.1.6-rc.2-build.9-windows-x64.zip.sha256",
+      "size": 109
+    },
+    {
+      "digest": "sha256:e390f669cb4c15e1b11ee83bdbc6fd4d1ea1d50746ed3031d03a670ca9baf08e",
+      "name": "Dukto2-0.1.6-rc.2-build.9-windows.json",
+      "size": 315
+    }
+  ],
+  "deviceValidation": "Historical device coverage only; not a fresh all-platform RC-binary LAN/background validation",
+  "googlePlay": "Awaiting account verification; not created or submitted"
+}
