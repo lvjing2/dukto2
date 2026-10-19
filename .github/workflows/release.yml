@@ -2,6 +2,12 @@ name: Release builds
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build (tags always build all)
+        type: choice
+        default: all
+        options: [all, android, ios, macos, windows, linux]
   push:
     tags: ['v*']
 
@@ -16,12 +22,17 @@ jobs:
   validate:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      matrix: ${{ steps.version.outputs.matrix }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-flutter
       - name: Check release version
+        id: version
+        env:
+          RELEASE_PLATFORM: ${{ inputs.platform || 'all' }}
         run: python tool/ci/package_release.py check
       - name: Analyze and test
         run: |
@@ -35,18 +46,7 @@ jobs:
     needs: validate
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: linux
-            runner: ubuntu-24.04
-          - target: windows
-            runner: windows-2025
-          - target: macos
-            runner: macos-26
-          - target: android
-            runner: ubuntu-24.04
-          - target: ios
-            runner: macos-26
+      matrix: ${{ fromJSON(needs.validate.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 75
     steps:
@@ -81,11 +81,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Android unsigned release APKs
+      - name: Android signed APK and Play AAB
         if: matrix.target == 'android'
         env:
-          DUKTO2_ANDROID_UNSIGNED: 'true'
-        run: flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64,android-x64
+          ANDROID_APP_KEYSTORE_BASE64: ${{ secrets.ANDROID_APP_KEYSTORE_BASE64 }}
+          ANDROID_APP_STORE_PASSWORD: ${{ secrets.ANDROID_APP_STORE_PASSWORD }}
+          ANDROID_APP_KEY_ALIAS: ${{ secrets.ANDROID_APP_KEY_ALIAS }}
+          ANDROID_APP_KEY_PASSWORD: ${{ secrets.ANDROID_APP_KEY_PASSWORD }}
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: python tool/ci/build_android_release.py
       - name: iOS unsigned device build
         if: matrix.target == 'ios'
         run: |
@@ -130,7 +137,8 @@ jobs:
           Development preview. Native CI compilation does not verify LAN transfer or device UI.
 
           Windows/Linux: complete portable bundles. macOS: ad-hoc signed, not notarized.
-          Android: unsigned APKs; sign before installing. iOS: unsigned device app, not an installable IPA.
+          Android: installable universal APK (app signing key) and Play AAB (upload key), with aligned package/version codes.
+          For first Play enrollment, import our existing app key into Play App Signing; see docs/android-signing.md. iOS: unsigned device app, not an installable IPA.
           Each package includes license notices; verify its SHA-256 sidecar. Signing and architecture are recorded in JSON metadata.
           EOF
           if gh release view "$RELEASE_TAG" --json isDraft > release.json 2>/dev/null; then

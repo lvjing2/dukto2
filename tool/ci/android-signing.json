@@ -1,0 +1,10 @@
+{
+  "applicationId": "dev.dukto2.dukto2",
+  "appCertificateSha256": "4f0c7dab4b81912270656b3e7c0c5cdcd11702fb2b16eca6b6b89f4aad207823",
+  "uploadCertificateSha256": "c2576e3d890f4a0c08dfcf03bae7540c77de120f2704bdf5bcc8e4f8eb2aab28",
+  "playAppSigningKeyImportRequired": true,
+  "bundletool": {
+    "url": "https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar",
+    "sha256": "a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29"
+  }
+}

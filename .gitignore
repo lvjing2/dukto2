@@ -62,6 +62,9 @@ received/
 *.mobileprovision
 *.provisionprofile
 *.key
+*.jks
+*.keystore
+**/key.properties
 id_ed25519*
 id_rsa*
 **/LocalSigning.xcconfig

@@ -4,11 +4,11 @@
 
 ## 触发与下载
 
-- Actions → Release builds → Run workflow：构建所选分支或标签，上传 Actions artifacts，不自动创建版本或标签。
+- Actions → Release builds → Run workflow：可选 all 或单个平台，上传 Actions artifacts，不自动创建版本或标签；Android 签名仅支持 main 或版本标签。
 - 推送匹配 `pubspec.yaml` 的 `v*` 标签：全部构建成功后创建 **Draft Release**；不会自动转为正式发布。已有正式 Release 不会被覆盖。
 - 标签必须是 `v0.1.6` 或包含构建号的 `v0.1.6+7` 这种与当前源码版本一致的形式；不匹配会在构建前失败。
 
-每个平台上传独立 artifact，默认保留 7 天；解压后得到版本化压缩包、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器、自动更新服务或正式签名。
+每个平台上传独立 artifact，默认保留 7 天；解压后得到版本化压缩包或 APK / AAB、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器或自动更新服务；Android 签名及 Play 首次配置见 [双渠道签名说明](android-signing.md)。
 
 ```sh
 gh workflow run release.yml --repo lvjing2/dukto2 --ref main
@@ -25,12 +25,12 @@ sha256sum --check *.sha256
 | Linux | Ubuntu 24.04 x64 | 完整 bundle tar.gz | 未签名；附运行库检查，其他发行版仍需实测 |
 | Windows | Windows 2025 x64 | 完整 Release zip | 未签名；保留 DLL、data，不能只拷贝 exe |
 | macOS | macOS 26 arm64 | 含 app 的 zip | ad-hoc 临时签名，未公证；实际二进制架构写入 JSON，不推定 Intel 通过 |
-| Android | Ubuntu + Java 21 | 三 ABI APK 的 zip | 未签名 Release APK；签名后才能安装，非可直接上架的包 |
+| Android | Ubuntu + Java 21 | 已签名通用 APK、Play AAB、许可 zip | APK 用应用密钥，AAB 用上传密钥；Play 首次须导入应用密钥 |
 | iPhone / iPad | macOS 26 | 无签名 device app 的 zip | 同一个 iOS app 覆盖两类设备，不是可直接安装的 IPA，也不是 TestFlight 包 |
 
 Windows 压缩包包含应用、Flutter DLL 和 data，但当前不捆绑 Visual C++ 运行库；目标机器需要安装对应的 x64 Runtime。首次运行缺少 `MSVCP140.dll` / `VCRUNTIME140.dll` 时，使用 [微软官方下载](https://aka.ms/vc14/vc_redist.x64.exe)，不要从非官方 DLL 站点单独下载文件。要求与 [Flutter Windows 分发说明](https://docs.flutter.dev/platform-integration/windows/building) 及 [微软运行库说明](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) 一致。Linux 仍依赖目标系统的 GTK3 / glibc；原生依赖由构建日志中的 `ldd` 记录。
 
-Android CI 设置 `DUKTO2_ANDROID_UNSIGNED=true`，不使用临时 debug key 假装正式签名。本地未设置该变量时保留已有 debug key 的开发构建行为。APK 打包时复核未签名状态；Apple 端复核 ad-hoc / unsigned 状态。后续接入 Android release key、Apple Developer ID、公证和 App Store / Ad Hoc 描述文件时，再使用 GitHub Secrets / Environments 配置，不将私钥放入仓库。
+Android CI 已接入两套 GitHub Secrets，并验证 APK/AAB 签名、统一包名和版本号，以及从 AAB 派生的应用密钥签名 APK；详见 [双渠道签名](android-signing.md)。本地未配置签名参数时仍使用开发用 debug key。Apple 端继续复核 ad-hoc / unsigned 状态，正式 Apple 签名另行配置，不将私钥放入仓库。
 
 ## 检查与追溯
 
@@ -38,7 +38,7 @@ Android CI 设置 `DUKTO2_ANDROID_UNSIGNED=true`，不使用临时 debug key 假
 
 Flutter 固定为 3.47.7；各系统下载地址与官方 SHA-256 在 [flutter-sdk.json](../tool/ci/flutter-sdk.json)。官方 SDK 校验通过后才解压，Actions 依赖固定提交。原生产物附带 LICENSE、第三方说明和 Flutter 通知资源。元数据包含版本、Git 提交、平台、Runner 架构、Flutter 版本与签名状态；摘要用于检查下载完整性，不代表代码审计或可重现构建证明。
 
-只有草稿汇总 job 获得 `contents: write`，构建 job 为只读；不读取个人签名配置，不改变仓库可见性。标签创建与正式发布由维护者安排，手动验收前不要把自动产物称为已通过跨平台互传测试。
+只有草稿汇总 job 获得 `contents: write`，构建 job 为只读；Android 签名材料仅由对应构建步骤从 Secrets 恢复到临时目录并清理，不改变仓库可见性。标签创建与正式发布由维护者安排，手动验收前不要把自动产物称为已通过跨平台互传测试。
 
 仓库为私有时，GitHub 托管 Runner 使用账号 Actions 配额。流程仅手动或标签触发，设有超时和产物保留期限，不对每次代码推送重复启动五个平台。
 

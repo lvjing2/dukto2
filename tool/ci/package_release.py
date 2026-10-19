@@ -49,6 +49,53 @@ def validate_apple_bundle(app, target):
         raise ValueError('Missing built Apple app bundle: ' + str(plist))
 
 
+def release_matrix(ref, requested):
+    runners = {'linux': 'ubuntu-24.04', 'windows': 'windows-2025', 'macos': 'macos-26', 'android': 'ubuntu-24.04', 'ios': 'macos-26'}
+    if requested != 'all' and requested not in runners:
+        raise ValueError('Unknown release platform')
+    targets = list(runners) if ref.startswith('refs/tags/') or requested == 'all' else [requested]
+    if 'android' in targets and ref and ref != 'refs/heads/main' and not ref.startswith('refs/tags/v'):
+        raise ValueError('Android signing is restricted to main or release tags')
+    return {'include': [{'target': t, 'runner': runners[t]} for t in targets]}
+
+
+def package_android(dest, prefix, metadata):
+    config = json.loads(Path(__file__).with_name('android-signing.json').read_text())
+    report = json.loads((ROOT / 'build/android-signing-report.json').read_text())
+    if (report['appCertificateSha256'] != config['appCertificateSha256'] or
+            report['uploadCertificateSha256'] != config['uploadCertificateSha256'] or
+            report['applicationId'] != config['applicationId'] or not report['playEquivalentApkVerified']):
+        raise ValueError('Missing verified Android cross-channel signing contract')
+    expected_name, expected_code = version().rsplit('+', 1)
+    if report['versionName'] != expected_name or report['versionCode'] != int(expected_code):
+        raise ValueError('Stale Android signing report')
+    files = {'apk': ROOT / 'build/app/outputs/flutter-apk/app-release.apk', 'aab': ROOT / 'build/app/outputs/bundle/release/app-release.aab'}
+    outputs = []
+    for kind, source in files.items():
+        if sha256(source) != report['artifacts'][kind]:
+            raise ValueError('Android artifact changed after signature verification')
+        output = dest / (prefix + ('.apk' if kind == 'apk' else '-play.aab'))
+        shutil.copy2(source, output)
+        outputs.append(output)
+    metadata['signing'] = {'apk': 'application key', 'aab': 'upload key'}
+    metadata['androidSigning'] = report
+    with tempfile.TemporaryDirectory(prefix='dukto2-notices-') as temp:
+        stage = Path(temp)
+        legal(stage)
+        (stage / 'certificates').mkdir()
+        for name in ('app-signing.pem', 'upload-signing.pem'):
+            shutil.copy2(ROOT / 'certificates/android' / name, stage / 'certificates' / name)
+        (stage / 'BUILD-INFO.json').write_text(json.dumps(metadata, indent=2) + '\n')
+        (stage / 'INSTALL.txt').write_text('GitHub APK: signed installable universal APK. Play AAB: upload-key signed, not directly installable. Play must import our existing app key via PEPK before cross-channel updates work. Use increasing versionCodes. See https://github.com/lvjing2/dukto2/blob/main/docs/android-signing.md\n')
+        output = dest / (prefix + '-notices.zip')
+        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as bundle:
+            for path in sorted(stage.rglob('*')):
+                if path.is_file():
+                    bundle.write(path, path.relative_to(stage))
+        outputs.append(output)
+    return outputs
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('target', choices=['check', 'linux', 'windows', 'macos', 'android', 'ios'])
@@ -56,6 +103,10 @@ def main():
     os.chdir(ROOT)
     check_tag(os.environ.get('GITHUB_REF', ''))
     if args.target == 'check':
+        matrix = release_matrix(os.environ.get('GITHUB_REF', ''), os.environ.get('RELEASE_PLATFORM') or 'all')
+        if os.environ.get('GITHUB_OUTPUT'):
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
+                stream.write('matrix=' + json.dumps(matrix) + '\n')
         print('Version/tag valid:', version())
         return
     dest = ROOT / 'dist'
@@ -69,7 +120,10 @@ def main():
         'signing': {'android': 'unsigned', 'ios': 'unsigned', 'macos': 'ad-hoc, not notarized'}.get(args.target, 'unsigned'),
         'validation': 'Native CI build only; does not verify device UI or LAN transfer.',
     }
-    if args.target in ('linux', 'windows'):
+    outputs = []
+    if args.target == 'android':
+        outputs = package_android(dest, prefix, metadata)
+    elif args.target in ('linux', 'windows'):
         source = ROOT / ('artifacts/linux/Dukto2-linux-x64.tar.gz' if args.target == 'linux' else 'artifacts/windows/Dukto2-windows-x64-release.zip')
         suffix = '.tar.gz' if args.target == 'linux' else '.zip'
         output = dest / (prefix + '-x64' + suffix)
@@ -78,25 +132,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix='dukto2-package-') as temp:
             stage = Path(temp)
             legal(stage)
-            if args.target == 'android':
-                apks = sorted((ROOT / 'build/app/outputs/flutter-apk').glob('app-*-release.apk'))
-                if len(apks) != 3:
-                    raise ValueError('Expected the three split ABI release APKs')
-                for apk in apks:
-                    with zipfile.ZipFile(apk) as archive:
-                        if 'AndroidManifest.xml' not in archive.namelist():
-                            raise ValueError('Not an Android APK')
-                    sdk = Path(os.environ.get('ANDROID_HOME') or os.environ['ANDROID_SDK_ROOT'])
-                    signers = sorted((sdk / 'build-tools').glob('*/apksigner'))
-                    if not signers:
-                        raise ValueError('apksigner is required to verify unsigned status')
-                    status = subprocess.run([str(signers[-1]), 'verify', str(apk)], capture_output=True)
-                    if status.returncode == 0:
-                        raise ValueError('Refusing to label a signed APK as unsigned')
-                    shutil.copy2(apk, stage / apk.name.replace('-release.apk', '-release-unsigned.apk'))
-                (stage / 'INSTALL.txt').write_text('Unsigned release APKs. Sign with your own Android release key before installation.\n')
-                output = dest / (prefix + '-unsigned.zip')
-            else:
+            if args.target in ('macos', 'ios'):
                 app = ROOT / ('build/macos/Build/Products/Release/Dukto2.app' if args.target == 'macos' else 'build/ios/iphoneos/Runner.app')
                 validate_apple_bundle(app, args.target)
                 shutil.copytree(app, stage / app.name, symlinks=True)
@@ -111,16 +147,13 @@ def main():
                 output = dest / (prefix + ('-adhoc.zip' if args.target == 'macos' else '-device-unsigned.zip'))
                 (stage / 'INSTALL.txt').write_text('macOS: ad-hoc signed, not notarized. iOS: unsigned device build, not an installable IPA or App Store package.\n')
             (stage / 'BUILD-INFO.json').write_text(json.dumps(metadata, indent=2) + '\n')
-            if args.target in ('macos', 'ios'):
-                subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', str(stage), str(output)], check=True)
-            else:
-                with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as bundle:
-                    for path in sorted(stage.rglob('*')):
-                        if path.is_file():
-                            bundle.write(path, path.relative_to(stage))
-    (dest / (output.name + '.sha256')).write_text(sha256(output) + '  ' + output.name + '\n')
+            subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', str(stage), str(output)], check=True)
+    if not outputs:
+        outputs = [output]
+    for output in outputs:
+        (dest / (output.name + '.sha256')).write_text(sha256(output) + '  ' + output.name + '\n')
     (dest / (prefix + '.json')).write_text(json.dumps(metadata, indent=2) + '\n')
-    print('Packaged:', output.name)
+    print('Packaged:', ', '.join(p.name for p in outputs))
 
 
 if __name__ == '__main__':

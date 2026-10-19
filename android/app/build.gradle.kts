@@ -4,6 +4,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val signedRelease = System.getenv("DUKTO2_ANDROID_SIGNED") == "true"
+val unsignedRelease = System.getenv("DUKTO2_ANDROID_UNSIGNED") == "true"
+require(!(signedRelease && unsignedRelease)) { "Conflicting Android signing modes" }
+fun signingValue(name: String): String =
+    requireNotNull(System.getenv(name)?.takeIf { it.isNotBlank() }) {
+        "Missing Android signing setting: $name"
+    }
+
 android {
     namespace = "dev.dukto2.dukto2"
     compileSdk = flutter.compileSdkVersion
@@ -21,24 +29,30 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
+        // GitHub ships a universal APK, not ABI splits, so it shares this version
+        // code with the Play AAB and can be updated across the two channels.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (signedRelease) {
+            create("dukto2Release") {
+                storeFile = file(signingValue("DUKTO2_ANDROID_STORE_FILE"))
+                storeType = "PKCS12"
+                storePassword = signingValue("DUKTO2_ANDROID_STORE_PASSWORD")
+                keyAlias = signingValue("DUKTO2_ANDROID_KEY_ALIAS")
+                keyPassword = signingValue("DUKTO2_ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            // CI deliberately produces unsigned release artifacts; local development
-            // keeps the template debug signing behavior until a release key is set up.
-            signingConfig = if (System.getenv("DUKTO2_ANDROID_UNSIGNED") == "true") {
-                null
-            } else {
-                signingConfigs.getByName("debug")
+            signingConfig = when {
+                signedRelease -> signingConfigs.getByName("dukto2Release")
+                unsignedRelease -> null
+                else -> signingConfigs.getByName("debug")
             }
         }
     }
