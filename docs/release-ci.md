@@ -10,7 +10,9 @@
 - 推送匹配 `pubspec.yaml` 的 `v*` 标签：全部构建成功后创建 **Draft Release**；不会自动转为正式发布。已有正式 Release 不会被覆盖。
 - 标签必须是 `v0.1.6` 或包含构建号的 `v0.1.6+7` 这种与当前源码版本一致的形式；不匹配会在构建前失败。
 
-每个平台上传独立 artifact，默认保留 7 天；解压后得到版本化压缩包或 APK / AAB、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器或自动更新服务；Android 签名及 Play 首次配置见 [双渠道签名说明](android-signing.md)。
+每个平台上传独立 artifact，默认保留 30 天；解压后得到版本化压缩包或 APK / AAB、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器或自动更新服务；Android 签名及 Play 首次配置见 [双渠道签名说明](android-signing.md)。
+
+GitHub Release 面向用户只附五个文件：Android APK、Windows zip、Linux tar.gz、macOS zip、iOS unsigned zip。Android APK 保持原始字节和签名，应用许可已在 APK 内；其他压缩包内附 `RELEASE-INFO.json` 和 `SHA256SUMS.txt`，原始文件、权限和链接保留。iOS 仍需自行签名后使用。Play AAB、独立 JSON、外置校验文件及许可包保留在 CI artifact；推广素材保留在仓库与本机。CI 重跑已有草稿时保留人工整理的 Release Note。
 
 ```sh
 gh workflow run release.yml --repo lvjing2/dukto2 --ref main

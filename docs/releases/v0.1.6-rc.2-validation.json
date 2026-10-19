@@ -84,7 +84,9 @@
   "isDraft": true,
   "isPrerelease": true,
   "assetDigestVerification": "8 uploaded binary/material digests matched their SHA-256 sidecars via GitHub API",
-  "assets": [
+  "deviceValidation": "Historical device coverage only; not a fresh all-platform RC-binary LAN/background validation",
+  "googlePlay": "Awaiting account verification; not created or submitted",
+  "originalCiAndPromotionAssets": [
     {
       "digest": "sha256:7d8f9eeb440d9f1413d4311eddadac66627ec04694170cc8e10705c65a3bb5e0",
       "name": "Dukto2-0.1.6-rc.2-build.9-android-notices.zip",
@@ -191,6 +193,38 @@
       "size": 315
     }
   ],
-  "deviceValidation": "Historical device coverage only; not a fresh all-platform RC-binary LAN/background validation",
-  "googlePlay": "Awaiting account verification; not created or submitted"
+  "publicationPackaging": {
+    "attachmentCount": 5,
+    "policy": "One attachment per OS; Android APK unchanged; archives include RELEASE-INFO.json and SHA256SUMS.txt",
+    "toolSha256": "b7c75197551eb93d0cd46812e610b9631dd272cdd06a023142fef9d930d887ec",
+    "assets": [
+      {
+        "name": "Dukto2-0.1.6-rc.2-build.9-android.apk",
+        "size": 76908565,
+        "sha256": "a236749be540cffdd86be4c8826d91f8e5b530c917228b13b23181db1e784f5f"
+      },
+      {
+        "name": "Dukto2-0.1.6-rc.2-build.9-ios-device-unsigned.zip",
+        "size": 8518272,
+        "sha256": "89e11ca81ef0217d1fc4fd9dd9db0697dceaf95d8064bdb92624f3a4621d6bd3"
+      },
+      {
+        "name": "Dukto2-0.1.6-rc.2-build.9-linux-x64.tar.gz",
+        "size": 10996655,
+        "sha256": "e02f20d3f4fc33e344adc5ecec733aae45f09d07717e577271d314e9d4d32973"
+      },
+      {
+        "name": "Dukto2-0.1.6-rc.2-build.9-macos-adhoc.zip",
+        "size": 20386844,
+        "sha256": "998e89838928f16d9957be67862133c82b0cd3f7252bba7a86849ea6d93fd079"
+      },
+      {
+        "name": "Dukto2-0.1.6-rc.2-build.9-windows-x64.zip",
+        "size": 13470021,
+        "sha256": "69b1b60377a8c9061040a5fdee6393493f9561cfea08c73b875c4e579db2eba7"
+      }
+    ],
+    "backup": "artifacts/releases/rc2-original-assets (local, excluded from Git)",
+    "payloadsAndPermissionsVerified": true
+  }
 }

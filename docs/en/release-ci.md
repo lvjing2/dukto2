@@ -10,7 +10,9 @@ Workflow: [Release builds](https://github.com/lvjing2/dukto2/actions/workflows/r
 - A `v*` tag matching `pubspec.yaml` creates a **draft release** only after all builds succeed. It is not automatically published and does not overwrite a published release.
 - Tags must match the source version, such as `v0.1.6` or `v0.1.6+7`; mismatches fail before building.
 
-Each platform uploads an artifact, retained for seven days by default. It contains versioned archives or APK / AAB files, SHA-256 sidecars and JSON metadata. Draft-release attachments are stored separately from expiring Actions artifacts. Store submissions, installers and automatic updates are not configured. Android signing and initial Play enrollment are described in [two-channel signing](android-signing.md).
+Each platform uploads an artifact, retained for 30 days by default. It contains versioned archives or APK / AAB files, SHA-256 sidecars and JSON metadata. Draft-release attachments are stored separately from expiring Actions artifacts. Store submissions, installers and automatic updates are not configured. Android signing and initial Play enrollment are described in [two-channel signing](android-signing.md).
+
+The user-facing GitHub Release has five attachments: Android APK, Windows zip, Linux tar.gz, macOS zip and unsigned iOS zip. APK bytes/signatures remain unchanged, with licenses already embedded. Archives include `RELEASE-INFO.json` and `SHA256SUMS.txt` while preserving original files, modes and links. iOS requires separate signing. Play AAB, standalone JSON/checksums and notices remain in CI artifacts; promotion material stays in the repository/local backup. Rerunning CI preserves manually edited notes on an existing draft.
 
 ```sh
 gh workflow run release.yml --repo lvjing2/dukto2 --ref main

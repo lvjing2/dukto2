@@ -108,7 +108,7 @@ jobs:
           name: release-${{ matrix.target }}
           path: dist/*
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
 
   draft-release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -118,6 +118,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: release-*
@@ -126,6 +129,8 @@ jobs:
       - name: Verify downloads
         working-directory: dist
         run: sha256sum --check *.sha256
+      - name: Prepare one download per operating system
+        run: python3 tool/ci/prepare_release_assets.py dist release-assets --version "$(jq -r .version dist/*-android.json)"
       - name: Create or update draft only
         env:
           GH_TOKEN: ${{ github.token }}
@@ -133,22 +138,21 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          cat > notes.md <<'EOF'
-          Development preview. Native CI compilation does not verify LAN transfer or device UI.
-
-          Windows/Linux: complete portable bundles. macOS: ad-hoc signed, not notarized.
-          Android: installable universal APK (app signing key) and Play AAB (upload key), with aligned package/version codes.
-          For first Play enrollment, import our existing app key into Play App Signing; see docs/android-signing.md. iOS: unsigned device app, not an installable IPA.
-          Each package includes license notices; verify its SHA-256 sidecar. Signing and architecture are recorded in JSON metadata.
-          EOF
+          python3 - <<'PYNOTES'
+          import os
+          from pathlib import Path
+          tag = os.environ['RELEASE_TAG']
+          source = Path('docs/releases') / (tag + '.md')
+          fallback = '更新内容见 [变更记录](https://github.com/' + os.environ['GH_REPO'] + '/blob/' + tag + '/CHANGELOG.zh-CN.md)。\n'
+          Path('notes.md').write_text(source.read_text() if source.is_file() else fallback)
+          PYNOTES
           if gh release view "$RELEASE_TAG" --json isDraft > release.json 2>/dev/null; then
             python3 -c 'import json; assert json.load(open("release.json"))["isDraft"], "Refusing to overwrite a published release"'
-            gh release upload "$RELEASE_TAG" dist/* --clobber
-            gh release edit "$RELEASE_TAG" --notes-file notes.md
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
           else
             release_flags=(--draft)
             if [[ "$RELEASE_TAG" == *-* ]]; then
               release_flags+=(--prerelease)
             fi
-            gh release create "$RELEASE_TAG" dist/* --verify-tag "${release_flags[@]}" --title "Dukto2 $RELEASE_TAG" --notes-file notes.md
+            gh release create "$RELEASE_TAG" release-assets/* --verify-tag "${release_flags[@]}" --title "Dukto2 $RELEASE_TAG" --notes-file notes.md
           fi
