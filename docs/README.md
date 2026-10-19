@@ -14,3 +14,9 @@
 | 来源与许可 | [来源核查](source-provenance-audit.md)、[第三方声明](../THIRD_PARTY_NOTICES.zh-CN.md)、[致谢与 AI 创作](../ACKNOWLEDGEMENTS.zh-CN.md)、[Apache-2.0](../LICENSE) |
 | Android 发布 | [Android 渠道签名](android-signing.md) |
 | 开发与发行 | [贡献指南](../CONTRIBUTING.zh-CN.md)、[变更记录](../CHANGELOG.zh-CN.md)、[Release CI](release-ci.md)、[安全说明](../SECURITY.zh-CN.md) |
+
+## 发布准备
+
+- [0.1.6-rc.2 候选说明](releases/v0.1.6-rc.2.md)
+- [国内社区试用素材](../distribution/community-zh/README.md)
+- [Google Play 离线材料](../distribution/google-play/README.md)（等待账号审核，不提交）

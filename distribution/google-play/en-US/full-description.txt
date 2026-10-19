@@ -1,0 +1,26 @@
+Move files and text between your own devices with Dukto2, a cross-platform local-network sharing app.
+
+Connect your phone and computer to a network that allows devices to communicate, open Dukto2 on both, and choose the receiving device. Transfers go directly between the devices without an internet relay or a Dukto2 account.
+
+FILES AND TEXT
+Select several files in one batch. The receiving device reviews the list and accepts the batch once. Write or paste text, send it, and copy received text from the viewer. Text messages support up to 16 MiB of UTF-8 data.
+
+FIND AND VERIFY DEVICES
+Discover nearby devices automatically, enter an address manually, or scan a Dukto2 connection QR code. Manual connections show a verification code; compare it on the receiving device. QR connections check the complete device fingerprint. The recipient still approves incoming transfers.
+
+LOCAL TRANSFERS
+File transfers use HTTPS with the verified device certificate. File size and SHA-256 checks help detect incomplete or altered transfers. Received files are saved only after verification, without replacing existing files.
+
+MAKE IT YOURS
+Choose and remember a receiving folder. View recent transfer times and durations, filter history by device, and open received text or file locations. Settings include completion notifications, light and dark appearance, and ten interface languages.
+
+CROSS-PLATFORM
+Dukto2 has clients for Android, macOS, Windows, Linux, iPhone and iPad. Release availability, signing and validation differ by platform; check the release notes before installing a companion client.
+
+CURRENT LIMITS
+Devices must be directly reachable on the network. Guest Wi-Fi and router isolation can prevent connections. Background transfers depend on the operating system. Interrupted files must be sent again; resumable transfers and folder transfers are not implemented. Compatibility with the original Dukto protocol is not yet available.
+
+ABOUT THE PROJECT
+Dukto2 is an independent project inspired by Dukto, created by Emanuele Colombo, with thanks to the community. It is not an officially endorsed successor. The project is created with AI assistance under human direction and uses Apache License 2.0 for its own source code.
+
+Android QR scanning uses Google ML Kit. Its diagnostic and usage-data practices are described in the privacy policy alongside Dukto2's local storage and device-to-device transfers.

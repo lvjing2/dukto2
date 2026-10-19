@@ -1,0 +1,24 @@
+{
+  "applicationId": "dev.dukto2.dukto2",
+  "developerName": "lvjing2",
+  "versionName": "0.1.6-rc.2",
+  "versionCode": 9,
+  "candidateTag": "v0.1.6-rc.2",
+  "candidateCommit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+  "defaultLocale": "zh-CN",
+  "locales": [
+    "en-US",
+    "zh-CN"
+  ],
+  "suggestedCategory": "TOOLS",
+  "suggestedPricing": "FREE",
+  "containsAds": false,
+  "loginRequired": false,
+  "supportEmail": "leojames.googol@gmail.com",
+  "privacyPolicyUrl": null,
+  "status": "prepared-offline-not-submitted",
+  "playAppSigningKeyImportRequired": true,
+  "dataSafetyReviewRequired": true,
+  "thirdPartyDiagnosticSdk": "Google ML Kit bundled barcode scanning via mobile_scanner 7.4.2",
+  "promotionPriority": "mainland-China-developer-community"
+}

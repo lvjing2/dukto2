@@ -1,0 +1,28 @@
+{
+  "captureDate": "2026-10-19",
+  "device": "REDMI K90",
+  "resolution": [
+    1156,
+    2510
+  ],
+  "installedVersionName": "0.1.6",
+  "installedVersionCode": 7,
+  "captureType": "adb exec-out screencap -p, native device resolution",
+  "sourceCodeReference": "2331af1 (multilingual / QR UI); installed binary source not re-attested",
+  "candidateTag": "v0.1.6-rc.2",
+  "candidateDeviceValidation": false,
+  "imageEditing": false,
+  "settingsChanged": false,
+  "transferRecords": "Existing test records, not generated for screenshots",
+  "googlePlayScreenshotReady": false,
+  "googlePlayBlockers": [
+    "Native phone aspect ratio exceeds 2:1",
+    "Status bar has real notification/network indicators",
+    "Retake with final release binary before Play submission"
+  ],
+  "files": {
+    "android-languages.png": "f35e1b58585b4017883ace5444ef6564e04f16192426d193a540a7f0ebf91b33",
+    "android-settings.png": "7b47cb1c535bf6e4e92a7bc33966c90ec9ffe6d865d9ac721a4f3ae8087365b2",
+    "android-main.png": "7891bbfff61a66cd5496cacb68e2a8d49d4b3162cef3b56c6e7411a6cc752584"
+  }
+}

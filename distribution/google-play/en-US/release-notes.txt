@@ -1,0 +1,1 @@
+Release candidate for local-network file and text sharing. Includes batch approval, verified QR device connections, ten interface languages, remembered receiving folders and transfer history. Interrupted files must be resent. Google Play and cross-channel upgrade validation remain pending.
