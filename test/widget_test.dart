@@ -135,11 +135,21 @@ void main() {
   }
 
   void clean(WidgetTester tester, TestController c) {
+    // Widget tests have no native keep-awake plugin. Complete its calls rather
+    // than leaving the acquisition timeout pending after accepting a transfer.
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      Dukto2Controller.platform,
+      (_) async => null,
+    );
     addTearDown(() async {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
       await c.client.close();
       c.dispose();
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        Dukto2Controller.platform,
+        null,
+      );
     });
   }
 
