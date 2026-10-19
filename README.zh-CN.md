@@ -2,7 +2,20 @@
 
 [English](README.md) | 简体中文
 
-一个希望延续 Dukto 简单、直接体验的跨平台局域网文件与文本传输项目，使用 Flutter / Dart 重新实现。不需要账户或互联网中继，发送前核对设备身份，接收后校验内容。
+Dukto2 是一款跨平台局域网文件与文本传输工具，让电脑、手机和平板在同一网络中直接交换内容。无需注册账户或上传云端，连接设备、选择内容，经对方确认后即可传输。
+
+## 功能与特色
+
+- **跨平台互传**：覆盖 macOS、Windows、Linux、Android 和 iPhone / iPad，界面适配桌面、手机与平板；各平台实测范围见下表。
+- **局域网直连**：设备之间直接传输，不经过互联网中继，适用于无线或有线网络。
+- **多种连接方式**：自动发现附近设备，也可扫码连接或手动连接；不同子网的设备，只要能够直接通信，也可以连接。
+- **文件与文本**：支持单文件、多文件批量发送，以及文本消息和 UTF-8 文本文件，接收方明确确认后开始传输。
+- **大文件流式传输**：分段读写，避免把整个文件载入内存；提供进度、速度显示与取消操作，完成前校验文件大小和 SHA-256。
+- **加密与身份校验**：使用 HTTPS / TLS，扫码校验完整证书指纹，手动连接核对设备码；发送时固定已验证的目标证书。
+- **接收目录与历史**：可选择接收位置，查看最近传输、按设备筛选记录，并打开文件所在目录或查看收到的文本。
+- **多语言与外观**：支持 10 种语言，记住语言选择，支持跟随系统、浅色与深色主题。
+
+## 版本与平台验证
 
 当前源码为 **0.1.6-rc.2+9 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，尚未发布正式安装包。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
 
@@ -23,24 +36,6 @@
 ![macOS 主界面](docs/screenshots/macos-main-015.jpg)
 
 更多实际设备及模拟器图片见 [截图说明](docs/screenshots/README.md)，其中 Windows、Linux 图片保留了测试时的原始桌面环境。
-
-## 致敬 Dukto
-
-感谢 **Emanuele Colombo** 创作了 [Dukto](https://www.msec.it/blog/dukto/)，让不同系统之间的局域网传输变得简单。也感谢 [xuzhen/dukto](https://github.com/xuzhen/dukto) 及社区贡献者持续维护和移植这个项目。
-
-Dukto2 的目标是延续原作的实用精神，用现代框架继续探索跨系统文件互传。目前是独立重写项目；名称表达致敬与延续意愿，尚不代表原作者授予的官方继任身份或背书。项目发起人计划与原作者沟通，相关关系将以实际沟通结果更新。
-
-项目以 Flutter / Dart 独立重写为目标，使用新的传输核心与协议；旧 Dukto 协议兼容留待后续实现。[首轮来源核查](docs/source-provenance-audit.md) 未发现可确认复制或翻译 Dukto / LocalSend 业务代码的明确证据；共同 Flutter 模板和 LocalSend 设计参考已列明，证书生成流程及早期历史仍有待追溯项。本说明不预先认定版权法上的衍生作品关系。
-
-详细来源与说明见 [致敬与创作说明](ACKNOWLEDGEMENTS.zh-CN.md)。
-
-## AI 创作声明
-
-本项目主要由 **OpenAI Codex** 在人的指导下创作：代码、UI 提案、测试与文档由 AI 生成并迭代；发起人提出目标、选择方案并审阅结果。开发过程中使用了 GPT-6.1 Sol，以及 UI UX Pro Max 等设计辅助工具。我们选择公开说明这一创作方式，而非将 AI 生成的工作表述为纯人工编写。
-
-本仓库记录了已执行的自动检查与真机验证；结果和未覆盖范围见 [验证记录](docs/validation.md)。
-
-Dukto2 自身代码采用 [Apache License 2.0](LICENSE)（`Apache-2.0`）。第三方代码、模板和依赖保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.zh-CN.md)。致谢与 AI 创作说明见 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.zh-CN.md)。
 
 ## 环境
 
@@ -164,3 +159,21 @@ Flutter 的生成模板在中文目录中读取 SDK 路径时存在编码问题�
 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.zh-CN.md)，安全边界与漏洞反馈见 [SECURITY.md](SECURITY.zh-CN.md)。文档导航见 [docs/README.md](docs/README.md)，版本变更见 [CHANGELOG.md](CHANGELOG.zh-CN.md)，多平台构建与签名说明见 [Release CI](docs/release-ci.md)。
 
 GitHub Actions 提供分析、测试及五平台原生构建，标签可触发草稿 Release；构建成功不代替真实设备验收。Android APK / AAB 签名已配置；首次 Play 接入、应用商店分发、Apple 正式签名与自动更新尚待完成。
+
+## 致敬 Dukto
+
+感谢 **Emanuele Colombo** 创作了 [Dukto](https://www.msec.it/blog/dukto/)，让不同系统之间的局域网传输变得简单。也感谢 [xuzhen/dukto](https://github.com/xuzhen/dukto) 及社区贡献者持续维护和移植这个项目。
+
+Dukto2 的目标是延续原作的实用精神，用现代框架继续探索跨系统文件互传。目前是独立重写项目；名称表达致敬与延续意愿，尚不代表原作者授予的官方继任身份或背书。项目发起人计划与原作者沟通，相关关系将以实际沟通结果更新。
+
+项目以 Flutter / Dart 独立重写为目标，使用新的传输核心与协议；旧 Dukto 协议兼容留待后续实现。[首轮来源核查](docs/source-provenance-audit.md) 未发现可确认复制或翻译 Dukto / LocalSend 业务代码的明确证据；共同 Flutter 模板和 LocalSend 设计参考已列明，证书生成流程及早期历史仍有待追溯项。本说明不预先认定版权法上的衍生作品关系。
+
+详细来源与说明见 [致敬与创作说明](ACKNOWLEDGEMENTS.zh-CN.md)。
+
+## AI 创作声明
+
+本项目主要由 **OpenAI Codex** 在人的指导下创作：代码、UI 提案、测试与文档由 AI 生成并迭代；发起人提出目标、选择方案并审阅结果。开发过程中使用了 GPT-6.1 Sol，以及 UI UX Pro Max 等设计辅助工具。我们选择公开说明这一创作方式，而非将 AI 生成的工作表述为纯人工编写。
+
+本仓库记录了已执行的自动检查与真机验证；结果和未覆盖范围见 [验证记录](docs/validation.md)。
+
+Dukto2 自身代码采用 [Apache License 2.0](LICENSE)（`Apache-2.0`）。第三方代码、模板和依赖保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.zh-CN.md)。致谢与 AI 创作说明见 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.zh-CN.md)。

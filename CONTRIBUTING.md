@@ -1,6 +1,6 @@
 # Contributing to Dukto2
 
-English | [简体中文](CONTRIBUTING.zh-CN.md)
+English | [Simplified Chinese](CONTRIBUTING.zh-CN.md)
 
 Read the platform coverage in the README before reporting a problem. A successful build, simulator test and physical LAN transfer are different results. Issues and pull requests are welcome in English or Simplified Chinese.
 

@@ -1,6 +1,6 @@
 # Android signing for two distribution channels
 
-English | [简体中文](../android-signing.md)
+English | [Simplified Chinese](../android-signing.md)
 
 Google Play uses an upload-key-signed AAB; GitHub uses a universal APK signed with the application key. **When first enabling Play App Signing, import the existing project application key rather than asking Google to generate a different key.** Matching application identities are required for updates across channels. See [Android signing](https://developer.android.com/studio/publish/app-signing) and the [cross-store FAQ](https://developer.android.com/guide/app-bundle/faq).
 

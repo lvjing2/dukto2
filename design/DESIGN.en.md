@@ -1,6 +1,6 @@
 # UI guidelines
 
-English | [简体中文](DESIGN.md)
+English | [Simplified Chinese](DESIGN.md)
 
 Dukto2 uses a minimal blue interface, system fonts and semantic colors, balancing desktop information density, mobile touch and large text.
 

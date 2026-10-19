@@ -1,6 +1,6 @@
 # Reliability and transfer sessions
 
-English | [简体中文](../reliability.md)
+English | [Simplified Chinese](../reliability.md)
 
 ## Module boundaries
 

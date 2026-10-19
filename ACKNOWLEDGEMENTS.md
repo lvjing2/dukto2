@@ -1,6 +1,6 @@
 # Acknowledgements and AI creation
 
-English | [简体中文](ACKNOWLEDGEMENTS.zh-CN.md)
+English | [Simplified Chinese](ACKNOWLEDGEMENTS.zh-CN.md)
 
 ## Dukto
 

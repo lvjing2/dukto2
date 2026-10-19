@@ -1,6 +1,6 @@
 # Batch transfers and history
 
-English | [简体中文](../batch-and-history.md)
+English | [Simplified Chinese](../batch-and-history.md)
 
 ## Sending batches
 

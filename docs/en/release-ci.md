@@ -1,6 +1,6 @@
 # Multi-platform Release CI
 
-English | [简体中文](../release-ci.md)
+English | [Simplified Chinese](../release-ci.md)
 
 Workflow: [Release builds](https://github.com/lvjing2/dukto2/actions/workflows/release.yml), configured in [release.yml](../../.github/workflows/release.yml). Downloads follow repository access permissions.
 

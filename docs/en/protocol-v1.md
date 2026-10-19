@@ -1,6 +1,6 @@
 # Dukto2 protocol v1
 
-English | [简体中文](../protocol-v1.md)
+English | [Simplified Chinese](../protocol-v1.md)
 
 Protocol and UI are separate. Any future legacy Dukto adapter should be independent; v1 must not introduce an unencrypted fallback.
 

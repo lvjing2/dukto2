@@ -1,6 +1,6 @@
 # Receiving folders and text
 
-English | [简体中文](../receive-and-text.md)
+English | [Simplified Chinese](../receive-and-text.md)
 
 ## Receiving folders
 
@@ -12,7 +12,7 @@ Change the destination or restore its default in Settings → Receiving location
 | Windows / Linux | Downloads / Dukto2 | System folder picker and local path |
 | Android 10+ | Downloads / Dukto2 | MediaStore by default, persistent SAF grants for selected folders |
 | Android 7–9 | App storage | Direct receiving after an SAF folder grant |
-| iPhone / iPad | Files → On My iPhone / iPad → Dukto2 → 接收文件 (Received files) | System folder picker and security-scoped bookmarks |
+| iPhone / iPad | Files → On My iPhone / iPad → Dukto2 → the default receiving folder shown in Settings | System folder picker and security-scoped bookmarks |
 
 Separate targets handle duplicate names without overwriting existing files. Success is recorded only after length / SHA-256 validation and commit. Incomplete targets are discarded; cancellation never deletes committed files. See [storage lifecycle](reliability.md).
 

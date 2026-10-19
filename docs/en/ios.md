@@ -1,6 +1,6 @@
 # iPhone and iPad
 
-English | [简体中文](../ios.md)
+English | [Simplified Chinese](../ios.md)
 
 The project targets iOS / iPadOS 15 or newer, with one app for iPhone and iPad. Selected scenarios are tested on iOS 27.0 simulators and physical iPadOS 26.6; physical iPhone, minimum OS and background behavior need separate tests. See [coverage](validation.md).
 
@@ -31,7 +31,7 @@ From iOS 16, hardware typically returns iPhone / iPad without Apple's special cu
 
 ## Files and background
 
-The default is Files → On My iPhone / iPad → Dukto2 → 接收文件 (Received files). Settings can select another folder and remember security-scoped access. The system picker chooses sending sources; system share sheets open or export received files, with a popover anchor on iPad.
+The default is Files → On My iPhone / iPad → Dukto2 → the default receiving folder shown in Settings. Settings can select another folder and remember security-scoped access. The system picker chooses sending sources; system share sheets open or export received files, with a popover anchor on iPad.
 
 Native writes use at most 256 KiB and await acknowledgement. Private staging is copied to an isolated target using file coordination, then length and SHA-256 are rechecked before publishing. Extra disk space is required; external-provider availability depends on that provider.
 

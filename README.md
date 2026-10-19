@@ -1,8 +1,21 @@
 # Dukto2
 
-English | [简体中文](README.zh-CN.md)
+English | [Simplified Chinese](README.zh-CN.md)
 
-Cross-platform LAN file and text sharing, rebuilt with Flutter and Dart to carry forward Dukto's simple, direct experience. No account or internet relay is required. Verify the receiving device before sending; transferred content is checked before completion.
+Dukto2 shares files and text directly between computers, phones and tablets on the same local network. No account or cloud upload is required: connect to a device, choose what to send, and transfer after the receiver approves.
+
+## Features
+
+- **Cross-platform sharing**: macOS, Windows, Linux, Android and iPhone / iPad, with layouts for desktops, phones and tablets. Tested coverage is listed below.
+- **Direct LAN transfers**: content travels between devices without an internet relay, over wireless or wired networks.
+- **Flexible connections**: discover nearby devices automatically, scan a connection QR code, or connect manually. Devices on different subnets can connect when direct communication is allowed.
+- **Files and text**: send a single file, a batch of files, text messages or UTF-8 text files. The receiver explicitly approves before transfer begins.
+- **Streaming large files**: bounded reads and writes avoid loading entire files into memory. Track progress and speed, cancel a transfer, and verify size and SHA-256 before completion.
+- **Encryption and identity checks**: HTTPS / TLS protects transfers. QR connections match the full certificate fingerprint; manual connections use a verification code. Sending pins the verified destination certificate.
+- **Receiving folders and history**: choose a destination, browse recent transfers, filter by device, open a file's folder or view received text.
+- **Languages and appearance**: choose from 10 languages, remember your preference, and follow the system theme or select light / dark mode.
+
+## Version and platform coverage
 
 The source is a **0.1.6-rc.2+9 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
@@ -18,25 +31,9 @@ These are tested environments, not a guarantee for every device. See [validation
 
 ## Screenshots
 
-![macOS main window](docs/screenshots/macos-main-015.jpg)
+![English desktop interface preview](docs/screenshots/desktop-main-en.png)
 
-See [screenshots](docs/screenshots/README.en.md) for other devices and simulators. Windows and Linux images retain their original test desktops.
-
-## A tribute to Dukto
-
-Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/dukto/), and to [xuzhen/dukto](https://github.com/xuzhen/dukto) and the community for maintaining and porting the project.
-
-Dukto2 aims to continue the original's practical spirit with a modern implementation. Its name expresses a tribute and an intention to continue that experience; it does not imply official successor status, authorization or endorsement by the original author. The initiator plans to contact the author, and this description will be updated to reflect any actual agreement.
-
-The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. The [initial provenance review](docs/en/source-provenance-audit.md) found no clear evidence confirming copied or translated Dukto / LocalSend business implementations. Shared Flutter templates and LocalSend design references are documented; certificate-generation provenance and early development history remain unresolved. This is not a legal determination about derivative-work status. See [acknowledgements](ACKNOWLEDGEMENTS.md).
-
-## Created with AI assistance
-
-This project is primarily created by **OpenAI Codex under human direction**, including code, UI proposals, tests and documentation. The human initiator sets goals, chooses approaches and reviews results. Development used GPT-6.1 Sol and design guidance including UI UX Pro Max. We disclose that process rather than presenting AI-generated work as wholly handwritten.
-
-Executed checks and device tests, including their limits, are listed in [validation coverage](docs/en/validation.md).
-
-Dukto2's own code is licensed under [Apache License 2.0](LICENSE) (`Apache-2.0`). Third-party code, templates and dependencies retain their licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
+Rendered from the current English Flutter interface with a sample device and no transfer history. See [English interface previews](docs/screenshots/README.en.md) for phone and tablet layouts; these previews do not represent device-transfer tests.
 
 ## Requirements
 
@@ -76,7 +73,7 @@ Debug packages use development signing. Android release signing uses separate ap
 2. Select a nearby device, or enter the IPv4 address and port shown in the other device's local information.
 3. **Read the verification code on the receiving device itself** and compare the 16 hexadecimal characters with the connection dialog. Names and discovery messages do not prove identity.
 4. Select files, review names and sizes, and explicitly send. The receiver approves; completion requires matching SHA-256 and a successful save acknowledgement.
-5. Change the destination in Settings. macOS, Windows, Linux and Android 10+ default to Downloads / Dukto2. Android 7–9 can use an authorized SAF folder; otherwise files remain in app storage for export. iPhone / iPad default to Files → Dukto2 → 接收文件 (Received files). Directory access is remembered. Changing folders does not move or delete existing files.
+5. Change the destination in Settings. macOS, Windows, Linux and Android 10+ default to Downloads / Dukto2. Android 7–9 can use an authorized SAF folder; otherwise files remain in app storage for export. iPhone / iPad default to Files → Dukto2 → the default receiving folder shown in Settings. Directory access is remembered. Changing folders does not move or delete existing files.
 
 App-storage and SAF transfers use separate subdirectories; MediaStore creates new download entries. Existing files are not overwritten. Incomplete files are not reported as successful and app-owned temporary data is cleaned up after restart. The last 100 completed history entries are stored locally.
 
@@ -147,3 +144,19 @@ Android settings explicitly read SDK paths as UTF-8. Checks use `dart analyze` t
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CHANGELOG.md](CHANGELOG.md) and [Release CI](docs/en/release-ci.md). Issues and pull requests are welcome in English or Simplified Chinese.
 
 GitHub Actions provides analysis, tests and native builds for five platforms; version tags can create draft releases. Successful builds do not replace device validation. Android APK / AAB signing is configured; initial Play enrollment, store delivery, production Apple signing and automatic updates remain outstanding.
+
+## A tribute to Dukto
+
+Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/dukto/), and to [xuzhen/dukto](https://github.com/xuzhen/dukto) and the community for maintaining and porting the project.
+
+Dukto2 aims to continue the original's practical spirit with a modern implementation. Its name expresses a tribute and an intention to continue that experience; it does not imply official successor status, authorization or endorsement by the original author. The initiator plans to contact the author, and this description will be updated to reflect any actual agreement.
+
+The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. The [initial provenance review](docs/en/source-provenance-audit.md) found no clear evidence confirming copied or translated Dukto / LocalSend business implementations. Shared Flutter templates and LocalSend design references are documented; certificate-generation provenance and early development history remain unresolved. This is not a legal determination about derivative-work status. See [acknowledgements](ACKNOWLEDGEMENTS.md).
+
+## Created with AI assistance
+
+This project is primarily created by **OpenAI Codex under human direction**, including code, UI proposals, tests and documentation. The human initiator sets goals, chooses approaches and reviews results. Development used GPT-6.1 Sol and design guidance including UI UX Pro Max. We disclose that process rather than presenting AI-generated work as wholly handwritten.
+
+Executed checks and device tests, including their limits, are listed in [validation coverage](docs/en/validation.md).
+
+Dukto2's own code is licensed under [Apache License 2.0](LICENSE) (`Apache-2.0`). Third-party code, templates and dependencies retain their licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).

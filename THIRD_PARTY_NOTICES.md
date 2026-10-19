@@ -1,6 +1,6 @@
 # Third-party sources and licenses
 
-English | [简体中文](THIRD_PARTY_NOTICES.zh-CN.md)
+English | [Simplified Chinese](THIRD_PARTY_NOTICES.zh-CN.md)
 
 Dukto2's own code uses [Apache License 2.0](LICENSE) (`Apache-2.0`). Upstream work retains its copyright and license; this project's statement does not replace them.
 

@@ -1,6 +1,6 @@
 # Windows
 
-English | [简体中文](../windows.md)
+English | [Simplified Chinese](../windows.md)
 
 Windows 11 x64 is tested; Windows 10, ARM64 and 32-bit Windows are not. See [validation coverage](validation.md) for builds and transfers actually performed.
 

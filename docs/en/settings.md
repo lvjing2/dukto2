@@ -1,6 +1,6 @@
 # Settings
 
-English | [简体中文](../settings.md)
+English | [Simplified Chinese](../settings.md)
 
 Open Settings using the gear on the main screen. About Dukto2 is at the bottom; receiving-folder controls are not duplicated on the main screen.
 

@@ -1,6 +1,6 @@
 # Validation coverage
 
-English | [简体中文](../validation.md)
+English | [Simplified Chinese](../validation.md)
 
 As of 2026-10-19. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
 

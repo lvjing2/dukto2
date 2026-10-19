@@ -1,6 +1,6 @@
 # Dukto2 source provenance review
 
-English | [简体中文](../source-provenance-audit.md)
+English | [Simplified Chinese](../source-provenance-audit.md)
 
 Date: 2026-10-19. Scope: static source / asset comparisons, shared-template attribution, key implementation flows and available development history. The review itself did not change runtime code, select a license, push or publish.
 

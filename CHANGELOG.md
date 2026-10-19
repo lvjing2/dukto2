@@ -1,6 +1,6 @@
 # Changelog
 
-English | [简体中文](CHANGELOG.zh-CN.md)
+English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 

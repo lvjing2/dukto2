@@ -1,6 +1,6 @@
 # Security
 
-English | [简体中文](SECURITY.zh-CN.md)
+English | [Simplified Chinese](SECURITY.zh-CN.md)
 
 Dukto2 is a development preview and has not had an independent security audit. Maintenance targets current repository code; there is no security-support commitment for older release branches.
 
