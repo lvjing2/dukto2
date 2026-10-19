@@ -11,6 +11,8 @@ Dukto2's own code uses [Apache License 2.0](LICENSE) (`Apache-2.0`). Upstream wo
 - Settings → About → Third-party licenses displays Flutter-registered runtime notices. Preserve `flutter_assets/NOTICES.Z` and other resources when distributing full builds, rather than copying only the executable.
 - This is a source index, not a complete legal audit of all dependencies. Recheck actual native components and notices when dependencies or distribution methods change.
 
+- Windows release packages may include Microsoft Visual C++ release runtime DLLs from the build toolchain for application-local deployment. These Microsoft components retain their own terms and are not Apache-2.0 code. See [Microsoft deployment documentation](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp). Debug runtime DLLs are not distributed.
+
 ## Design and implementation references
 
 - **Dukto / Emanuele Colombo**: inspiration for the experience and project spirit. The author's page states GPL; original core source headers state GPL-2.0-or-later. Dukto2 aims at an independent rewrite with a new protocol. The [initial review](docs/en/source-provenance-audit.md) leaves historical and asset provenance questions open; it does not rule out copying, adaptation, translation or derivative-work status, or establish official succession. Sources: [original project](https://www.msec.it/blog/dukto/) and [community source headers](https://github.com/xuzhen/dukto/blob/master/duktoprotocol.cpp). The community root LICENSE.txt has a separate disclaimer that does not supersede source notices.

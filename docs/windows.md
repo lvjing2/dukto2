@@ -30,7 +30,7 @@ cd ../..
 flutter build windows --release
 ```
 
-运行 `build/windows/x64/runner/Release/Dukto2.exe`。分发必须包含完整 Release 目录的 DLL、data 和许可文件。脚本输出 `artifacts/windows/Dukto2-windows-x64-release.zip` 及 SHA-256，不提供签名安装器。目标系统需要对应的 Visual C++ x64 Runtime，详见 [发行说明](release-ci.md)。
+运行 `build/windows/x64/runner/Release/Dukto2.exe`。分发必须包含完整 Release 目录的 DLL、data 和许可文件。脚本输出 `artifacts/windows/Dukto2-windows-x64-release.zip` 及 SHA-256，不提供签名安装器。新构建使用工具链的可再分发 Release DLL 做应用本地部署，打包检查三项必要运行库；无需用户另装开发环境。现有 rc.2 仍按 [安装说明](install.md) 补装官方运行库。详见 [发行说明](release-ci.md)。
 
 ## 系统行为
 

@@ -41,6 +41,7 @@ def legal(stage):
     for name in ('LICENSE', 'ACKNOWLEDGEMENTS.md', 'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT / name, stage / name)
     shutil.copytree(ROOT / 'licenses', stage / 'licenses')
+    shutil.copy2(ROOT / 'docs/install.md', stage / 'INSTALL.zh-CN.md')
 
 
 def validate_apple_bundle(app, target):
@@ -145,7 +146,8 @@ def main():
                 elif subprocess.run(['codesign', '--verify', str(stage / app.name)], capture_output=True).returncode == 0:
                     raise ValueError('Expected an unsigned iOS device build')
                 output = dest / (prefix + ('-adhoc.zip' if args.target == 'macos' else '-device-unsigned.zip'))
-                (stage / 'INSTALL.txt').write_text('macOS: ad-hoc signed, not notarized. iOS: unsigned device build, not an installable IPA or App Store package.\n')
+                instructions = ('Move Dukto2.app to Applications, then open it. This build is ad-hoc signed, not notarized. If blocked, review System Settings > Privacy & Security > Open Anyway after checking the source. Do not disable Gatekeeper.\n' if args.target == 'macos' else 'Unsigned iOS device build for developers only. Not directly installable; not an IPA, TestFlight or App Store release. Requires your own Xcode signing.\n')
+                (stage / 'INSTALL.txt').write_text(instructions)
             (stage / 'BUILD-INFO.json').write_text(json.dumps(metadata, indent=2) + '\n')
             subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', str(stage), str(output)], check=True)
     if not outputs:

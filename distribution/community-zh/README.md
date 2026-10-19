@@ -4,6 +4,8 @@
 
 目录内容：community-post.md 为长介绍；short-post.txt 为短介绍；install-and-feedback.md 为安装、验证与反馈说明；screenshots/ 为原始真机截图；graphics/ 为中文功能图与现有应用图标。
 
+[平台发布安排](rollout.md) 包含 V2EX、酷安、掘金、知乎、少数派的独立草稿与安装验收状态；[安装指引](../../docs/install.md) 面向实际下载用户。所有内容继续保持未发布。
+
 ## 推广前需要确认
 
 1. 使用本轮候选包，不把旧版测试包改名后充当新版；发布附件附有 commit、版本、平台与签名元数据。

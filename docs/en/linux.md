@@ -33,7 +33,8 @@ In a logged-in graphical desktop:
 # Register the source-build bundle for the current user:
 python3 tool/install_linux_user.py build/linux/x64/release/bundle
 # In an extracted distribution:
-python3 install_linux_user.py .
+bash install.sh
+# Original rc.2 package: python3 install_linux_user.py .
 ```
 
 Registration installs the current user's desktop entry and icon without sudo or moving the bundle. Re-register after moving or updating it. Completion notifications need a desktop service and the installed desktop file for the app ID. No deb, rpm or AppImage is provided.

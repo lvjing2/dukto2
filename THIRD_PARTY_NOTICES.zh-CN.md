@@ -22,3 +22,7 @@ Dukto2 自身代码采用 [Apache License 2.0](LICENSE)（`Apache-2.0`）。以�
 图标矢量母版及平台导出位于 `design/app-icon/`，来源和生成方式见该目录 README。公开前仍需维护者确认这些素材可以随项目选择的许可证分发，不把常见纸飞机造型表述为独占标识。
 
 `docs/screenshots/` 是测试设备或模拟器的实际截图，具体来源、版本及桌面附带内容见其 README。它们不是运行时素材；维护者应在公开前确认设备名称、桌面背景、系统提示和其他软件窗口适合公开。
+
+## Windows 运行库
+
+新 Windows 发行包附带构建工具链提供的 Microsoft Visual C++ Release 运行库，按微软可再分发组件条款保留，不适用 Dukto2 的 Apache-2.0。参考 [微软部署说明](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp)。不分发 Debug 运行库。

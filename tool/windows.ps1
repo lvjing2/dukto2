@@ -89,7 +89,7 @@ try {
     if ($Mode -eq 'release') {
         $taskStage = 'package'
         $bundle = Join-Path $taskRoot 'build/windows/x64/runner/Release'
-        foreach ($taskRequired in @('Dukto2.exe', 'flutter_windows.dll', 'data/icudtl.dat', 'data/flutter_assets')) {
+        foreach ($taskRequired in @('Dukto2.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'data/icudtl.dat', 'data/flutter_assets')) {
             if (!(Test-Path (Join-Path $bundle $taskRequired))) {
                 throw "Incomplete release bundle: missing $taskRequired"
             }
@@ -99,6 +99,7 @@ try {
         }
         Copy-Item (Join-Path $taskRoot 'licenses') $bundle -Recurse -Force
         Copy-Item (Join-Path $taskRoot 'docs/windows.md') (Join-Path $bundle 'WINDOWS.md')
+        Copy-Item (Join-Path $taskRoot 'docs/install.md') (Join-Path $bundle 'INSTALL.zh-CN.md')
         $taskArchive = Join-Path $taskArtifacts 'Dukto2-windows-x64-release.zip'
         $taskTemporaryArchive = Join-Path $taskRun 'Dukto2-windows-x64-release.zip'
         Compress-Archive -Path (Join-Path $bundle '*') -DestinationPath $taskTemporaryArchive

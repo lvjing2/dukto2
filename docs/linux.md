@@ -33,7 +33,8 @@ sudo apt-get install -y git curl xz-utils unzip zip clang cmake ninja-build pkg-
 # 从源码构建目录注册用户级桌面入口：
 python3 tool/install_linux_user.py build/linux/x64/release/bundle
 # 已解压发行包中：
-python3 install_linux_user.py .
+bash install.sh
+# 旧 rc.2 包：python3 install_linux_user.py .
 ```
 
 注册脚本写入当前用户的 desktop 入口与图标，不需要 sudo，不移动 bundle。移动或更新后需重新注册。完成通知依赖桌面服务及对应应用 ID 的 desktop 文件，当前没有 deb、rpm 或 AppImage 安装包。

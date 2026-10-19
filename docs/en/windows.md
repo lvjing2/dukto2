@@ -30,7 +30,7 @@ cd ../..
 flutter build windows --release
 ```
 
-Run `build/windows/x64/runner/Release/Dukto2.exe`. Distribute the entire Release directory, including DLLs, data and license files. The script outputs `artifacts/windows/Dukto2-windows-x64-release.zip` and SHA-256, without a signed installer. Targets need the corresponding Visual C++ x64 Runtime; see [distribution](release-ci.md).
+Run `build/windows/x64/runner/Release/Dukto2.exe`. Distribute the entire Release directory, including DLLs, data and license files. The script outputs `artifacts/windows/Dukto2-windows-x64-release.zip` and SHA-256, without a signed installer. New builds include the toolchain-provided release CRT DLLs for app-local deployment; packaging fails if required DLLs are absent. Existing rc.2 downloads may still need the official Visual C++ x64 Redistributable. See [installation](../install.md) and [distribution](release-ci.md).
 
 ## System behavior
 
