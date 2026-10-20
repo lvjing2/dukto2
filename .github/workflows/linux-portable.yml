@@ -1,0 +1,106 @@
+name: Linux portable candidates
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['codex/linux-portable-packages']
+    paths:
+      - '.github/workflows/linux-portable.yml'
+      - 'linux/packaging/**'
+      - 'tool/ci/*linux_portable.py'
+      - 'tool/test_linux_portable.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-portable-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    container: ubuntu:22.04
+    timeout-minutes: 75
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install Ubuntu 22.04 build dependencies
+        run: |
+          apt-get update
+          apt-get install -y ca-certificates git curl xz-utils unzip zip clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev binutils patchelf file squashfs-tools desktop-file-utils appstream flatpak xvfb xauth xdotool dbus-x11 libgl1-mesa-dri
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-flutter
+      - name: Analyze and test
+        run: ./tool/check.sh
+      - name: Build complete native bundle
+        run: ./tool/linux.sh --skip-tests --skip-doctor
+      - name: Package and validate candidates
+        shell: bash
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          bundle="build/linux/$TARGET_ARCH/release/bundle"
+          python tool/ci/package_linux_portable.py appimage --arch "$TARGET_ARCH" --bundle "$bundle"
+          python tool/ci/package_linux_portable.py flatpak --arch "$TARGET_ARCH" --bundle "$bundle"
+          (cd dist && sha256sum --check *.sha256)
+          xvfb-run -a dbus-run-session -- python tool/ci/smoke_linux_portable.py --report dist/appimage-startup.json -- dist/*.AppImage
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: linux-portable-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  flatpak-startup:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: linux-portable-${{ matrix.arch }}
+          path: dist
+      - name: Install sandbox runtime and candidate
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak xvfb xauth xdotool dbus-x11
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive -y dist/*.flatpak
+      - name: Start with declared sandbox permissions
+        run: |
+          flatpak info --user --show-permissions dev.dukto2.dukto2 | tee dist/flatpak-permissions.txt
+          xvfb-run -a dbus-run-session -- python3 tool/ci/smoke_linux_portable.py --report dist/flatpak-startup.json -- flatpak run dev.dukto2.dukto2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: linux-flatpak-startup-${{ matrix.arch }}
+          path: |
+            dist/flatpak-*.json
+            dist/flatpak-*.log
+            dist/flatpak-permissions.txt
+          if-no-files-found: warn
+          retention-days: 14
