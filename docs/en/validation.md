@@ -8,7 +8,9 @@ As of 2026-10-19. Current-workspace checks and prior device tests are separate; 
 
 Camera scanning and local image recognition retain full certificate fingerprint and device-ID matching. Both analyzers, 18 script tests and 49 core tests passed. After the application suite passed, additional orientation/theme combinations brought the new QR tests to 10 passing tests. Layouts cover 375×500, 900×500, 500×900, large text and reduced motion. Camera doubles cover unavailable/denied cameras, switching, background release and temporary-photo cleanup.
 
-These are automated checks. The new native Windows package, physical camera and Windows tablet still need device acceptance. Earlier Windows file-transfer results do not substitute for it.
+[Windows CI 39361156061](https://github.com/lvjing2/dukto2/actions/runs/39361156061) passed native host tests, Release compilation and packaging at source `0f39205`. The archive SHA-256 is `d333b74184c77320a02d49272788f31f34dcc8fefec068f6f1f76faa327b0fda`. Its camera plugin, Flutter DLL, three CRT DLLs and runtime license resources were checked independently. This private CI validation build does not replace an existing tag or Release asset.
+
+These are automated checks. With no Windows device environment available, the maintainer deferred camera recognition, transfers after image connection, tablet hardware and device screenshots. Earlier Windows file-transfer results do not substitute for them.
 
 ## Current source
 
