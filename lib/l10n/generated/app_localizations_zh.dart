@@ -862,6 +862,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get qrUnreachable => '无法连接二维码中的设备，或设备身份不一致。请确认对方应用已打开、网络允许设备互通，再重新扫码。';
+
+  @override
+  String get qrNoCamera => '未找到摄像头，可从图片识别。';
+
+  @override
+  String get qrCamera => '摄像头';
+
+  @override
+  String get qrChooseImage => '从图片识别';
+
+  @override
+  String get qrOpenCamera => '打开摄像头';
+
+  @override
+  String get qrImageNotFound => '未识别到二维码，请选择更清晰的图片。';
+
+  @override
+  String get qrImageTooLarge => '图片过大，请选择小于 20 MiB、1600 万像素的图片。';
+
+  @override
+  String get qrImageUnreadable => '无法读取图片，请选择 PNG、JPEG 或 BMP 图片。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1721,4 +1742,25 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get qrUnreachable => '无法连接二维码中的设备，或设备身份不一致。请确认对方应用已打开、网络允许设备互通，再重新扫码。';
+
+  @override
+  String get qrNoCamera => '未找到摄像头，可从图片识别。';
+
+  @override
+  String get qrCamera => '摄像头';
+
+  @override
+  String get qrChooseImage => '从图片识别';
+
+  @override
+  String get qrOpenCamera => '打开摄像头';
+
+  @override
+  String get qrImageNotFound => '未识别到二维码，请选择更清晰的图片。';
+
+  @override
+  String get qrImageTooLarge => '图片过大，请选择小于 20 MiB、1600 万像素的图片。';
+
+  @override
+  String get qrImageUnreadable => '无法读取图片，请选择 PNG、JPEG 或 BMP 图片。';
 }

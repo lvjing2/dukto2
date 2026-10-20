@@ -252,7 +252,7 @@ class Dukto2Controller extends ChangeNotifier {
   Completer<void>? _outgoingSettled;
   DateTime _lastProgress = DateTime.fromMillisecondsSinceEpoch(0);
   bool get ready => server != null && !starting;
-  bool get canScanQr => _isAndroid || _isIOS || _isMacOS;
+  bool get canScanQr => _isAndroid || _isIOS || _isMacOS || Platform.isWindows;
   bool get busy => picking || (_session?.active ?? false);
 
   void _notify() {

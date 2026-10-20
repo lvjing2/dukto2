@@ -11,6 +11,8 @@ Dukto2 自身代码采用 [Apache License 2.0](LICENSE)（`Apache-2.0`）。以�
 - 应用的“设置 → 关于 Dukto2 → 第三方许可”展示 Flutter 注册的运行时许可。完整构建目录中的 `flutter_assets/NOTICES.Z` 应与其他资源一起保留，不能只分发可执行文件。
 - 本文件是来源索引，不是已完成的全依赖法律审计。每次更新依赖或改变发布方式时，重新检查对应平台实际打包的原生组件和许可文件。
 
+- 二维码依赖：`qr_flutter`、`mobile_scanner`；Windows 相机使用 `camera_platform_interface`、`camera_windows`（BSD-3-Clause）；本机图片识别使用 `image`（MIT）、`zxing2`（BSD-3-Clause）。Windows 实现调用公开相机接口与二维码库，未复制 LocalSend 扫码代码。分发时保留运行时许可和锁定版本。
+
 ## 设计与实现参考
 
 - **Dukto / Emanuele Colombo**：产品体验与项目精神的来源。原作者页面声明 GPL，保留原作者版权头的核心源码声明 GPL-2.0-or-later。Dukto2 以 Flutter / Dart 独立重写为目标，采用新协议；首轮源码对照已完成，见 [核查报告](docs/source-provenance-audit.md)；仍有历史和素材来源待追溯项，不据此断言已排除复制、改写、翻译或衍生作品关系，也不声称获得官方继任授权。参考：[原作](https://www.msec.it/blog/dukto/)、[社区维护版源码许可头](https://github.com/xuzhen/dukto/blob/master/duktoprotocol.cpp)。社区维护版根目录的 LICENSE.txt 另有自定义免责声明，不能据此忽略源码原有声明。

@@ -1245,5 +1245,33 @@
   "qrUnreachable": "Unable to reach or verify this device. Check that Dukto2 is open and the network allows device communication, then scan again.",
   "@qrUnreachable": {
     "description": "Dukto2 qrUnreachable. Keep names, paths and codes unchanged."
+  },
+  "qrNoCamera": "No camera found. You can choose a QR image.",
+  "qrCamera": "Camera",
+  "qrChooseImage": "Choose QR image",
+  "qrOpenCamera": "Open camera",
+  "qrImageNotFound": "No QR code found. Choose a clearer image.",
+  "qrImageTooLarge": "Image too large. Use an image under 20 MiB and 16 megapixels.",
+  "qrImageUnreadable": "Cannot read this image. Choose a PNG, JPEG or BMP image.",
+  "@qrNoCamera": {
+    "description": "Windows QR scanner: qrNoCamera"
+  },
+  "@qrCamera": {
+    "description": "Windows QR scanner: qrCamera"
+  },
+  "@qrChooseImage": {
+    "description": "Windows QR scanner: qrChooseImage"
+  },
+  "@qrOpenCamera": {
+    "description": "Windows QR scanner: qrOpenCamera"
+  },
+  "@qrImageNotFound": {
+    "description": "Windows QR scanner: qrImageNotFound"
+  },
+  "@qrImageTooLarge": {
+    "description": "Windows QR scanner: qrImageTooLarge"
+  },
+  "@qrImageUnreadable": {
+    "description": "Windows QR scanner: qrImageUnreadable"
   }
 }

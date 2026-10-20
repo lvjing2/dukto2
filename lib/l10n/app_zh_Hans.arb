@@ -259,5 +259,12 @@
   "subnetHint": "同一网络下，即使处于不同子网，也可以扫码连接；设备之间需要能够直接通信。",
   "qrExpected": "请扫描 Dukto2 的连接二维码",
   "qrInvalid": "连接二维码无效，请在对方设备重新打开本机信息",
-  "qrUnreachable": "无法连接二维码中的设备，或设备身份不一致。请确认对方应用已打开、网络允许设备互通，再重新扫码。"
+  "qrUnreachable": "无法连接二维码中的设备，或设备身份不一致。请确认对方应用已打开、网络允许设备互通，再重新扫码。",
+  "qrNoCamera": "未找到摄像头，可从图片识别。",
+  "qrCamera": "摄像头",
+  "qrChooseImage": "从图片识别",
+  "qrOpenCamera": "打开摄像头",
+  "qrImageNotFound": "未识别到二维码，请选择更清晰的图片。",
+  "qrImageTooLarge": "图片过大，请选择小于 20 MiB、1600 万像素的图片。",
+  "qrImageUnreadable": "无法读取图片，请选择 PNG、JPEG 或 BMP 图片。"
 }

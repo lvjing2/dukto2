@@ -1675,6 +1675,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to reach or verify this device. Check that Dukto2 is open and the network allows device communication, then scan again.'**
   String get qrUnreachable;
+
+  /// Windows QR scanner: qrNoCamera
+  ///
+  /// In en, this message translates to:
+  /// **'No camera found. You can choose a QR image.'**
+  String get qrNoCamera;
+
+  /// Windows QR scanner: qrCamera
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get qrCamera;
+
+  /// Windows QR scanner: qrChooseImage
+  ///
+  /// In en, this message translates to:
+  /// **'Choose QR image'**
+  String get qrChooseImage;
+
+  /// Windows QR scanner: qrOpenCamera
+  ///
+  /// In en, this message translates to:
+  /// **'Open camera'**
+  String get qrOpenCamera;
+
+  /// Windows QR scanner: qrImageNotFound
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found. Choose a clearer image.'**
+  String get qrImageNotFound;
+
+  /// Windows QR scanner: qrImageTooLarge
+  ///
+  /// In en, this message translates to:
+  /// **'Image too large. Use an image under 20 MiB and 16 megapixels.'**
+  String get qrImageTooLarge;
+
+  /// Windows QR scanner: qrImageUnreadable
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot read this image. Choose a PNG, JPEG or BMP image.'**
+  String get qrImageUnreadable;
 }
 
 class _AppLocalizationsDelegate

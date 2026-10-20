@@ -41,3 +41,13 @@ Run `build/windows/x64/runner/Release/Dukto2.exe`. Distribute the entire Release
 - TCP defaults to 45879; UDP discovery uses 45878. Allow the trusted LAN when prompted by the firewall. Manual connections still require identity comparison.
 
 References: [Flutter Windows setup](https://docs.flutter.dev/platform-integration/windows/setup), [distribution](https://docs.flutter.dev/platform-integration/windows/building).
+
+## QR connection
+
+Open **Scan QR** to use a camera or **Choose image**. PNG, JPEG and BMP images are supported, with limits of 20 MiB encoded and 16 megapixels decoded. Recognition stays on this device.
+
+Use the camera selector on devices with multiple cameras. The current Windows camera backend reports all lenses as front-facing, so some tablets need manual selection of the rear camera. Controls support touch, portrait/landscape and large text. Native Windows ARM64 tablet builds remain unverified.
+
+If camera access fails, check Windows Settings → Privacy & security → Camera, including desktop-app access. Image recognition and manual connection remain available. Switching cameras, backgrounding or leaving the scanner releases the camera. Temporary capture photos are deleted after processing and never added to transfer history; selected images are left unchanged. Abrupt process termination can leave an unprocessed photo in the system temporary directory.
+
+QR connections still match the complete certificate fingerprint and device ID. Transfer consent remains separate.

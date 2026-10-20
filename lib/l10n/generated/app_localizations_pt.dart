@@ -914,6 +914,31 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get qrUnreachable =>
       'Não foi possível conectar ou verificar. Confira o Dukto2 e a comunicação de rede e escaneie novamente.';
+
+  @override
+  String get qrNoCamera =>
+      'Nenhuma câmera encontrada. Você pode escolher uma imagem QR.';
+
+  @override
+  String get qrCamera => 'Câmera';
+
+  @override
+  String get qrChooseImage => 'Escolher imagem QR';
+
+  @override
+  String get qrOpenCamera => 'Abrir câmera';
+
+  @override
+  String get qrImageNotFound =>
+      'Nenhum código QR encontrado. Escolha uma imagem mais nítida.';
+
+  @override
+  String get qrImageTooLarge =>
+      'Imagem muito grande. Use menos de 20 MiB e 16 megapixels.';
+
+  @override
+  String get qrImageUnreadable =>
+      'Não foi possível ler a imagem. Escolha PNG, JPEG ou BMP.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1825,4 +1850,29 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get qrUnreachable =>
       'Não foi possível conectar ou verificar. Confira o Dukto2 e a comunicação de rede e escaneie novamente.';
+
+  @override
+  String get qrNoCamera =>
+      'Nenhuma câmera encontrada. Você pode escolher uma imagem QR.';
+
+  @override
+  String get qrCamera => 'Câmera';
+
+  @override
+  String get qrChooseImage => 'Escolher imagem QR';
+
+  @override
+  String get qrOpenCamera => 'Abrir câmera';
+
+  @override
+  String get qrImageNotFound =>
+      'Nenhum código QR encontrado. Escolha uma imagem mais nítida.';
+
+  @override
+  String get qrImageTooLarge =>
+      'Imagem muito grande. Use menos de 20 MiB e 16 megapixels.';
+
+  @override
+  String get qrImageUnreadable =>
+      'Não foi possível ler a imagem. Escolha PNG, JPEG ou BMP.';
 }

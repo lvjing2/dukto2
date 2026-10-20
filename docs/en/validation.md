@@ -4,6 +4,12 @@ English | [Simplified Chinese](../validation.md)
 
 As of 2026-10-19. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
 
+## Windows QR increment (2026-10-20)
+
+Camera scanning and local image recognition retain full certificate fingerprint and device-ID matching. Both analyzers, 18 script tests and 49 core tests passed. After the application suite passed, additional orientation/theme combinations brought the new QR tests to 10 passing tests. Layouts cover 375×500, 900×500, 500×900, large text and reduced motion. Camera doubles cover unavailable/denied cameras, switching, background release and temporary-photo cleanup.
+
+These are automated checks. The new native Windows package, physical camera and Windows tablet still need device acceptance. Earlier Windows file-transfer results do not substitute for it.
+
 ## Current source
 
 - `tool/check.sh`: 116 application tests, 49 core tests and 14 script tests passed; both analyzers reported no issues.

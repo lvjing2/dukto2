@@ -869,4 +869,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get qrUnreachable => '연결하거나 확인할 수 없습니다. Dukto2와 네트워크를 확인한 뒤 다시 스캔하세요.';
+
+  @override
+  String get qrNoCamera => '카메라를 찾을 수 없습니다. QR 이미지를 선택할 수 있습니다.';
+
+  @override
+  String get qrCamera => '카메라';
+
+  @override
+  String get qrChooseImage => 'QR 이미지 선택';
+
+  @override
+  String get qrOpenCamera => '카메라 열기';
+
+  @override
+  String get qrImageNotFound => 'QR 코드를 찾지 못했습니다. 더 선명한 이미지를 선택하세요.';
+
+  @override
+  String get qrImageTooLarge => '이미지가 너무 큽니다. 20 MiB 및 1,600만 화소 이하로 선택하세요.';
+
+  @override
+  String get qrImageUnreadable => '이미지를 읽을 수 없습니다. PNG, JPEG 또는 BMP를 선택하세요.';
 }

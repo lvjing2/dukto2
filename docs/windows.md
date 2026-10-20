@@ -41,3 +41,13 @@ flutter build windows --release
 - TCP 默认 45879，UDP 发现 45878。首次运行按系统提示允许可信局域网接入；自动发现不可用时可手动连接，仍需核对身份码。
 
 参考：[Flutter Windows 环境](https://docs.flutter.dev/platform-integration/windows/setup)、[Windows 分发](https://docs.flutter.dev/platform-integration/windows/building)。
+
+## 扫码连接
+
+点击连接区的「扫码连接」，可使用摄像头或「从图片识别」。图片支持 PNG、JPEG、BMP，文件最多 20 MiB、解码尺寸最多 1600 万像素。识别在本机执行，不上传图片。
+
+有多个摄像头时可在列表中切换；Windows 相机插件目前把摄像头方向统一报告为前置，因此部分平板需要手动选择后置摄像头。控件支持触屏、横竖屏及大字体。Windows ARM64 平板的原生构建仍未验证。
+
+若无法打开摄像头，请检查 Windows「设置 → 隐私和安全性 → 摄像头」中的设备及桌面应用访问权限；仍可从图片识别或手动连接。后台、切换摄像头和退出扫码页会释放摄像头。拍摄用于识码的临时照片在处理后删除，不加入传输记录；用户选择的图片不会删除。应用异常终止时，系统临时目录中可能留有尚未清理的照片。
+
+扫码仍核对二维码内的完整证书指纹与设备 ID；传输接收确认独立执行。

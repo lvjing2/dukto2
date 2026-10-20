@@ -259,5 +259,12 @@
   "subnetHint": "QR-Verbindungen funktionieren zwischen Subnetzen desselben Netzwerks, wenn die Geräte direkt kommunizieren können.",
   "qrExpected": "Einen Dukto2-QR-Code scannen",
   "qrInvalid": "Ungültiger QR-Code. Lokale Informationen auf dem anderen Gerät neu öffnen.",
-  "qrUnreachable": "Gerät nicht erreichbar oder nicht verifiziert. Dukto2 und Netzwerk prüfen und erneut scannen."
+  "qrUnreachable": "Gerät nicht erreichbar oder nicht verifiziert. Dukto2 und Netzwerk prüfen und erneut scannen.",
+  "qrNoCamera": "Keine Kamera gefunden. Du kannst ein QR-Bild auswählen.",
+  "qrCamera": "Kamera",
+  "qrChooseImage": "QR-Bild auswählen",
+  "qrOpenCamera": "Kamera öffnen",
+  "qrImageNotFound": "Kein QR-Code gefunden. Wähle ein schärferes Bild.",
+  "qrImageTooLarge": "Bild zu groß. Verwende weniger als 20 MiB und 16 Megapixel.",
+  "qrImageUnreadable": "Bild nicht lesbar. Wähle PNG, JPEG oder BMP."
 }
