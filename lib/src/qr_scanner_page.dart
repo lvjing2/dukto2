@@ -70,32 +70,20 @@ class _QrScannerPageState extends State<QrScannerPage> {
                     ),
                   ),
                 ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(context.l10n.qrAim, textAlign: TextAlign.center),
-                        const SizedBox(height: 8),
-                        Text(
-                          context.l10n.subnetHint,
-                          textAlign: TextAlign.center,
+                if (_error != null)
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
                         ),
-                        if (_error != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              _error!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

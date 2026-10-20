@@ -386,8 +386,6 @@ class _WindowsQrScannerPageState extends State<WindowsQrScannerPage>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(strings.qrAim, textAlign: TextAlign.center),
                     ],
                   ),
                 ),
