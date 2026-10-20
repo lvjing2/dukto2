@@ -28,6 +28,25 @@ class NativeArchitectureTest(unittest.TestCase):
             (root / 'runtime.dll').write_bytes(self.pe(0xaa64))
             native.verify_bundle('windows', 'arm64', root)
 
+    def test_arm64_rejects_dependency_on_excluded_x64_helper(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            data = bytearray(1024)
+            data[:128] = self.pe(0xaa64)
+            struct.pack_into('<H', data, 70, 1)  # NumberOfSections
+            struct.pack_into('<H', data, 84, 240)  # SizeOfOptionalHeader
+            struct.pack_into('<H', data, 88, 0x20b)
+            struct.pack_into('<I', data, 88 + 120, 0x1000)
+            struct.pack_into('<IIII', data, 88 + 240 + 8, 512, 0x1000, 512, 512)
+            struct.pack_into('<IIIII', data, 512, 1, 0, 0, 0x1050, 1)
+            name = b'VCRUNTIME140_1.dll\0'
+            data[592:592 + len(name)] = name
+            path = root / 'Dukto2.exe'
+            path.write_bytes(data)
+            self.assertEqual(native.pe_imports(path), {'vcruntime140_1.dll'})
+            with self.assertRaisesRegex(ValueError, 'unexpectedly imports'):
+                native.verify_bundle('windows', 'arm64', root)
+
     def test_elf_headers_distinguish_arm64_from_x64(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'dukto2'

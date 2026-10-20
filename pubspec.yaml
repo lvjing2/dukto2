@@ -1,7 +1,7 @@
 name: dukto2
 description: Encrypted LAN file and text sharing for macOS, Windows, Linux, Android, and iOS.
 publish_to: none
-version: 0.1.6-rc.4+11
+version: 0.1.6-rc.5+12
 environment:
   sdk: ^3.13.5
 dependencies:

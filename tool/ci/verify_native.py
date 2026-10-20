@@ -24,11 +24,43 @@ def architecture(path):
     raise ValueError('Unsupported native binary: ' + str(path))
 
 
+def pe_imports(path):
+    data = path.read_bytes()
+    offset = struct.unpack_from('<I', data, 60)[0]
+    sections, optional_size = struct.unpack_from('<H', data, offset + 6)[0], struct.unpack_from('<H', data, offset + 20)[0]
+    optional = offset + 24
+    if optional_size == 0:
+        return set()
+    if struct.unpack_from('<H', data, optional)[0] != 0x20b:
+        raise ValueError('Expected PE32+ binary: ' + str(path))
+    import_rva = struct.unpack_from('<I', data, optional + 120)[0]
+    if import_rva == 0:
+        return set()
+
+    def file_offset(rva):
+        for index in range(sections):
+            section = optional + optional_size + index * 40
+            size, address, raw_size, raw = struct.unpack_from('<IIII', data, section + 8)
+            if address <= rva < address + max(size, raw_size):
+                return raw + rva - address
+        raise ValueError('Invalid PE import address: ' + str(path))
+
+    cursor = file_offset(import_rva)
+    names = set()
+    while any(data[cursor:cursor + 20]):
+        name = file_offset(struct.unpack_from('<I', data, cursor + 12)[0])
+        names.add(data[name:data.index(b'\0', name)].decode('ascii').lower())
+        cursor += 20
+    return names
+
+
 def verify_bundle(system, arch, bundle):
     executable = bundle / ('Dukto2.exe' if system == 'windows' else 'dukto2')
     paths = [executable, *bundle.rglob('*.dll' if system == 'windows' else '*.so')]
     for path in paths:
         actual = architecture(path)
+        if system == 'windows' and arch == 'arm64' and 'vcruntime140_1.dll' in pe_imports(path):
+            raise ValueError('Native ARM64 payload unexpectedly imports excluded x64 EH helper: ' + str(path))
         if actual != arch:
             raise ValueError(f'{path}: expected {arch}, got {actual}')
     print(f'Verified {system} {arch}: {len(paths)} native binaries')

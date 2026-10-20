@@ -77,6 +77,11 @@ set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
 set(CMAKE_INSTALL_DEBUG_LIBRARIES FALSE)
 include(InstallRequiredSystemLibraries)
+# MSVC's ARM64 CRT directory also contains an x64-only EH helper. Native
+# ARM64 applications do not use it; keep architecture-pure app-local files.
+if(CMAKE_VS_PLATFORM_NAME STREQUAL "ARM64")
+  list(FILTER CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS EXCLUDE REGEX "/vcruntime140_1[.]dll$")
+endif()
 install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   CONFIGURATIONS Profile;Release COMPONENT Runtime)
