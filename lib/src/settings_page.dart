@@ -80,6 +80,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         language == AppLanguage.system
                             ? context.l10n.followSystem
                             : language.nativeName,
+                        textAlign:
+                            Directionality.of(context) == TextDirection.rtl
+                            ? TextAlign.right
+                            : TextAlign.left,
                         textDirection: language == AppLanguage.ar
                             ? TextDirection.rtl
                             : TextDirection.ltr,

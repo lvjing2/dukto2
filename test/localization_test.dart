@@ -8,6 +8,7 @@ import 'package:dukto2/src/settings_page.dart';
 import 'package:dukto2/src/theme.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -314,6 +315,31 @@ void main() {
         expect(find.text(strings.language), findsWidgets);
         expect(find.byKey(const ValueKey('language-system')), findsOneWidget);
         expect(find.byKey(const ValueKey('language-ar')), findsOneWidget);
+        Rect languageGlyphBounds(String tag) {
+          final text = find.descendant(
+            of: find.byKey(ValueKey('language-$tag')),
+            matching: find.byType(Text),
+          );
+          final paragraph = tester.renderObject<RenderParagraph>(text);
+          final boxes = paragraph.getBoxesForSelection(
+            TextSelection(
+              baseOffset: 0,
+              extentOffset: paragraph.text.toPlainText().length,
+            ),
+          );
+          final bounds = boxes
+              .map((b) => b.toRect())
+              .reduce((a, b) => a.expandToInclude(b));
+          return bounds.shift(paragraph.localToGlobal(Offset.zero));
+        }
+
+        final english = languageGlyphBounds('en');
+        final arabic = languageGlyphBounds('ar');
+        expect(
+          language == AppLanguage.ar ? arabic.right : arabic.left,
+          closeTo(language == AppLanguage.ar ? english.right : english.left, 1),
+        );
+
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         await tester.runAsync(() => close(c));
