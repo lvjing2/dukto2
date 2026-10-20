@@ -1,4 +1,4 @@
-"""Prepare one user-facing asset per OS from verified native CI packages.
+"""Prepare one user-facing asset per OS/architecture from verified native CI packages.
 
 APK bytes remain unchanged. Archives gain build metadata and an internal
 checksum list; their original files, signatures, modes and links are preserved.
@@ -17,6 +17,7 @@ import tarfile
 import zipfile
 
 TARGETS = {'android': '.apk', 'windows': '-x64.zip', 'linux': '-x64.tar.gz',
+           'windows-arm64': '.zip', 'linux-arm64': '.tar.gz',
            'macos': '-adhoc.zip', 'ios': '-device-unsigned.zip'}
 EXTRA = {'RELEASE-INFO.json', 'SHA256SUMS.txt'}
 

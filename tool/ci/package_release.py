@@ -51,7 +51,7 @@ def validate_apple_bundle(app, target):
 
 
 def release_matrix(ref, requested):
-    runners = {'linux': 'ubuntu-24.04', 'windows': 'windows-2025', 'macos': 'macos-26', 'android': 'ubuntu-24.04', 'ios': 'macos-26'}
+    runners = {'linux': 'ubuntu-24.04', 'windows': 'windows-2025', 'windows-arm64': 'windows-11-arm', 'linux-arm64': 'ubuntu-24.04-arm', 'macos': 'macos-26', 'android': 'ubuntu-24.04', 'ios': 'macos-26'}
     if requested != 'all' and requested not in runners:
         raise ValueError('Unknown release platform')
     targets = list(runners) if ref.startswith('refs/tags/') or requested == 'all' else [requested]
@@ -99,7 +99,7 @@ def package_android(dest, prefix, metadata):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('target', choices=['check', 'linux', 'windows', 'macos', 'android', 'ios'])
+    parser.add_argument('target', choices=['check', 'linux', 'linux-arm64', 'windows', 'windows-arm64', 'macos', 'android', 'ios'])
     args = parser.parse_args()
     os.chdir(ROOT)
     check_tag(os.environ.get('GITHUB_REF', ''))
@@ -124,10 +124,15 @@ def main():
     outputs = []
     if args.target == 'android':
         outputs = package_android(dest, prefix, metadata)
-    elif args.target in ('linux', 'windows'):
-        source = ROOT / ('artifacts/linux/Dukto2-linux-x64.tar.gz' if args.target == 'linux' else 'artifacts/windows/Dukto2-windows-x64-release.zip')
-        suffix = '.tar.gz' if args.target == 'linux' else '.zip'
-        output = dest / (prefix + '-x64' + suffix)
+    elif args.target in ('linux', 'windows', 'linux-arm64', 'windows-arm64'):
+        system = args.target.split('-')[0]
+        arch = 'arm64' if args.target.endswith('-arm64') else 'x64'
+        metadata['binaryArchitecture'] = arch
+        suffix = '.tar.gz' if system == 'linux' else '.zip'
+        source = ROOT / ('artifacts/' + system + '/Dukto2-' + system + '-' + arch + ('-release' if system == 'windows' else '') + suffix)
+        bundle = ROOT / ('build/linux/' + arch + '/release/bundle' if system == 'linux' else 'build/windows/' + arch + '/runner/Release')
+        subprocess.run(['python', str(ROOT / 'tool/ci/verify_native.py'), system, arch, str(bundle)], check=True)
+        output = dest / (prefix + ('' if arch == 'arm64' else '-x64') + suffix)
         shutil.copy2(source, output)
     else:
         with tempfile.TemporaryDirectory(prefix='dukto2-package-') as temp:

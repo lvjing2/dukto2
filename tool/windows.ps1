@@ -66,8 +66,10 @@ try {
         $taskStatus = 'doctor-complete'
         return
     }
-    if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
-        throw 'This packaging script currently requires an x64 Windows host.'
+    $taskArch = switch ($env:PROCESSOR_ARCHITECTURE) {
+        'AMD64' { 'x64' }
+        'ARM64' { 'arm64' }
+        default { throw 'Native x64 or ARM64 Windows host required.' }
     }
     $taskStage = 'dependencies'
     Invoke-Checked $taskFlutter @('pub', 'get')
@@ -88,7 +90,7 @@ try {
     Invoke-Checked $taskFlutter @('build', 'windows', "--$Mode")
     if ($Mode -eq 'release') {
         $taskStage = 'package'
-        $bundle = Join-Path $taskRoot 'build/windows/x64/runner/Release'
+        $bundle = Join-Path $taskRoot "build/windows/$taskArch/runner/Release"
         foreach ($taskRequired in @('Dukto2.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'data/icudtl.dat', 'data/flutter_assets')) {
             if (!(Test-Path (Join-Path $bundle $taskRequired))) {
                 throw "Incomplete release bundle: missing $taskRequired"
@@ -100,8 +102,8 @@ try {
         Copy-Item (Join-Path $taskRoot 'licenses') $bundle -Recurse -Force
         Copy-Item (Join-Path $taskRoot 'docs/windows.md') (Join-Path $bundle 'WINDOWS.md')
         Copy-Item (Join-Path $taskRoot 'docs/install.md') (Join-Path $bundle 'INSTALL.zh-CN.md')
-        $taskArchive = Join-Path $taskArtifacts 'Dukto2-windows-x64-release.zip'
-        $taskTemporaryArchive = Join-Path $taskRun 'Dukto2-windows-x64-release.zip'
+        $taskArchive = Join-Path $taskArtifacts "Dukto2-windows-$taskArch-release.zip"
+        $taskTemporaryArchive = Join-Path $taskRun "Dukto2-windows-$taskArch-release.zip"
         Compress-Archive -Path (Join-Path $bundle '*') -DestinationPath $taskTemporaryArchive
         $taskArchiveHash = (Get-FileHash $taskTemporaryArchive -Algorithm SHA256).Hash
         Move-Item -Path $taskTemporaryArchive -Destination $taskArchive -Force
@@ -113,6 +115,7 @@ try {
     [ordered]@{
         status = $taskStatus
         stage = $taskStage
+        architecture = $taskArch
         mode = $Mode
         testsRequested = !$SkipTests -and !$DoctorOnly
         steps = @($taskSteps.ToArray())

@@ -7,7 +7,7 @@ on:
         description: Platform to build (tags always build all)
         type: choice
         default: all
-        options: [all, android, ios, macos, windows, linux]
+        options: [all, android, ios, macos, windows, windows-arm64, linux, linux-arm64]
   push:
     tags: ['v*']
 
@@ -60,13 +60,13 @@ jobs:
           flutter pub get --enforce-lockfile
           (cd packages/dukto2_core && dart pub get --enforce-lockfile)
       - name: Linux native build
-        if: matrix.target == 'linux'
+        if: startsWith(matrix.target, 'linux')
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
           ./tool/linux.sh --skip-tests --skip-doctor
       - name: Windows tests and native build
-        if: matrix.target == 'windows'
+        if: startsWith(matrix.target, 'windows')
         shell: pwsh
         run: ./tool/windows.ps1
       - name: macOS tests and native build
@@ -129,7 +129,7 @@ jobs:
       - name: Verify downloads
         working-directory: dist
         run: sha256sum --check *.sha256
-      - name: Prepare one download per operating system
+      - name: Prepare downloads by operating system and architecture
         run: python3 tool/ci/prepare_release_assets.py dist release-assets --version "$(jq -r .version dist/*-android.json)"
       - name: Create or update draft only
         env:

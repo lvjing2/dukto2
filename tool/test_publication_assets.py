@@ -25,7 +25,7 @@ class PublicationAssetsTest(unittest.TestCase):
                 with zipfile.ZipFile(artifact, 'w') as z:
                     z.writestr('assets/flutter_assets/NOTICES.Z', gzip.compress(b'\ndukto2\n\nApache License'))
                     z.writestr('META-INF/CERT.RSA', b'unchanged signature fixture')
-            elif target == 'linux':
+            elif target.startswith('linux'):
                 with tarfile.open(artifact, 'w:gz') as z:
                     entry = tarfile.TarInfo('bundle/dukto2')
                     entry.mode, entry.size = 0o755, 7
@@ -57,7 +57,7 @@ class PublicationAssetsTest(unittest.TestCase):
             root = Path(temp)
             version = self.fixtures(root)
             outputs = publication.prepare(root, root / 'publish', version)
-            self.assertEqual(len(outputs), 5)
+            self.assertEqual(len(outputs), 7)
             apk = next(p for p in outputs if p.suffix == '.apk')
             self.assertEqual(apk.read_bytes(), (root / apk.name).read_bytes())
             for archive in (p for p in outputs if p.suffix == '.zip'):

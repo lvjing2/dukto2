@@ -1,12 +1,16 @@
-name: Checksum-pinned Flutter
-description: Install the official SDK for this runner using the repository's hash lock.
+name: Pinned official Flutter
+description: Install the official SDK for this runner using the repository's archive hash or source commit lock.
 runs:
   using: composite
   steps:
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
-        python-version: '3.12'
+        python-version: '3.13'
+        architecture: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
     - shell: bash
       run: python tool/ci/install_flutter.py
     - shell: bash
       run: flutter --version
+    - name: Verify native Dart architecture
+      shell: bash
+      run: python tool/ci/verify_native.py sdk
