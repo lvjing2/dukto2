@@ -1,0 +1,80 @@
+{
+  "version": "0.1.6-rc.3+10",
+  "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+  "ciRun": 39398667423,
+  "assets": [
+    {
+      "target": "android",
+      "name": "Dukto2-0.1.6-rc.3-build.10-android.apk",
+      "bytes": 76908973,
+      "sha256": "5ad0fbfa03c29b1a510e2e17504a880066e8eaca108270fb4cbc2b2027271060",
+      "originalCiSha256": "5ad0fbfa03c29b1a510e2e17504a880066e8eaca108270fb4cbc2b2027271060",
+      "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+      "androidSigning": {
+        "applicationId": "dev.dukto2.dukto2",
+        "versionName": "0.1.6-rc.3",
+        "versionCode": 10,
+        "appCertificateSha256": "4f0c7dab4b81912270656b3e7c0c5cdcd11702fb2b16eca6b6b89f4aad207823",
+        "uploadCertificateSha256": "c2576e3d890f4a0c08dfcf03bae7540c77de120f2704bdf5bcc8e4f8eb2aab28",
+        "playEquivalentApkVerified": true,
+        "playAppSigningKeyImportRequired": true,
+        "artifacts": {
+          "apk": "5ad0fbfa03c29b1a510e2e17504a880066e8eaca108270fb4cbc2b2027271060",
+          "aab": "f3826e7c2067970eec007927fc5eed907da944cee29490488da14c6f200613f4"
+        }
+      }
+    },
+    {
+      "target": "windows",
+      "name": "Dukto2-0.1.6-rc.3-build.10-windows-x64.zip",
+      "bytes": 14515666,
+      "sha256": "f2c72f1ff39c86ebdc8f89c029852c6813b701132dfd6b9a35e43bfbcbebd2ba",
+      "originalCiSha256": "c0de30eb95316793dd78f62d38a0e45dec807bdb4075f68967a05f0b5cee75cd",
+      "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+      "verifiedInternalFiles": 29
+    },
+    {
+      "target": "linux",
+      "name": "Dukto2-0.1.6-rc.3-build.10-linux-x64.tar.gz",
+      "bytes": 11002770,
+      "sha256": "04994713e8420968a1716829316da2b614554651f84377d95ac91df5427696de",
+      "originalCiSha256": "44cdfa38598d0c78b18be49057bc528c080addef3ccce623ddaa443cfa45fa8d",
+      "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+      "verifiedInternalFiles": 24
+    },
+    {
+      "target": "macos",
+      "name": "Dukto2-0.1.6-rc.3-build.10-macos-adhoc.zip",
+      "bytes": 20397181,
+      "sha256": "2f35a42722259ef57992fdbf1590c478a9b32eb074dbb81791e5f2d43ca76724",
+      "originalCiSha256": "cf681aa8eab216e1bfdc23eecb8f626426918acfe9de3d36359093f9dfb30c79",
+      "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+      "verifiedInternalFiles": 48,
+      "binaryArchitectures": "x86_64 arm64"
+    },
+    {
+      "target": "ios",
+      "name": "Dukto2-0.1.6-rc.3-build.10-ios-device-unsigned.zip",
+      "bytes": 8520984,
+      "sha256": "375bde900c86178684a6237596c1a8616a450458bec50bcea5d44c0988a81be7",
+      "originalCiSha256": "fb0d16dede6c4239777f4f1552ddcd572f8fede3336f5ef17ce2e87b3ea36bdc",
+      "sourceCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
+      "verifiedInternalFiles": 74,
+      "bundleVersion": "0.1.6.3"
+    }
+  ],
+  "repositoryVisibility": "PRIVATE",
+  "releaseDraft": true,
+  "releasePrerelease": true,
+  "releaseUrl": "https://github.com/lvjing2/dukto2/releases/tag/untagged-d0a822905361b00dcbd3",
+  "checks": {
+    "fivePlatformNativeBuilds": "passed",
+    "githubUploadDigests": "matched",
+    "desktopInternalManifests": "matched",
+    "macosCodeSignature": "verified after extracting final asset",
+    "iosSigning": "unsigned developer build confirmed",
+    "oldAssets": "backed up and removed from draft",
+    "existingRc2GitTag": "unchanged",
+    "deviceTests": "not repeated for this frozen candidate"
+  }
+}
