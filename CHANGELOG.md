@@ -4,6 +4,14 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.3+10 — Release candidate
+
+- Add Windows camera and image QR connections with touch and orientation support.
+- Show online/offline state, disable unavailable sends, and recheck endpoint identity before sending.
+- Place the device name first in Settings and align all language names with the dialog direction.
+- Bundle the Windows VC++ runtime and add a user-level Linux desktop installer.
+- Increase Android versionCode to 10 while retaining the application and upload signing identities.
+
 ## 0.1.6-rc.2+9 — Release candidate
 
 - Freeze the first release candidate; align Android APK and Play AAB at versionCode 9, using separate application and upload signing keys.

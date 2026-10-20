@@ -35,7 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Dukto2 · 0.1.6 (7)',
+              'Dukto2 · 0.1.6-rc.3 (10)',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
