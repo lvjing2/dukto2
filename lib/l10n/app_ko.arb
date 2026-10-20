@@ -48,6 +48,7 @@
   "starting": "시작 중…",
   "nearbyDevices": "주변 기기: {arg0}",
   "refreshDevices": "기기 새로고침",
+  "searchingDevices": "검색 중…",
   "findingDevices": "주변 기기 검색 중…",
   "noDevices": "기기를 찾지 못했습니다",
   "verifiedSelected": "확인됨 · 선택됨",

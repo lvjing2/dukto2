@@ -177,6 +177,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get refreshDevices => '기기 새로고침';
 
   @override
+  String get searchingDevices => '검색 중…';
+
+  @override
   String get findingDevices => '주변 기기 검색 중…';
 
   @override

@@ -135,6 +135,19 @@ class PhoneConnectionController extends TestController {
   bool get canScanQr => true;
 }
 
+class SearchTestController extends TestController {
+  int searches = 0;
+  Completer<void> searchFinished = Completer<void>();
+
+  @override
+  Future<void> refreshAddresses({bool activeSearch = false}) async {
+    if (activeSearch) {
+      searches++;
+      await searchFinished.future;
+    }
+  }
+}
+
 void main() {
   Future<void> show(
     WidgetTester tester,
@@ -183,6 +196,64 @@ void main() {
         Dukto2Controller.platform,
         null,
       );
+    });
+  }
+
+  for (final size in [const Size(375, 812), const Size(1100, 800)]) {
+    testWidgets('button and pull share one active search at $size', (
+      tester,
+    ) async {
+      final c = SearchTestController()..selected = null;
+      clean(tester, c);
+      await show(tester, c, size);
+      await tester.tap(find.byTooltip('刷新设备'));
+      await tester.pump();
+      expect(c.searches, 1);
+      expect(find.text('正在搜索…'), findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byTooltip('刷新设备'),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      // Pulling while the button's search is active joins the same operation.
+      final scroll = find
+          .descendant(
+            of: find.byType(RefreshIndicator),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.drag(scroll, const Offset(0, 360));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(c.searches, 1);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+      c.searchFinished.complete();
+      await tester.pumpAndSettle();
+      expect(c.searchingDevices, isFalse);
+      expect(find.text('正在搜索…'), findsNothing);
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+
+      // A fresh pull must work even with an empty, shorter-than-viewport list.
+      c.searchFinished = Completer<void>();
+      await tester.drag(scroll, const Offset(0, 360));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(c.searches, 2);
+      expect(c.searchingDevices, isTrue);
+      expect(find.text('正在搜索…'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+      c.searchFinished.complete();
+      await tester.pumpAndSettle();
+      expect(c.searchingDevices, isFalse);
+      expect(tester.takeException(), isNull);
     });
   }
 

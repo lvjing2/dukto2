@@ -37,8 +37,9 @@ class PeerDiscovery {
   StreamSubscription<RawSocketEvent>? _subscription;
   List<NetworkInterface> _interfaces = [];
   bool _closed = false;
-  bool _refreshing = false;
-  bool _scanning = false;
+  Future<void>? _refreshWork;
+  Future<void>? _scanWork;
+  Future<void>? _searchWork;
   int _generation = 0;
   DateTime _lastInterfaces = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastScan = DateTime.fromMillisecondsSinceEpoch(0);
@@ -85,7 +86,8 @@ class PeerDiscovery {
       }
       announce();
       unawaited(_reconnectKnown());
-      if (DateTime.now().difference(_lastInterfaces).inSeconds >= 5) {
+      if (_searchWork == null &&
+          DateTime.now().difference(_lastInterfaces).inSeconds >= 5) {
         unawaited(refresh());
       }
       if (_peers.isEmpty &&
@@ -98,104 +100,130 @@ class PeerDiscovery {
   /// Rejoin interfaces after Wi-Fi/VPN changes or resume. The public stream stays
   /// alive, and an unavailable multicast socket does not disable HTTPS scans.
   Future<void> refresh({bool force = false}) async {
-    if (_closed || _refreshing) return;
-    _refreshing = true;
+    while (_refreshWork != null) {
+      await _refreshWork;
+      if (!force) return;
+    }
+    if (_closed) return;
+    final work = _refresh(force: force);
+    _refreshWork = work;
     try {
-      final interfaces = await NetworkInterface.list(
-        type: InternetAddressType.IPv4,
+      await work;
+    } finally {
+      if (identical(_refreshWork, work)) _refreshWork = null;
+    }
+  }
+
+  /// An explicit search also scans when some devices are already visible.
+  /// Repeated gestures share the same work instead of restarting its sockets.
+  Future<void> search() =>
+      _searchWork ??= _search().whenComplete(() => _searchWork = null);
+
+  Future<void> _search() async {
+    if (_closed) return;
+    await refresh(force: true);
+    // A previous scan belongs to the old interface generation. Let its bounded
+    // probes unwind before starting the new one, rather than dropping this scan.
+    await _scanWork;
+    if (_closed) return;
+    await Future.wait([
+      scan(),
+      // Keep listening through all three announcement bursts, even on networks
+      // where the bounded subnet fallback is disabled or finishes immediately.
+      Future<void>.delayed(const Duration(seconds: 3)),
+    ]);
+  }
+
+  Future<void> _refresh({required bool force}) async {
+    final interfaces = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+    );
+    String key(List<NetworkInterface> values) =>
+        (values
+                .expand((i) => i.addresses.map((a) => '${i.name}:${a.address}'))
+                .toList()
+              ..sort())
+            .join(',');
+    final changed = key(interfaces) != key(_interfaces);
+    _lastInterfaces = DateTime.now();
+    if (!force && !changed && _socket != null) return;
+    _interfaces = interfaces;
+    _generation++;
+    _scanTimer?.cancel();
+    for (final timer in _burst) {
+      timer.cancel();
+    }
+    _burst.clear();
+    await _subscription?.cancel();
+    _socket?.close();
+    _socket = null;
+    if (_closed) return;
+    if (changed && _peers.isNotEmpty) {
+      _peers.clear();
+      _changes.add(peers);
+    }
+    _lastProbe.clear();
+    unawaited(_reconnectKnown());
+    try {
+      final socket = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        port,
+        reuseAddress: true,
+        reusePort: !Platform.isAndroid && !Platform.isWindows,
       );
-      String key(List<NetworkInterface> values) =>
-          (values
-                  .expand(
-                    (i) => i.addresses.map((a) => '${i.name}:${a.address}'),
-                  )
-                  .toList()
-                ..sort())
-              .join(',');
-      final changed = key(interfaces) != key(_interfaces);
-      _lastInterfaces = DateTime.now();
-      if (!force && !changed && _socket != null) return;
-      _interfaces = interfaces;
-      _generation++;
-      _scanTimer?.cancel();
-      for (final timer in _burst) {
-        timer.cancel();
+      if (_closed) {
+        socket.close();
+        return;
       }
-      _burst.clear();
-      await _subscription?.cancel();
-      _socket?.close();
-      _socket = null;
-      if (_closed) return;
-      if (changed && _peers.isNotEmpty) {
-        _peers.clear();
-        _changes.add(peers);
-      }
-      _lastProbe.clear();
-      unawaited(_reconnectKnown());
-      try {
-        final socket = await RawDatagramSocket.bind(
-          InternetAddress.anyIPv4,
-          port,
-          reuseAddress: true,
-          reusePort: !Platform.isAndroid && !Platform.isWindows,
-        );
-        if (_closed) {
-          socket.close();
-          return;
-        }
-        _socket = socket;
-        if (useMulticast) {
-          socket.broadcastEnabled = true;
-          socket.multicastHops = 1;
-          socket.multicastLoopback = true;
-          for (final interface in interfaces) {
-            try {
-              socket.joinMulticast(group, interface);
-            } on SocketException {
-              /* Skip unusable adapters. */
-            }
+      _socket = socket;
+      if (useMulticast) {
+        socket.broadcastEnabled = true;
+        socket.multicastHops = 1;
+        socket.multicastLoopback = true;
+        for (final interface in interfaces) {
+          try {
+            socket.joinMulticast(group, interface);
+          } on SocketException {
+            /* Skip unusable adapters. */
           }
         }
-        _subscription = socket.listen(
-          (event) {
-            if (event != RawSocketEvent.read) return;
-            Datagram? packet;
-            while ((packet = socket.receive()) != null) {
-              try {
-                if (packet!.data.length > 4096) continue;
-                final data =
-                    jsonDecode(utf8.decode(packet.data))
-                        as Map<String, dynamic>;
-                if (data['app'] != 'dukto2') continue;
-                final candidate = Peer.fromJson(data, packet.address.address);
-                if (candidate.fingerprint == local.fingerprint) continue;
-                unawaited(
-                  _confirm(candidate.host, candidate.port, expected: candidate),
-                );
-              } on Object {
-                /* Unrelated or malformed datagram. */
-              }
+      }
+      _subscription = socket.listen(
+        (event) {
+          if (event != RawSocketEvent.read) return;
+          Datagram? packet;
+          while ((packet = socket.receive()) != null) {
+            try {
+              if (packet!.data.length > 4096) continue;
+              final data =
+                  jsonDecode(utf8.decode(packet.data)) as Map<String, dynamic>;
+              if (data['app'] != 'dukto2') continue;
+              final candidate = Peer.fromJson(data, packet.address.address);
+              if (candidate.fingerprint == local.fingerprint) continue;
+              unawaited(
+                _confirm(candidate.host, candidate.port, expected: candidate),
+              );
+            } on Object {
+              /* Unrelated or malformed datagram. */
             }
-          },
-          onError: (Object _) {
-            // A transient ICMP/VPN error is not proof that the socket is dead.
-          },
-          onDone: () {
-            if (identical(_socket, socket)) _socket = null;
-          },
-        );
-      } on SocketException {
-        // Keep running: known endpoints, subnet fallback and manual IP work.
-      }
-      for (final delay in [100, 600, 2600]) {
-        _burst.add(Timer(Duration(milliseconds: delay), announce));
-      }
-      _scanTimer = Timer(const Duration(seconds: 3), () {
-        if (_peers.isEmpty) unawaited(scan());
-      });
-    } finally {
-      _refreshing = false;
+          }
+        },
+        onError: (Object _) {
+          // A transient ICMP/VPN error is not proof that the socket is dead.
+        },
+        onDone: () {
+          if (identical(_socket, socket)) _socket = null;
+        },
+      );
+    } on SocketException {
+      // Keep running: known endpoints, subnet fallback and manual IP work.
     }
+    for (final delay in [100, 600, 2600]) {
+      _burst.add(Timer(Duration(milliseconds: delay), announce));
+    }
+    _scanTimer = Timer(const Duration(seconds: 3), () {
+      if (_peers.isEmpty) unawaited(scan());
+    });
   }
 
   bool _preferred(String host) => _interfaces
@@ -347,50 +375,48 @@ class PeerDiscovery {
   /// Bounded fallback on directly connected private IPv4 /24 segments only.
   /// It probes identity metadata, never offers or sends files. It is intentionally
   /// conservative: larger/VPN subnets remain available through manual IP.
-  Future<void> scan() async {
-    if (_closed || _scanning || !subnetFallback) return;
-    _scanning = true;
+  Future<void> scan() =>
+      _scanWork ??= _scan().whenComplete(() => _scanWork = null);
+
+  Future<void> _scan() async {
+    if (_closed || !subnetFallback) return;
     _lastScan = DateTime.now();
     final generation = _generation;
-    try {
-      final addresses = _interfaces
-          .where(
-            (i) =>
-                !RegExp(r'^(utun|tun|tap|ppp|ipsec|rmnet|lo)').hasMatch(i.name),
-          )
-          .expand((i) => i.addresses)
-          .map((a) => a.address)
-          .toSet();
-      final prefixes = addresses
-          .where((a) {
-            final b = a.split('.').map(int.parse).toList();
-            return b[0] == 10 ||
-                (b[0] == 192 && b[1] == 168) ||
-                (b[0] == 172 && b[1] >= 16 && b[1] <= 31);
-          })
-          .map((a) => a.split('.').take(3).join('.'))
-          .toSet()
-          .take(2);
-      final hosts = [
-        for (final prefix in prefixes)
-          for (var n = 1; n < 255; n++) '$prefix.$n',
-      ].where((a) => !addresses.contains(a)).toList();
-      var index = 0;
-      Future<void> worker() async {
-        while (!_closed && generation == _generation && index < hosts.length) {
-          if (_pending.length >= 8) {
-            await Future<void>.delayed(const Duration(milliseconds: 20));
-            continue;
-          }
-          final host = hosts[index++];
-          await _confirm(host, transferPort);
+    final addresses = _interfaces
+        .where(
+          (i) =>
+              !RegExp(r'^(utun|tun|tap|ppp|ipsec|rmnet|lo)').hasMatch(i.name),
+        )
+        .expand((i) => i.addresses)
+        .map((a) => a.address)
+        .toSet();
+    final prefixes = addresses
+        .where((a) {
+          final b = a.split('.').map(int.parse).toList();
+          return b[0] == 10 ||
+              (b[0] == 192 && b[1] == 168) ||
+              (b[0] == 172 && b[1] >= 16 && b[1] <= 31);
+        })
+        .map((a) => a.split('.').take(3).join('.'))
+        .toSet()
+        .take(2);
+    final hosts = [
+      for (final prefix in prefixes)
+        for (var n = 1; n < 255; n++) '$prefix.$n',
+    ].where((a) => !addresses.contains(a)).toList();
+    var index = 0;
+    Future<void> worker() async {
+      while (!_closed && generation == _generation && index < hosts.length) {
+        if (_pending.length >= 8) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          continue;
         }
+        final host = hosts[index++];
+        await _confirm(host, transferPort);
       }
-
-      await Future.wait(List.generate(8, (_) => worker()));
-    } finally {
-      _scanning = false;
     }
+
+    await Future.wait(List.generate(8, (_) => worker()));
   }
 
   void announce() {

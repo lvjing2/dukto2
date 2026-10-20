@@ -6,6 +6,17 @@ import 'package:crypto/crypto.dart';
 import 'package:dukto2_core/dukto2_core.dart';
 import 'package:test/test.dart';
 
+class RecordingDiscovery extends PeerDiscovery {
+  int scans = 0;
+  RecordingDiscovery(super.local)
+    : super(port: 0, subnetFallback: false, useMulticast: false);
+
+  @override
+  Future<void> scan() async {
+    scans++;
+  }
+}
+
 void main() {
   late Directory root;
   late DeviceIdentity identity;
@@ -40,6 +51,36 @@ void main() {
         ..findProxy = ((_) => 'DIRECT')
         ..badCertificateCallback = (cert, _, _) =>
             sha256.convert(cert.der).toString() == identity.fingerprint;
+
+  test(
+    'active search scans with visible peers and coalesces repeats',
+    () async {
+      final server = await start();
+      final discovery = RecordingDiscovery(
+        Peer(
+          id: other.id,
+          name: 'Local',
+          host: '127.0.0.1',
+          port: 1,
+          fingerprint: other.fingerprint,
+        ),
+      );
+      addTearDown(discovery.close);
+      await discovery.start();
+      await discovery.confirmEndpoint('127.0.0.1', server.port);
+      expect(discovery.peers.single.fingerprint, identity.fingerprint);
+      final first = discovery.search();
+      expect(identical(first, discovery.search()), isTrue);
+      await first;
+      expect(discovery.scans, 1);
+      expect(discovery.peers.single.fingerprint, identity.fingerprint);
+      await discovery.search();
+      expect(discovery.scans, 2);
+      await discovery.close();
+      await discovery.search();
+      expect(discovery.scans, 2);
+    },
+  );
 
   test(
     'listener health check completes TLS and emits no transfer error',

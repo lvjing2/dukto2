@@ -183,6 +183,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get refreshDevices => 'Actualiser les appareils';
 
   @override
+  String get searchingDevices => 'Recherche…';
+
+  @override
   String get findingDevices => 'Recherche d’appareils…';
 
   @override

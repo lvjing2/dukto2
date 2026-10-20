@@ -182,6 +182,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get refreshDevices => 'Actualizar dispositivos';
 
   @override
+  String get searchingDevices => 'Buscando…';
+
+  @override
   String get findingDevices => 'Buscando dispositivos…';
 
   @override

@@ -179,6 +179,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refreshDevices => 'تحديث الأجهزة';
 
   @override
+  String get searchingDevices => 'جارٍ البحث…';
+
+  @override
   String get findingDevices => 'جارٍ البحث عن الأجهزة القريبة…';
 
   @override

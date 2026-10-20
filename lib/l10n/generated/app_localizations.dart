@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Refresh devices'**
   String get refreshDevices;
 
+  /// Active nearby-device search is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get searchingDevices;
+
   /// Dukto2 findingDevices. Keep names, paths and codes unchanged.
   ///
   /// In en, this message translates to:

@@ -2,7 +2,16 @@
 
 English | [Simplified Chinese](../validation.md)
 
-As of 2026-10-19. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
+As of 2026-10-21. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
+
+## Active device search (2026-10-21)
+
+The refresh button and a pull at the top of the list share one active discovery operation: reannounce, reconnect verified endpoints, and run the bounded private IPv4 subnet scan even when peers are already visible. Apple also restarts Bonjour; Android ensures its multicast lock is held. Repeated gestures join the current task, and periodic network checks do not interrupt it. Existing peers stay visible. A single heading and spinner show searching; short lists also support the gesture.
+
+- `tool/check.sh` passed 139 application tests, 50 core tests and 21 script tests; both analyzers were clean. The final indicator adjustment additionally passed all 32 widget tests and application analysis. The Android Release APK built successfully.
+- REDMI K90 was updated over wireless adb without clearing data. Actual button and pull operations showed searching, finished, restored the refresh action, and kept the discovered Mac visible. A read-only UDP observer on the Mac received fresh discovery announcements after both actions. The final two rounds took approximately 28 seconds from input to observing completion, including the full scan and UI sampling; this is not time to first discovery.
+- Core coverage includes scanning with existing peers, coalescing requests, and returning safely after close. UI coverage includes phone/desktop, short lists, state restoration, and a single progress indicator. Controller coverage includes scan failures and native-discovery failure fallback.
+- Hardware captures: [searching](../screenshots/android-discovery-search.png) / [finished](../screenshots/android-discovery-ready.png). File transfers, real-network discovery on other platforms, and disconnect/reconnect were not revalidated in this round.
 
 ## Device connection status (2026-10-20)
 

@@ -182,6 +182,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get refreshDevices => 'Geräte aktualisieren';
 
   @override
+  String get searchingDevices => 'Suche läuft…';
+
+  @override
   String get findingDevices => 'Suche nach Geräten…';
 
   @override

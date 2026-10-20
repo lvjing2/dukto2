@@ -181,6 +181,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get refreshDevices => 'Обновить устройства';
 
   @override
+  String get searchingDevices => 'Поиск…';
+
+  @override
   String get findingDevices => 'Поиск устройств поблизости…';
 
   @override

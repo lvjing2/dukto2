@@ -182,6 +182,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get refreshDevices => 'Atualizar dispositivos';
 
   @override
+  String get searchingDevices => 'Buscando…';
+
+  @override
   String get findingDevices => 'Buscando dispositivos próximos…';
 
   @override
@@ -1128,6 +1131,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get refreshDevices => 'Atualizar dispositivos';
+
+  @override
+  String get searchingDevices => 'Buscando…';
 
   @override
   String get findingDevices => 'Buscando dispositivos próximos…';

@@ -567,16 +567,24 @@ class _TransferDashboardState extends State<TransferDashboard> {
                       child: Column(
                         children: [
                           Expanded(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.fromLTRB(16, 28, 16, 8),
-                              child: Column(
-                                children: [
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(8, 0, 8, 28),
-                                    child: _Brand(),
-                                  ),
-                                  _devices(),
-                                ],
+                            child: _refreshable(
+                              SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  28,
+                                  16,
+                                  8,
+                                ),
+                                child: Column(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.fromLTRB(8, 0, 8, 28),
+                                      child: _Brand(),
+                                    ),
+                                    _devices(),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -617,7 +625,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                     ],
                   ),
                 ),
-                Expanded(child: _content(false)),
+                Expanded(child: _refreshable(_content(false))),
               ],
             );
           },
@@ -743,15 +751,33 @@ class _TransferDashboardState extends State<TransferDashboard> {
         Row(
           children: [
             Expanded(
-              child: Text(
-                context.l10n.nearbyDevices((c.peers.length).toString()),
-                style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  c.searchingDevices
+                      ? context.l10n.searchingDevices
+                      : context.l10n.nearbyDevices((c.peers.length).toString()),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
             IconButton(
               tooltip: context.l10n.refreshDevices,
-              onPressed: c.ready ? () => unawaited(c.refreshAddresses()) : null,
-              icon: const Icon(Icons.refresh, size: 21),
+              onPressed: c.ready && !c.searchingDevices
+                  ? () => unawaited(c.searchDevices())
+                  : null,
+              icon: c.searchingDevices
+                  ? SizedBox.square(
+                      dimension: 21,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        semanticsLabel: context.l10n.searchingDevices,
+                      ),
+                    )
+                  : const Icon(Icons.refresh, size: 21),
             ),
           ],
         ),
@@ -760,7 +786,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              c.starting ? context.l10n.findingDevices : context.l10n.noDevices,
+              c.starting || c.searchingDevices
+                  ? context.l10n.findingDevices
+                  : context.l10n.noDevices,
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),
@@ -855,8 +883,15 @@ class _TransferDashboardState extends State<TransferDashboard> {
     );
   }
 
+  Widget _refreshable(Widget child) => RefreshIndicator.noSpinner(
+    onRefresh: c.searchDevices,
+    notificationPredicate: (notification) => c.ready && notification.depth == 0,
+    child: child,
+  );
+
   Widget _content(bool desktop) => ListView(
     key: const PageStorageKey('transfer-content'),
+    physics: desktop ? null : const AlwaysScrollableScrollPhysics(),
     padding: EdgeInsets.fromLTRB(
       desktop ? 32 : 20,
       desktop ? 28 : 4,

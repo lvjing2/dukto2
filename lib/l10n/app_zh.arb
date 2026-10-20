@@ -48,6 +48,7 @@
   "starting": "正在启动…",
   "nearbyDevices": "附近设备 {arg0}",
   "refreshDevices": "刷新设备",
+  "searchingDevices": "正在搜索…",
   "findingDevices": "正在查找附近设备…",
   "noDevices": "还没有发现设备",
   "verifiedSelected": "已核对 · 已选择",

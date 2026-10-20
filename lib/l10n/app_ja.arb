@@ -48,6 +48,7 @@
   "starting": "起動中…",
   "nearbyDevices": "近くのデバイス: {arg0}",
   "refreshDevices": "デバイスを更新",
+  "searchingDevices": "検索中…",
   "findingDevices": "近くのデバイスを検索中…",
   "noDevices": "デバイスが見つかりません",
   "verifiedSelected": "確認済み · 選択中",

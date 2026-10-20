@@ -42,6 +42,17 @@ final class DiskSelection extends PlatformFile {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class ControlledSearch extends PeerDiscovery {
+  final finished = Completer<void>();
+  int searches = 0;
+  ControlledSearch(super.local);
+  @override
+  Future<void> search() {
+    searches++;
+    return finished.future;
+  }
+}
+
 class DesktopNetworkBinding extends AutomatedTestWidgetsFlutterBinding {
   @override
   bool get overrideHttpClient => false;
@@ -78,6 +89,64 @@ void main() {
     messenger.setMockMethodCallHandler(Dukto2Controller.platform, null);
     await root.delete(recursive: true);
   });
+
+  for (final failure in ['none', 'scan', 'native']) {
+    test(
+      'active search restarts native discovery and resets state: failure=$failure',
+      () async {
+        if (failure == 'native') {
+          messenger.setMockMethodCallHandler(Dukto2Controller.platform, (
+            call,
+          ) async {
+            calls.add(call);
+            if (call.method == 'startDiscovery') {
+              throw PlatformException(code: 'DISCOVERY');
+            }
+            return null;
+          });
+        }
+        final identity = await DeviceIdentity.loadOrCreate(root);
+        final c = DesktopController('ios')..selected = null;
+        final server = TransferServer(
+          identity: identity,
+          name: 'Local',
+          receiveDirectory: root,
+          onOffer: (_) async => false,
+          bindAddress: InternetAddress.loopbackIPv4,
+        );
+        await server.start();
+        c.server = server;
+        final discovery = ControlledSearch(server.localPeer);
+        c.discovery = discovery;
+        addTearDown(() async {
+          await discovery.close();
+          await server.close();
+          await c.client.close();
+          c.dispose();
+        });
+        final searching = c.searchDevices();
+        expect(c.searchingDevices, isTrue);
+        expect(identical(searching, c.searchDevices()), isTrue);
+        // The listener health probe and platform channel complete asynchronously.
+        for (var i = 0; i < 100 && discovery.searches == 0; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        expect(discovery.searches, 1);
+        final native = calls.singleWhere(
+          (call) => call.method == 'startDiscovery',
+        );
+        expect(native.arguments, {'id': identity.id, 'port': server.port});
+        if (failure == 'scan') {
+          discovery.finished.completeError(const SocketException('offline'));
+        } else {
+          discovery.finished.complete();
+        }
+        await searching;
+        expect(c.searchingDevices, isFalse);
+        expect(c.error, failure == 'none' ? isNull : isNotNull);
+      },
+    );
+  }
 
   for (final target in ['linux', 'windows']) {
     test(

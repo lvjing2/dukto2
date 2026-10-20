@@ -176,6 +176,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get refreshDevices => 'デバイスを更新';
 
   @override
+  String get searchingDevices => '検索中…';
+
+  @override
   String get findingDevices => '近くのデバイスを検索中…';
 
   @override

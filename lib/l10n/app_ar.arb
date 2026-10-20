@@ -48,6 +48,7 @@
   "starting": "جارٍ البدء…",
   "nearbyDevices": "الأجهزة القريبة: {arg0}",
   "refreshDevices": "تحديث الأجهزة",
+  "searchingDevices": "جارٍ البحث…",
   "findingDevices": "جارٍ البحث عن الأجهزة القريبة…",
   "noDevices": "لم يُعثر على أجهزة",
   "verifiedSelected": "موثّق · محدد",

@@ -48,6 +48,7 @@
   "starting": "Запуск…",
   "nearbyDevices": "Устройства поблизости: {arg0}",
   "refreshDevices": "Обновить устройства",
+  "searchingDevices": "Поиск…",
   "findingDevices": "Поиск устройств поблизости…",
   "noDevices": "Устройства не найдены",
   "verifiedSelected": "Проверено · Выбрано",

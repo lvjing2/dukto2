@@ -48,6 +48,7 @@
   "starting": "Startet…",
   "nearbyDevices": "Geräte in der Nähe: {arg0}",
   "refreshDevices": "Geräte aktualisieren",
+  "searchingDevices": "Suche läuft…",
   "findingDevices": "Suche nach Geräten…",
   "noDevices": "Keine Geräte gefunden",
   "verifiedSelected": "Verifiziert · Ausgewählt",

@@ -181,6 +181,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshDevices => 'Refresh devices';
 
   @override
+  String get searchingDevices => 'Searching…';
+
+  @override
   String get findingDevices => 'Looking for nearby devices…';
 
   @override

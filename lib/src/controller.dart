@@ -256,7 +256,9 @@ class Dukto2Controller extends ChangeNotifier {
   int? chosenTextSize;
   String chosenTextPreview = '';
   Timer? _networkDebounce;
-  bool _recoveringNetwork = false;
+  Future<void>? _networkRecovery;
+  Future<void>? _deviceSearch;
+  bool searchingDevices = false;
   DateTime _lastNotification = DateTime.fromMillisecondsSinceEpoch(0);
   FileOffer? get pendingOffer => _session?.pendingOffer;
   TransferProgress? get activeProgress => _session?.progress;
@@ -406,9 +408,40 @@ class Dukto2Controller extends ChangeNotifier {
     }
   }
 
-  Future<void> refreshAddresses() async {
-    if (_disposed || _recoveringNetwork) return;
-    _recoveringNetwork = true;
+  Future<void> searchDevices() {
+    if (_disposed || !ready) return Future.value();
+    return _deviceSearch ??= _searchDevices().whenComplete(
+      () => _deviceSearch = null,
+    );
+  }
+
+  Future<void> _searchDevices() async {
+    searchingDevices = true;
+    _notify();
+    try {
+      await refreshAddresses(activeSearch: true);
+    } finally {
+      searchingDevices = false;
+      _notify();
+    }
+  }
+
+  Future<void> refreshAddresses({bool activeSearch = false}) async {
+    while (_networkRecovery != null) {
+      await _networkRecovery;
+      if (!activeSearch) return;
+    }
+    if (_disposed) return;
+    final work = _refreshAddresses(activeSearch: activeSearch);
+    _networkRecovery = work;
+    try {
+      await work;
+    } finally {
+      if (identical(_networkRecovery, work)) _networkRecovery = null;
+    }
+  }
+
+  Future<void> _refreshAddresses({required bool activeSearch}) async {
     try {
       final interfaces = await NetworkInterface.list(
         type: InternetAddressType.IPv4,
@@ -419,14 +452,28 @@ class Dukto2Controller extends ChangeNotifier {
           .map((a) => '${a.address}:${server?.port ?? 0}')
           .toList();
       if (selected != null) connection.watch(selected!);
-      await discovery?.refresh(force: true);
       if (!busy && server != null) await server!.ensureListening();
+      if (activeSearch) {
+        if (server != null && (_isAndroid || _isIOS || _isMacOS)) {
+          try {
+            // Apple restarts Bonjour browsing; Android reacquires its multicast
+            // lock. Neither operation changes trust or transfer consent.
+            await platform.invokeMethod<void>('startDiscovery', {
+              'id': server!.localPeer.id,
+              'port': server!.port,
+            });
+          } on Object {
+            _errorText = (strings) => strings.discoveryUnavailable;
+          }
+        }
+        await discovery?.search();
+      } else {
+        await discovery?.refresh(force: true);
+      }
       _notify();
     } on Object {
       _errorText = (strings) => strings.networkRecoveryFailed;
       _notify();
-    } finally {
-      _recoveringNetwork = false;
     }
   }
 

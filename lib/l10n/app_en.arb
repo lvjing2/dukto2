@@ -259,6 +259,8 @@
   "@refreshDevices": {
     "description": "Dukto2 refreshDevices. Keep names, paths and codes unchanged."
   },
+  "searchingDevices": "Searching…",
+  "@searchingDevices": {"description": "Active nearby-device search is in progress."},
   "findingDevices": "Looking for nearby devices…",
   "@findingDevices": {
     "description": "Dukto2 findingDevices. Keep names, paths and codes unchanged."

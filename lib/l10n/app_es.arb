@@ -48,6 +48,7 @@
   "starting": "Iniciando…",
   "nearbyDevices": "Dispositivos cercanos: {arg0}",
   "refreshDevices": "Actualizar dispositivos",
+  "searchingDevices": "Buscando…",
   "findingDevices": "Buscando dispositivos…",
   "noDevices": "No se encontraron dispositivos",
   "verifiedSelected": "Verificado · Seleccionado",

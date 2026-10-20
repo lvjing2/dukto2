@@ -176,6 +176,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get refreshDevices => '刷新设备';
 
   @override
+  String get searchingDevices => '正在搜索…';
+
+  @override
   String get findingDevices => '正在查找附近设备…';
 
   @override
@@ -1066,6 +1069,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get refreshDevices => '刷新设备';
+
+  @override
+  String get searchingDevices => '正在搜索…';
 
   @override
   String get findingDevices => '正在查找附近设备…';
