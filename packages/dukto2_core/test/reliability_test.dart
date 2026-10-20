@@ -248,12 +248,24 @@ void main() {
     () async {
       final server = await start();
       final receiver = await RawDatagramSocket.bind(
-        InternetAddress.loopbackIPv4,
+        InternetAddress.anyIPv4,
         0,
         reuseAddress: true,
         reusePort: !Platform.isAndroid && !Platform.isWindows,
       );
       addTearDown(receiver.close);
+      // This observer and discovery share one host and port. Unicast with
+      // SO_REUSEPORT can reach either socket, unlike two separate LAN devices.
+      // Join the announcement group so multicast loopback fans out to both.
+      for (final interface in await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      )) {
+        try {
+          receiver.joinMulticast(PeerDiscovery.group, interface);
+        } on SocketException {
+          // Skip adapters which cannot join this multicast group.
+        }
+      }
       final received = Completer<Map<String, dynamic>>();
       final departed = Completer<Map<String, dynamic>>();
       final subscription = receiver.listen((event) {
