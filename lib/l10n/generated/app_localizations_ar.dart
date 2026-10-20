@@ -928,4 +928,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deviceOnline => 'متصل · تم التحقق من الهوية';
+
+  @override
+  String get aboutAuthor => 'المؤلف: lvjing2';
 }

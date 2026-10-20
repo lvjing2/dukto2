@@ -946,4 +946,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deviceOnline => 'В сети · Личность подтверждена';
+
+  @override
+  String get aboutAuthor => 'Автор: lvjing2';
 }

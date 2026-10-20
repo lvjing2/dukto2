@@ -4,6 +4,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'app_settings.dart';
 import 'controller.dart';
@@ -17,6 +19,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   Dukto2Controller get c => widget.controller;
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
   @override
   void initState() {
     super.initState();
@@ -34,16 +37,47 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Dukto2 · 0.1.6-rc.3 (10)',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            FutureBuilder<PackageInfo>(
+              future: _packageInfo,
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                final version = info == null || info.version.isEmpty
+                    ? ''
+                    : ' · ${info.version}'
+                          '${info.buildNumber.isEmpty ? '' : ' (${info.buildNumber})'}';
+                return Text(
+                  'Dukto2$version',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => _openLink(
+                Uri.https('github.com', '/lvjing2'),
+                context.l10n.aboutAuthor,
+              ),
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(context.l10n.aboutAuthor),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(44, 44),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _openLink(
+                Uri.https('github.com', '/lvjing2/dukto2'),
+                'GitHub · lvjing2/dukto2',
+              ),
+              icon: const Icon(Icons.code, size: 18),
+              label: const Text('GitHub · lvjing2/dukto2'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(44, 44),
+              ),
             ),
             SizedBox(height: 16),
             Text(context.l10n.aboutTribute),
-            SizedBox(height: 16),
-            Text(context.l10n.aboutAi),
-            SizedBox(height: 16),
-            Text(context.l10n.aboutProject),
           ],
         ),
       ),
@@ -60,6 +94,28 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
     ),
   );
+
+  Future<void> _openLink(Uri uri, String title) async {
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } on Exception {
+      // Keep the address available for copying when no browser can be opened.
+    }
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SelectableText(uri.toString()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _chooseLanguage() async {
     final selected = await showDialog<AppLanguage>(

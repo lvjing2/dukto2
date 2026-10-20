@@ -898,6 +898,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceOnline => '在线 · 已核对';
+
+  @override
+  String get aboutAuthor => '作者：lvjing2';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1793,4 +1796,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get deviceOnline => '在线 · 已核对';
+
+  @override
+  String get aboutAuthor => '作者：lvjing2';
 }

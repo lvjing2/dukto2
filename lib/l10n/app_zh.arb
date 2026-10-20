@@ -271,5 +271,6 @@
   "deviceOffline": "离线",
   "deviceChecking": "正在检查连接…",
   "deviceIdentityChanged": "设备身份已变化",
-  "deviceOnline": "在线 · 已核对"
+  "deviceOnline": "在线 · 已核对",
+  "aboutAuthor": "作者：lvjing2"
 }

@@ -271,5 +271,6 @@
   "deviceOffline": "Offline",
   "deviceChecking": "Verbindung wird geprüft…",
   "deviceIdentityChanged": "Geräteidentität geändert",
-  "deviceOnline": "Online · Identität geprüft"
+  "deviceOnline": "Online · Identität geprüft",
+  "aboutAuthor": "Autor: lvjing2"
 }

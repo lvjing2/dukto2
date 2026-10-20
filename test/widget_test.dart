@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dukto2/main.dart';
 import 'package:dukto2/src/controller.dart';
 import 'package:dukto2_core/dukto2_core.dart';
@@ -1175,8 +1176,15 @@ void main() {
     (const Size(800, 600), 1.0, false),
   ]) {
     testWidgets(
-      'about is reached through settings and preserves credits at $size',
+      'about shows installed version and preserves credits at $size',
       (tester) async {
+        PackageInfo.setMockInitialValues(
+          appName: 'Dukto2',
+          packageName: 'dev.dukto2.dukto2',
+          version: '9.8.7-test',
+          buildNumber: '4321',
+          buildSignature: '',
+        );
         final c = StorageTestController();
         clean(tester, c);
         await show(tester, c, size, scale: scale, dark: dark);
@@ -1192,8 +1200,11 @@ void main() {
         );
         await tester.tap(about);
         await tester.pumpAndSettle();
+        expect(find.text('Dukto2 · 9.8.7-test (4321)'), findsOneWidget);
+        expect(find.text('作者：lvjing2'), findsOneWidget);
+        expect(find.text('GitHub · lvjing2/dukto2'), findsOneWidget);
         expect(find.textContaining('Emanuele Colombo'), findsOneWidget);
-        expect(find.textContaining('OpenAI Codex'), findsOneWidget);
+        expect(find.textContaining('OpenAI Codex'), findsNothing);
         expect(find.text('第三方许可'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },

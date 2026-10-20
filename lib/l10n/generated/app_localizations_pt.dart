@@ -954,6 +954,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deviceOnline => 'Online · Identidade verificada';
+
+  @override
+  String get aboutAuthor => 'Autor: lvjing2';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1905,4 +1908,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get deviceOnline => 'Online · Identidade verificada';
+
+  @override
+  String get aboutAuthor => 'Autor: lvjing2';
 }

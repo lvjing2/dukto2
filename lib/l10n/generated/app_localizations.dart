@@ -1747,6 +1747,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Online · Identity verified'**
   String get deviceOnline;
+
+  /// No description provided for @aboutAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author: lvjing2'**
+  String get aboutAuthor;
 }
 
 class _AppLocalizationsDelegate

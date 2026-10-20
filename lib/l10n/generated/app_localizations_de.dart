@@ -957,4 +957,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deviceOnline => 'Online · Identität geprüft';
+
+  @override
+  String get aboutAuthor => 'Autor: lvjing2';
 }

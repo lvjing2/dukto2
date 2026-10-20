@@ -901,4 +901,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deviceOnline => 'オンライン · 識別情報確認済み';
+
+  @override
+  String get aboutAuthor => '作者：lvjing2';
 }

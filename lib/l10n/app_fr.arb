@@ -271,5 +271,6 @@
   "deviceOffline": "Hors ligne",
   "deviceChecking": "Vérification de la connexion…",
   "deviceIdentityChanged": "Identité de l’appareil modifiée",
-  "deviceOnline": "En ligne · Identité vérifiée"
+  "deviceOnline": "En ligne · Identité vérifiée",
+  "aboutAuthor": "Auteur : lvjing2"
 }

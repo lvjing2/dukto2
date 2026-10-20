@@ -905,4 +905,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get deviceOnline => '온라인 · 식별 정보 확인됨';
+
+  @override
+  String get aboutAuthor => '제작자: lvjing2';
 }

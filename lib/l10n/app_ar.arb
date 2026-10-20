@@ -271,5 +271,6 @@
   "deviceOffline": "غير متصل",
   "deviceChecking": "جارٍ التحقق من الاتصال…",
   "deviceIdentityChanged": "تغيّرت هوية الجهاز",
-  "deviceOnline": "متصل · تم التحقق من الهوية"
+  "deviceOnline": "متصل · تم التحقق من الهوية",
+  "aboutAuthor": "المؤلف: lvjing2"
 }

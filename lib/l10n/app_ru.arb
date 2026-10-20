@@ -271,5 +271,6 @@
   "deviceOffline": "Не в сети",
   "deviceChecking": "Проверка соединения…",
   "deviceIdentityChanged": "Идентификатор устройства изменился",
-  "deviceOnline": "В сети · Личность подтверждена"
+  "deviceOnline": "В сети · Личность подтверждена",
+  "aboutAuthor": "Автор: lvjing2"
 }

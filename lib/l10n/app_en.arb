@@ -1291,5 +1291,6 @@
   "deviceOnline": "Online · Identity verified",
   "@deviceOnline": {
     "description": "Selected device is reachable and its full identity matches."
-  }
+  },
+  "aboutAuthor": "Author: lvjing2"
 }
