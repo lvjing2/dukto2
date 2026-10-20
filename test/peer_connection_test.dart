@@ -64,10 +64,10 @@ void main() {
     await tester.pump();
     expect(connection.state, PeerConnectionState.online);
     reachable = false;
-    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 1));
     expect(connection.state, PeerConnectionState.offline);
     reachable = true;
-    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 1));
     expect(connection.state, PeerConnectionState.online);
     connection.dispose();
   });

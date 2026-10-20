@@ -4,6 +4,19 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.6+13 — Release candidate
+
+- Unify refresh-button and touch pull-to-refresh actions into active discovery, with a searching indicator and coalesced repeated requests.
+- Check discovered peers independently every second and expire them after three seconds without HTTPS confirmation. Graceful exit broadcasts a departure hint; a failed HTTPS check permits earlier removal.
+- Give presence checks separate bounded capacity so candidate scans cannot delay liveness checks.
+- Simplify selected-device details and the QR scanner; show author links and the installed version in About.
+- Deploy the same discovery logic to Android and Windows x64 for manual acceptance; this does not establish hardware coverage on every platform.
+
+## 0.1.6-rc.5+12 — Release candidate
+
+- Add native Windows ARM64 and Linux ARM64 builds and separate downloads.
+- Verify architecture across the app, engine, plugins and runtime libraries; ARM64 hardware acceptance remains pending.
+
 ## 0.1.6-rc.3+10 — Release candidate
 
 - Add Windows camera and image QR connections with touch and orientation support.

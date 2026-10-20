@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 
@@ -58,6 +59,12 @@ class _Dukto2AppState extends State<Dukto2App> with WidgetsBindingObserver {
       unawaited(controller.refreshAddresses());
       unawaited(controller.refreshSystemSettings());
     }
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    await controller.shutdown();
+    return AppExitResponse.exit;
   }
 
   @override
