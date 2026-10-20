@@ -1,6 +1,6 @@
 # 国内社区发布安排
 
-状态：仅准备；仓库 private，Release Draft，不创建公开下载，不发帖。当前版本 0.1.6-rc.2+9；新安装修复已通过 Windows / Linux 原生 CI，仍需干净环境复验，不能使用旧包冒充修复版。
+状态：仅准备；仓库 private，Release Draft，不创建公开下载，不发帖。当前版本 0.1.6-rc.3+10；新安装修复已通过 Windows / Linux 原生 CI，仍需干净环境复验，不能使用旧包冒充修复版。
 
 ## 顺序与素材
 
@@ -38,3 +38,5 @@
 - [少数派创作手册](https://manual.sspai.com/guides/quickstart/) 与 [提交及审阅](https://manual.sspai.com/guides/review-procedure/)：深度投稿原则上要求首发，AI 辅助创作须披露。已发其他平台的通稿不作为相同内容的首发投稿。
 - [酷安](https://www.coolapk.com/)：当前官网以 App 为入口；未验证开发者上架权限，本轮先准备社区介绍，不承诺应用商店收录。
 - 掘金、知乎账号权限与编辑入口尚未在登录态核验，发帖前再检查，不预填认证身份。
+
+rc.3 统一候选构建：[五平台 CI](https://github.com/lvjing2/dukto2/actions/runs/39398667423)，源码标签 `v0.1.6-rc.3`。先前安装测试结果不等于本次候选已完成干净环境或全部真机复验。

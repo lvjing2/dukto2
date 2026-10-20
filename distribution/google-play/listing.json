@@ -1,10 +1,10 @@
 {
   "applicationId": "dev.dukto2.dukto2",
   "developerName": "lvjing2",
-  "versionName": "0.1.6-rc.2",
-  "versionCode": 9,
-  "candidateTag": "v0.1.6-rc.2",
-  "candidateCommit": "c6ed3ca87f6a2ef0b8c35fb9e9b442b400847abe",
+  "versionName": "0.1.6-rc.3",
+  "versionCode": 10,
+  "candidateTag": "v0.1.6-rc.3",
+  "candidateCommit": "1ae3b37ed1107611895ee06ea6e8bb6815f06816",
   "defaultLocale": "zh-CN",
   "locales": [
     "en-US",

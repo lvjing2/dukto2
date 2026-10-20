@@ -1,6 +1,6 @@
 # 国内开发者社区试用准备
 
-候选版：0.1.6-rc.2+9；源码标签 v0.1.6-rc.2。仓库继续保持 private。文案尚未向任何平台发送，GitHub Release 也只保留 Draft / Prerelease 状态。
+候选版：0.1.6-rc.3+10；源码标签 v0.1.6-rc.3。仓库继续保持 private。文案尚未向任何平台发送，GitHub Release 也只保留 Draft / Prerelease 状态。
 
 目录内容：community-post.md 为长介绍；short-post.txt 为短介绍；install-and-feedback.md 为安装、验证与反馈说明；screenshots/ 为原始真机截图；graphics/ 为中文功能图与现有应用图标。
 

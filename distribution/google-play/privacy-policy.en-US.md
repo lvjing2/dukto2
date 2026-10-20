@@ -1,6 +1,6 @@
 # Dukto2 privacy policy draft
 
-Prepared: 2026-10-19. Candidate: 0.1.6-rc.2+9. Maintainer: lvjing2. Contact: leojames.googol@gmail.com.
+Prepared: 2026-10-20. Candidate: 0.1.6-rc.3+10. Maintainer: lvjing2. Contact: leojames.googol@gmail.com.
 
 This is an offline release-preparation draft, not a published policy. Review the final binary and SDK behavior, establish a stable public URL and set the effective date before submitting a store listing.
 
@@ -20,7 +20,7 @@ Clearing app data or uninstalling normally deletes private app settings, records
 
 ## Camera, clipboard and permissions
 
-Camera access scans Dukto2 connection QR codes on the device. Dukto2 does not save or upload camera images. Discovery and manual connection remain available without camera permission. The app reads the clipboard when you choose paste, and writes text when you choose copy; it implements no background clipboard monitoring.
+Camera access scans Dukto2 connection QR codes on the device. Camera images are not uploaded. Windows scanning briefly stores captured frames for local recognition and deletes them after processing; abrupt termination may leave a temporary file. Image recognition reads the selected image without deleting the original. Discovery and manual connection remain available without camera permission. The app reads the clipboard when you choose paste, and writes text when you choose copy; it implements no background clipboard monitoring.
 
 Network and Wi-Fi permissions support discovery and communication. System file pickers and folder grants provide access to selected files. Notifications show progress and completion; foreground data-sync and wake-lock capabilities support active transfers. Permissions can be managed in system settings.
 

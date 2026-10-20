@@ -1,1 +1,1 @@
-Release candidate for local-network file and text sharing. Includes batch approval, verified QR device connections, ten interface languages, remembered receiving folders and transfer history. Interrupted files must be resent. Google Play and cross-channel upgrade validation remain pending.
+Show device online/offline status, disable unavailable sends, and restore sending after reconnection. Improve Settings order and language-list alignment. Includes LAN file, text and batch transfers with device identity checks.
