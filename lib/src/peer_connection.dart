@@ -18,13 +18,13 @@ class PeerConnection extends ChangeNotifier {
 
   PeerConnection({
     Future<Peer> Function(Peer)? probe,
-    this.interval = const Duration(seconds: 5),
+    this.interval = const Duration(seconds: 1),
   }) : _probe =
            probe ??
            ((peer) => TransferClient.probe(
              peer.host,
              peer.port,
-             timeout: const Duration(seconds: 2),
+             timeout: const Duration(milliseconds: 800),
            ));
 
   bool watches(Peer peer) =>
@@ -54,7 +54,7 @@ class PeerConnection extends ChangeNotifier {
     var result = PeerConnectionState.offline;
     try {
       final observed = await Future.sync(() => _probe(peer))
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 1));
       result =
           observed.id == peer.id && observed.fingerprint == peer.fingerprint
           ? PeerConnectionState.online

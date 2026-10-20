@@ -243,45 +243,59 @@ void main() {
     },
   );
 
-  test('confirmed endpoints receive a unicast return announcement', () async {
-    final server = await start();
-    final receiver = await RawDatagramSocket.bind(
-      InternetAddress.loopbackIPv4,
-      0,
-      reuseAddress: true,
-      reusePort: !Platform.isAndroid && !Platform.isWindows,
-    );
-    addTearDown(receiver.close);
-    final received = Completer<Map<String, dynamic>>();
-    final subscription = receiver.listen((event) {
-      if (event != RawSocketEvent.read) return;
-      Datagram? packet;
-      while ((packet = receiver.receive()) != null) {
-        final value =
-            jsonDecode(utf8.decode(packet!.data)) as Map<String, dynamic>;
-        if (!received.isCompleted) received.complete(value);
-      }
-    });
-    addTearDown(subscription.cancel);
-    final discovery = PeerDiscovery(
-      Peer(
-        id: other.id,
-        name: 'Local',
-        host: '127.0.0.1',
-        port: 12345,
-        fingerprint: other.fingerprint,
-      ),
-      port: receiver.port,
-      subnetFallback: false,
-    );
-    addTearDown(discovery.close);
-    await discovery.start();
-    await discovery.confirmEndpoint('127.0.0.1', server.port);
-    final message = await received.future.timeout(const Duration(seconds: 3));
-    expect(message['app'], 'dukto2');
-    expect(message['id'], other.id);
-    expect(message['port'], 12345);
-  });
+  test(
+    'confirmed endpoints receive online and graceful offline announcements',
+    () async {
+      final server = await start();
+      final receiver = await RawDatagramSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+        reuseAddress: true,
+        reusePort: !Platform.isAndroid && !Platform.isWindows,
+      );
+      addTearDown(receiver.close);
+      final received = Completer<Map<String, dynamic>>();
+      final departed = Completer<Map<String, dynamic>>();
+      final subscription = receiver.listen((event) {
+        if (event != RawSocketEvent.read) return;
+        Datagram? packet;
+        while ((packet = receiver.receive()) != null) {
+          final value =
+              jsonDecode(utf8.decode(packet!.data)) as Map<String, dynamic>;
+          if (value['event'] == 'offline') {
+            if (!departed.isCompleted) departed.complete(value);
+          } else if (!received.isCompleted) {
+            received.complete(value);
+          }
+        }
+      });
+      addTearDown(subscription.cancel);
+      final discovery = PeerDiscovery(
+        Peer(
+          id: other.id,
+          name: 'Local',
+          host: '127.0.0.1',
+          port: 12345,
+          fingerprint: other.fingerprint,
+        ),
+        port: receiver.port,
+        subnetFallback: false,
+      );
+      addTearDown(discovery.close);
+      await discovery.start();
+      await discovery.confirmEndpoint('127.0.0.1', server.port);
+      final message = await received.future.timeout(const Duration(seconds: 3));
+      expect(message['app'], 'dukto2');
+      expect(message['id'], other.id);
+      expect(message['port'], 12345);
+      expect(message['event'], 'online');
+      await discovery.close();
+      final offline = await departed.future.timeout(const Duration(seconds: 1));
+      expect(offline['event'], 'offline');
+      expect(offline['id'], other.id);
+      expect(offline['fingerprint'], other.fingerprint);
+    },
+  );
 
   test(
     'remembered endpoint rejects an IP reused by a different identity',
