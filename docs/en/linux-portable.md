@@ -6,7 +6,7 @@ Flatpak and AppImage candidates target native x86_64 and ARM64. Their separate C
 
 | Format | Purpose | Requirements |
 | --- | --- | --- |
-| Flatpak | Desktop installation with a shared runtime and file authorization | Flatpak support; access to the GNOME 49 runtime on Flathub for the first installation |
+| Flatpak | Desktop installation with a shared runtime and file authorization | Flatpak support; access to the GNOME 50 runtime on Flathub for the first installation |
 | AppImage | Portable execution without a system installation | 64-bit Linux, glibc 2.35 or newer, compatible desktop, drivers and system services |
 | tar.gz | Manual deployment and troubleshooting | Compatible GTK3 and system dependencies |
 
