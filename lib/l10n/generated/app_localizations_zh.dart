@@ -831,7 +831,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanQr => '扫码连接';
 
   @override
-  String get qrInstructions => '在对方设备打开 Dukto2。\n同一网络不同子网时，也可尝试扫码连接。';
+  String get qrInstructions => '在对方设备打开 Dukto2。';
 
   @override
   String get connectionQr => '连接二维码';
@@ -1729,7 +1729,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get scanQr => '扫码连接';
 
   @override
-  String get qrInstructions => '在对方设备打开 Dukto2。\n同一网络不同子网时，也可尝试扫码连接。';
+  String get qrInstructions => '在对方设备打开 Dukto2。';
 
   @override
   String get connectionQr => '连接二维码';

@@ -4,11 +4,22 @@ English | [Simplified Chinese](../release-ci.md)
 
 Workflow: [Release builds](https://github.com/lvjing2/dukto2/actions/workflows/release.yml), configured in [release.yml](../../.github/workflows/release.yml). Downloads follow repository access permissions.
 
+## Version naming
+
+`pubspec.yaml` is the version source, for example `0.1.6-rc.6+13`.
+Use `v0.1.6-rc.6` for the Git tag, `Dukto2 0.1.6-rc.6` for the Release title,
+and `0.1.6-rc.6` in About and the project homepage. Build number `13` stays in
+native packages and provenance metadata. Apple can normalize its native version
+fields; About displays the original project version bundled with the app.
+After changing pubspec, run `python3 tool/sync_project_version.py`.
+Project checks and release CI reject stale version assets. Published tags never
+move. Historical `baseline-*` and `checkpoint-*` tags are internal checkpoints.
+
 ## Trigger and download
 
 - Actions → Release builds → Run workflow selects all or one platform and uploads artifacts without creating a tag or release. Android signing requires main or a release tag.
 - A `v*` tag matching `pubspec.yaml` creates a **draft release** only after all builds succeed. It is not automatically published and does not overwrite a published release.
-- Tags must match the source version, such as `v0.1.6` or `v0.1.6+7`; mismatches fail before building.
+- Tags must match the source version, such as `v0.1.6` or `v0.1.6-rc.6`; mismatches fail before building.
 
 Each platform uploads an artifact, retained for 30 days by default. It contains versioned archives or APK / AAB files, SHA-256 sidecars and JSON metadata. Draft-release attachments are stored separately from expiring Actions artifacts. Store submissions, installers and automatic updates are not configured. Android signing and initial Play enrollment are described in [two-channel signing](android-signing.md).
 

@@ -1613,7 +1613,7 @@ abstract class AppLocalizations {
   /// Dukto2 qrInstructions. Keep names, paths and codes unchanged.
   ///
   /// In en, this message translates to:
-  /// **'Open Dukto2 on the other device.\nIf you share network but use different subnets, try scanning its QR code.'**
+  /// **'Open Dukto2 on the other device.'**
   String get qrInstructions;
 
   /// Dukto2 connectionQr. Keep names, paths and codes unchanged.

@@ -870,8 +870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQr => 'Scan to connect';
 
   @override
-  String get qrInstructions =>
-      'Open Dukto2 on the other device.\nIf you share network but use different subnets, try scanning its QR code.';
+  String get qrInstructions => 'Open Dukto2 on the other device.';
 
   @override
   String get connectionQr => 'Connection QR code';

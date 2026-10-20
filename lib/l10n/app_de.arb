@@ -249,7 +249,7 @@
   "qrConnectionFailed": "Verbindung fehlgeschlagen. App, Netzwerkverbindung und Gültigkeit des QR-Codes prüfen.",
   "showQr": "QR-Code anzeigen",
   "scanQr": "Zum Verbinden scannen",
-  "qrInstructions": "Dukto2 auf dem anderen Gerät öffnen.\nBei verschiedenen Subnetzen im selben Netzwerk den QR-Code versuchen.",
+  "qrInstructions": "Öffne Dukto2 auf dem anderen Gerät.",
   "connectionQr": "Verbindungs-QR-Code",
   "qrAfterWifi": "Für den QR-Code mit einem Netzwerk verbinden",
   "qrSemantic": "Dukto2-Geräte-QR-Code",

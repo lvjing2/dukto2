@@ -249,7 +249,7 @@
   "qrConnectionFailed": "连接失败：请确认对方应用已打开、设备可以互通，且二维码仍有效。",
   "showQr": "显示二维码",
   "scanQr": "扫码连接",
-  "qrInstructions": "在对方设备打开 Dukto2。\n同一网络不同子网时，也可尝试扫码连接。",
+  "qrInstructions": "在对方设备打开 Dukto2。",
   "connectionQr": "连接二维码",
   "qrAfterWifi": "连接网络后显示二维码",
   "qrSemantic": "Dukto2 设备连接二维码",

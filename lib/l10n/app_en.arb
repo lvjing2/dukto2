@@ -1200,7 +1200,7 @@
   "@scanQr": {
     "description": "Dukto2 scanQr. Keep names, paths and codes unchanged."
   },
-  "qrInstructions": "Open Dukto2 on the other device.\nIf you share network but use different subnets, try scanning its QR code.",
+  "qrInstructions": "Open Dukto2 on the other device.",
   "@qrInstructions": {
     "description": "Dukto2 qrInstructions. Keep names, paths and codes unchanged."
   },

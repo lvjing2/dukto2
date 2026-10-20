@@ -876,8 +876,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scanQr => 'Escanear para conectar';
 
   @override
-  String get qrInstructions =>
-      'Abra o Dukto2 no outro dispositivo.\nNo mesma rede com sub-redes diferentes, tente o código QR.';
+  String get qrInstructions => 'Abra o Dukto2 no outro dispositivo.';
 
   @override
   String get connectionQr => 'Código QR de conexão';
@@ -1830,8 +1829,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get scanQr => 'Escanear para conectar';
 
   @override
-  String get qrInstructions =>
-      'Abra o Dukto2 no outro dispositivo.\nNo mesma rede com sub-redes diferentes, tente o código QR.';
+  String get qrInstructions => 'Abra o Dukto2 no outro dispositivo.';
 
   @override
   String get connectionQr => 'Código QR de conexão';

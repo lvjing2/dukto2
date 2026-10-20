@@ -40,7 +40,8 @@ class ReleasePackageTest(unittest.TestCase):
         with mock.patch.object(package, 'version', return_value='1.2.3+4'):
             package.check_tag('refs/heads/main')
             package.check_tag('refs/tags/v1.2.3')
-            package.check_tag('refs/tags/v1.2.3+4')
+            with self.assertRaises(ValueError):
+                package.check_tag('refs/tags/v1.2.3+4')
             with self.assertRaises(ValueError):
                 package.check_tag('refs/tags/v1.2.4')
             with self.assertRaises(ValueError):
@@ -49,7 +50,8 @@ class ReleasePackageTest(unittest.TestCase):
     def test_candidate_tag_preserves_prerelease_and_build_number(self):
         with mock.patch.object(package, 'version', return_value='0.1.6-rc.1+8'):
             package.check_tag('refs/tags/v0.1.6-rc.1')
-            package.check_tag('refs/tags/v0.1.6-rc.1+8')
+            with self.assertRaises(ValueError):
+                package.check_tag('refs/tags/v0.1.6-rc.1+8')
             for ref in ('refs/tags/v0.1.6', 'refs/tags/v0.1.6-rc.2', 'refs/tags/v0.1.6-rc.1+7'):
                 with self.assertRaises(ValueError):
                     package.check_tag(ref)

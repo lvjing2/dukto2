@@ -4,11 +4,19 @@
 
 工作流：[Release builds](https://github.com/lvjing2/dukto2/actions/workflows/release.yml)，配置位于 [release.yml](../.github/workflows/release.yml)。产物下载遵循仓库访问权限。
 
+## 版本命名
+
+- `pubspec.yaml` 是唯一版本来源，例如 `0.1.6-rc.6+13`。
+- Git 标签：`v0.1.6-rc.6`；Release 标题：`Dukto2 0.1.6-rc.6`；应用「关于」及项目首页：`0.1.6-rc.6`。
+- `+13` 是内部构建号，写入安装包和构建元数据；Apple 的原生版本字段可以转换为纯数字，但不用于「关于」展示。
+- 更新 `pubspec.yaml` 后运行 `python3 tool/sync_project_version.py`，生成随应用打包的项目版本资源。`tool/check.sh` 与 Release CI 会拒绝不同步的资源。
+- 已创建的发布标签不移动；`baseline-*` 和 `checkpoint-*` 是历史检查点，不是发布版本。
+
 ## 触发与下载
 
 - Actions → Release builds → Run workflow：可选 all 或单个平台，上传 Actions artifacts，不自动创建版本或标签；Android 签名仅支持 main 或版本标签。
 - 推送匹配 `pubspec.yaml` 的 `v*` 标签：全部构建成功后创建 **Draft Release**；不会自动转为正式发布。已有正式 Release 不会被覆盖。
-- 标签必须是 `v0.1.6` 或包含构建号的 `v0.1.6+7` 这种与当前源码版本一致的形式；不匹配会在构建前失败。
+- 标签使用 `v主版本.次版本.修订号`，候选版例如 `v0.1.6-rc.6`，须与 `pubspec.yaml` 中 `+` 前的项目版本完全一致；标签不包含构建号。不匹配会在构建前失败。
 
 每个平台上传独立 artifact，默认保留 30 天；解压后得到版本化压缩包或 APK / AAB、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器或自动更新服务；Android 签名及 Play 首次配置见 [双渠道签名说明](android-signing.md)。
 

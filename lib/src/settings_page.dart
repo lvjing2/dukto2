@@ -1,10 +1,11 @@
 import 'localization.dart';
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_settings.dart';
@@ -19,7 +20,12 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   Dukto2Controller get c => widget.controller;
-  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
+  late final Future<String> _projectVersion = rootBundle
+      .loadString('assets/project-version.json')
+      .then(
+        (value) =>
+            (jsonDecode(value) as Map<String, dynamic>)['version'] as String,
+      );
   @override
   void initState() {
     super.initState();
@@ -37,19 +43,12 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FutureBuilder<PackageInfo>(
-              future: _packageInfo,
-              builder: (context, snapshot) {
-                final info = snapshot.data;
-                final version = info == null || info.version.isEmpty
-                    ? ''
-                    : ' · ${info.version}'
-                          '${info.buildNumber.isEmpty ? '' : ' (${info.buildNumber})'}';
-                return Text(
-                  'Dukto2$version',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                );
-              },
+            FutureBuilder<String>(
+              future: _projectVersion,
+              builder: (context, snapshot) => Text(
+                snapshot.hasData ? 'Dukto2 · ${snapshot.data}' : 'Dukto2',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 8),
             TextButton.icon(

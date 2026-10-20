@@ -879,8 +879,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scanQr => 'Zum Verbinden scannen';
 
   @override
-  String get qrInstructions =>
-      'Dukto2 auf dem anderen Gerät öffnen.\nBei verschiedenen Subnetzen im selben Netzwerk den QR-Code versuchen.';
+  String get qrInstructions => 'Öffne Dukto2 auf dem anderen Gerät.';
 
   @override
   String get connectionQr => 'Verbindungs-QR-Code';

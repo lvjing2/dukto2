@@ -25,7 +25,7 @@ def version():
 def check_tag(ref):
     if ref.startswith('refs/tags/'):
         value = version()
-        if ref[10:] not in ('v' + value, 'v' + value.split('+')[0]):
+        if ref[10:] != 'v' + value.split('+')[0]:
             raise ValueError('Release tag must match pubspec.yaml version')
 
 

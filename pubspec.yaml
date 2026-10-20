@@ -22,7 +22,6 @@ dependencies:
   image: ^4.12.0
   zxing2: ^0.2.4
   url_launcher: ^6.3.3
-  package_info_plus: ^10.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -31,4 +30,5 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
+    - assets/project-version.json
     - assets/branding/dukto2.png

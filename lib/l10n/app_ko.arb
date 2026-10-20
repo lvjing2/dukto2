@@ -249,7 +249,7 @@
   "qrConnectionFailed": "연결할 수 없습니다. 상대 앱 실행 여부, 기기 간 통신, QR 코드 유효성을 확인하세요.",
   "showQr": "QR 코드 표시",
   "scanQr": "스캔하여 연결",
-  "qrInstructions": "상대 기기에서 Dukto2를 여세요.\n같은 네트워크의 다른 서브넷이라면 QR 연결을 시도하세요.",
+  "qrInstructions": "다른 기기에서 Dukto2를 여세요.",
   "connectionQr": "연결 QR 코드",
   "qrAfterWifi": "네트워크에 연결하면 QR 코드가 표시됩니다",
   "qrSemantic": "Dukto2 기기 연결 QR 코드",

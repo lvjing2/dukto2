@@ -854,8 +854,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scanQr => 'مسح للاتصال';
 
   @override
-  String get qrInstructions =>
-      'افتح Dukto2 على الجهاز الآخر.\nإذا كانت الشبكات الفرعية مختلفة ضمن نفس الشبكة، جرّب رمز QR.';
+  String get qrInstructions => 'افتح Dukto2 على الجهاز الآخر.';
 
   @override
   String get connectionQr => 'رمز QR للاتصال';

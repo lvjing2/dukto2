@@ -832,8 +832,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scanQr => 'スキャンして接続';
 
   @override
-  String get qrInstructions =>
-      '相手のデバイスで Dukto2 を開いてください。\n同じ ネットワーク の別サブネットでも QR 接続を試せます。';
+  String get qrInstructions => '相手の端末で Dukto2 を開いてください。';
 
   @override
   String get connectionQr => '接続用 QR コード';

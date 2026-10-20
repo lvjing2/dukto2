@@ -1759,7 +1759,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
             key: const ValueKey('history-text-actions'),
             style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
             onPressed: () => _showText(entry.receipt),
-            child: Text(context.l10n.viewText, maxLines: 1),
+            child: Text(
+              context.l10n.viewText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           )
         : Tooltip(
             message: c.canOpenHistoryDirectory(entry)
@@ -1770,7 +1774,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
               onPressed: c.canOpenHistoryDirectory(entry)
                   ? () => c.openHistoryDirectory(entry)
                   : null,
-              child: Text(context.l10n.openFolder, maxLines: 1),
+              child: Text(
+                context.l10n.openFolder,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           );
     return Padding(
@@ -1844,7 +1852,17 @@ class _TransferDashboardState extends State<TransferDashboard> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  action,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth * 0.5,
+                    ),
+                    child: Tooltip(
+                      message: entry.receipt.text != null
+                          ? context.l10n.viewText
+                          : context.l10n.openFolder,
+                      child: action,
+                    ),
+                  ),
                 ],
               ),
             ],

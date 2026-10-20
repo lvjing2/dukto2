@@ -8,7 +8,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dukto2/main.dart';
 import 'package:dukto2/src/controller.dart';
 import 'package:dukto2_core/dukto2_core.dart';
@@ -347,6 +346,30 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final size in [
+    const Size(800, 600),
+    const Size(1200, 900),
+    const Size(1024, 1366),
+  ]) {
+    testWidgets(
+      'wide send area does not duplicate the selected device at $size',
+      (tester) async {
+        final c = TestController();
+        c.peers = [c.selected!];
+        clean(tester, c);
+        await show(tester, c, size);
+        for (final kind in TransferKind.values) {
+          c.sendKind = kind;
+          c.notifyListeners();
+          await tester.pumpAndSettle();
+          expect(find.text(c.selected!.name), findsOneWidget);
+          expect(find.textContaining('发送到'), findsNothing);
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+  }
 
   testWidgets(
     'an old selection is not counted as a currently discovered device',
@@ -1176,14 +1199,15 @@ void main() {
     (const Size(800, 600), 1.0, false),
   ]) {
     testWidgets(
-      'about shows installed version and preserves credits at $size',
+      'about preserves project prerelease version and credits at $size',
       (tester) async {
-        PackageInfo.setMockInitialValues(
-          appName: 'Dukto2',
-          packageName: 'dev.dukto2.dukto2',
-          version: '9.8.7-test',
-          buildNumber: '4321',
-          buildSignature: '',
+        final projectVersion = RegExp(
+          r'^version:\s*([^+\s]+)\+\d+',
+          multiLine: true,
+        ).firstMatch(File('pubspec.yaml').readAsStringSync())!.group(1)!;
+        rootBundle.evict('assets/project-version.json');
+        await tester.runAsync(
+          () => rootBundle.loadString('assets/project-version.json'),
         );
         final c = StorageTestController();
         clean(tester, c);
@@ -1200,7 +1224,11 @@ void main() {
         );
         await tester.tap(about);
         await tester.pumpAndSettle();
-        expect(find.text('Dukto2 · 9.8.7-test (4321)'), findsOneWidget);
+        await tester.runAsync(() async {
+          await rootBundle.loadString('assets/project-version.json');
+        });
+        await tester.pumpAndSettle();
+        expect(find.text('Dukto2 · $projectVersion'), findsOneWidget);
         expect(find.text('作者：lvjing2'), findsOneWidget);
         expect(find.text('GitHub · lvjing2/dukto2'), findsOneWidget);
         expect(find.textContaining('Emanuele Colombo'), findsOneWidget);
