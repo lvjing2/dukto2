@@ -2,7 +2,7 @@
 
 English | [Simplified Chinese](../windows.md)
 
-Windows 11 x64 is tested; Windows 10, ARM64 and 32-bit Windows are not. See [validation coverage](validation.md) for builds and transfers actually performed.
+Windows 11 x64 is tested; Windows 10 and ARM64 hardware are not; no 32-bit Windows package is provided. See [validation coverage](validation.md) for builds and transfers actually performed.
 
 ## Build
 
@@ -46,7 +46,7 @@ References: [Flutter Windows setup](https://docs.flutter.dev/platform-integratio
 
 Open **Scan QR** to use a camera or **Choose image**. PNG, JPEG and BMP images are supported, with limits of 20 MiB encoded and 16 megapixels decoded. Recognition stays on this device.
 
-Use the camera selector on devices with multiple cameras. The current Windows camera backend reports all lenses as front-facing, so some tablets need manual selection of the rear camera. Controls support touch, portrait/landscape and large text. Native Windows ARM64 tablet builds remain unverified.
+Use the camera selector on devices with multiple cameras. The current Windows camera backend reports all lenses as front-facing, so some tablets need manual selection of the rear camera. Controls support touch, portrait/landscape and large text. Native Windows ARM64 packages are compiled and architecture-checked in CI; tablet cameras still require hardware validation.
 
 If camera access fails, check Windows Settings → Privacy & security → Camera, including desktop-app access. Image recognition and manual connection remain available. Switching cameras, backgrounding or leaving the scanner releases the camera. Temporary capture photos are deleted after processing and never added to transfer history; selected images are left unchanged. Abrupt process termination can leave an unprocessed photo in the system temporary directory.
 

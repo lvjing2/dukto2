@@ -1,0 +1,105 @@
+{
+  "version": "0.1.6-rc.5+12",
+  "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+  "ciRun": 39408684830,
+  "assets": [
+    {
+      "target": "android",
+      "name": "Dukto2-0.1.6-rc.5-build.12-android.apk",
+      "bytes": 76908973,
+      "sha256": "ebb0314ceef70ed07a087bf496b8e2555cbe5dd80f75e15a728366d8ea481fea",
+      "originalCiSha256": "ebb0314ceef70ed07a087bf496b8e2555cbe5dd80f75e15a728366d8ea481fea",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "androidSigning": {
+        "applicationId": "dev.dukto2.dukto2",
+        "versionName": "0.1.6-rc.5",
+        "versionCode": 12,
+        "appCertificateSha256": "4f0c7dab4b81912270656b3e7c0c5cdcd11702fb2b16eca6b6b89f4aad207823",
+        "uploadCertificateSha256": "c2576e3d890f4a0c08dfcf03bae7540c77de120f2704bdf5bcc8e4f8eb2aab28",
+        "playEquivalentApkVerified": true,
+        "playAppSigningKeyImportRequired": true,
+        "artifacts": {
+          "apk": "ebb0314ceef70ed07a087bf496b8e2555cbe5dd80f75e15a728366d8ea481fea",
+          "aab": "9a1bcaffecfd6545bcf1167a53d77e48e0e55c6b98e7093bd23e0bc38ce72011"
+        }
+      }
+    },
+    {
+      "target": "windows",
+      "name": "Dukto2-0.1.6-rc.5-build.12-windows-x64.zip",
+      "bytes": 14515839,
+      "sha256": "56683e24eb24897255794f24f995e8071d25d527ae78c419aa160fde4f61758b",
+      "originalCiSha256": "bb17a2cf87c1e9e21519e96e696cfb366f1ff737015839ef1db3b6d3a4e38ecb",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 29,
+      "binaryArchitecture": "x64"
+    },
+    {
+      "target": "linux",
+      "name": "Dukto2-0.1.6-rc.5-build.12-linux-x64.tar.gz",
+      "bytes": 11002977,
+      "sha256": "f10230116709ddeed587f89074f1574c3494be35eea715f57c8314823e880611",
+      "originalCiSha256": "27275aeced38a53ea193331f612d915f9ebf0ef2fa0ff58da0b7445289e3b106",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 24,
+      "binaryArchitecture": "x64"
+    },
+    {
+      "target": "macos",
+      "name": "Dukto2-0.1.6-rc.5-build.12-macos-adhoc.zip",
+      "bytes": 20397239,
+      "sha256": "bbcd9ebc7dd3bcbc5614d4c3d4fb62eae19195534f6b581cbc6f819611c5df13",
+      "originalCiSha256": "88ade2b1f9ac0aff447e7d575adb77c3390199382118c77cdb52551b36e4ed00",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 48,
+      "binaryArchitectures": "x86_64 arm64"
+    },
+    {
+      "target": "ios",
+      "name": "Dukto2-0.1.6-rc.5-build.12-ios-device-unsigned.zip",
+      "bytes": 8521045,
+      "sha256": "1638e591ad7664b02bd48672c1dc87a8f36b3ac89c7ee424d0f519c63a46e211",
+      "originalCiSha256": "be7ba984c89c8de84207186a86b86a3ec42f051833230c500aa913286cd71d32",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 74,
+      "bundleVersion": "0.1.6.5"
+    },
+    {
+      "target": "windows-arm64",
+      "name": "Dukto2-0.1.6-rc.5-build.12-windows-arm64.zip",
+      "bytes": 14001479,
+      "sha256": "a471ddade9be360fb36631b981a6d910e2af52a1735a2e3a294466016f199f70",
+      "originalCiSha256": "4e60ca18148105fba6b041943609e9e3fceafd6bba442b4d94c90272ec4090cc",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 28,
+      "binaryArchitecture": "arm64"
+    },
+    {
+      "target": "linux-arm64",
+      "name": "Dukto2-0.1.6-rc.5-build.12-linux-arm64.tar.gz",
+      "bytes": 10590984,
+      "sha256": "cbd85e459f5f8af7533e45cc879bb17b8aadd6902e7522261c64c99cb85916b7",
+      "originalCiSha256": "f3d598cd4cb7d388e1872dc00c2c5cd48a5b5d5b302597c2b07c5c5bc089ba80",
+      "sourceCommit": "0c36dbba302f1162f2556de291edf378d563639b",
+      "verifiedInternalFiles": 24,
+      "binaryArchitecture": "arm64"
+    }
+  ],
+  "repositoryVisibility": "PRIVATE",
+  "releaseDraft": true,
+  "releasePrerelease": true,
+  "releaseUrl": "https://github.com/lvjing2/dukto2/releases/tag/untagged-9688e8288303317f79e4",
+  "checks": {
+    "sevenNativeBuilds": "passed",
+    "githubUploadDigests": "matched",
+    "desktopInternalManifests": "matched",
+    "windowsArm64": "PE ARM64 executable, camera plugin, engine and all runtime DLLs verified; excluded x64 EH helper imports rejected",
+    "linuxArm64": "AArch64 executable, engine and shared libraries verified",
+    "macosCodeSignature": "verified after extracting final asset; x86_64 arm64 universal",
+    "iosSigning": "unsigned; iPhone/iPad UIDeviceFamily [1,2]",
+    "androidSigning": "existing app/upload certificates; AAB-derived APK contract verified",
+    "oldAssets": "five rc.3 assets backed up, verified and removed from draft",
+    "existingGitTags": "unchanged",
+    "deviceTests": "ARM64 hardware tests pending; no device retesting for this candidate"
+  }
+}

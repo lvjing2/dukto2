@@ -2,7 +2,7 @@
 
 [English](en/linux.md) | 简体中文
 
-已验证 Ubuntu 24.04.3 x64 / GTK3。Ubuntu 22.04、其他发行版及 ARM64 尚未实测；较新发行版构建的包不保证可在旧系统运行。具体测试范围见 [验证范围](validation.md)。
+已验证 Ubuntu 24.04.3 x64 / GTK3。Ubuntu 22.04、其他发行版及 ARM64 真机尚未实测；较新发行版构建的包不保证可在旧系统运行。具体测试范围见 [验证范围](validation.md)。
 
 ## 构建
 

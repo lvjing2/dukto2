@@ -2,7 +2,7 @@
 
 English | [Simplified Chinese](../linux.md)
 
-Ubuntu 24.04.3 x64 / GTK3 is tested. Ubuntu 22.04, other distributions and ARM64 are not; binaries built on newer distributions need not run on older systems. See [validation coverage](validation.md).
+Ubuntu 24.04.3 x64 / GTK3 is tested. Ubuntu 22.04, other distributions and ARM64 hardware are not; binaries built on newer distributions need not run on older systems. See [validation coverage](validation.md).
 
 ## Build
 
