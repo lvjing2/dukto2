@@ -266,5 +266,9 @@
   "qrOpenCamera": "Открыть камеру",
   "qrImageNotFound": "QR-код не найден. Выберите более чёткое изображение.",
   "qrImageTooLarge": "Изображение слишком большое. Максимум 20 МиБ и 16 мегапикселей.",
-  "qrImageUnreadable": "Не удалось прочитать изображение. Выберите PNG, JPEG или BMP."
+  "qrImageUnreadable": "Не удалось прочитать изображение. Выберите PNG, JPEG или BMP.",
+  "deviceOffline": "Не в сети",
+  "deviceChecking": "Проверка соединения…",
+  "deviceIdentityChanged": "Идентификатор устройства изменился",
+  "deviceOnline": "В сети · Личность подтверждена"
 }

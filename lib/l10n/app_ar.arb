@@ -266,5 +266,9 @@
   "qrOpenCamera": "فتح الكاميرا",
   "qrImageNotFound": "لم يتم العثور على رمز QR. اختر صورة أوضح.",
   "qrImageTooLarge": "الصورة كبيرة جدًا. استخدم أقل من 20 MiB و16 ميغابكسل.",
-  "qrImageUnreadable": "تعذر قراءة الصورة. اختر PNG أو JPEG أو BMP."
+  "qrImageUnreadable": "تعذر قراءة الصورة. اختر PNG أو JPEG أو BMP.",
+  "deviceOffline": "غير متصل",
+  "deviceChecking": "جارٍ التحقق من الاتصال…",
+  "deviceIdentityChanged": "تغيّرت هوية الجهاز",
+  "deviceOnline": "متصل · تم التحقق من الهوية"
 }

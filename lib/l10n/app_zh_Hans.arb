@@ -266,5 +266,9 @@
   "qrOpenCamera": "打开摄像头",
   "qrImageNotFound": "未识别到二维码，请选择更清晰的图片。",
   "qrImageTooLarge": "图片过大，请选择小于 20 MiB、1600 万像素的图片。",
-  "qrImageUnreadable": "无法读取图片，请选择 PNG、JPEG 或 BMP 图片。"
+  "qrImageUnreadable": "无法读取图片，请选择 PNG、JPEG 或 BMP 图片。",
+  "deviceOffline": "离线",
+  "deviceChecking": "正在检查连接…",
+  "deviceIdentityChanged": "设备身份已变化",
+  "deviceOnline": "在线 · 已核对"
 }

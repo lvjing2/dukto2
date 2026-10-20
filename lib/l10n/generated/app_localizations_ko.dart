@@ -890,4 +890,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get qrImageUnreadable => '이미지를 읽을 수 없습니다. PNG, JPEG 또는 BMP를 선택하세요.';
+
+  @override
+  String get deviceOffline => '오프라인';
+
+  @override
+  String get deviceChecking => '연결 확인 중…';
+
+  @override
+  String get deviceIdentityChanged => '기기 식별 정보가 변경됨';
+
+  @override
+  String get deviceOnline => '온라인 · 식별 정보 확인됨';
 }

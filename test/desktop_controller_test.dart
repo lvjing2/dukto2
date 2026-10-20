@@ -18,6 +18,7 @@ class DesktopController extends Dukto2Controller {
     super.desktopFolders,
     super.directoryPicker,
     super.filePicker,
+    super.connection,
   });
   @override
   String get operatingSystem => target;
@@ -240,6 +241,7 @@ void main() {
     final c =
         DesktopController(
             'android',
+            connection: PeerConnection(probe: (peer) async => peer),
             filePicker: () async => [DiskSelection(file)],
           )
           ..selected = Peer(

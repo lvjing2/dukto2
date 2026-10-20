@@ -886,4 +886,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get qrImageUnreadable => '画像を読み込めません。PNG、JPEG、BMPを選んでください。';
+
+  @override
+  String get deviceOffline => 'オフライン';
+
+  @override
+  String get deviceChecking => '接続を確認中…';
+
+  @override
+  String get deviceIdentityChanged => 'デバイスの識別情報が変更されました';
+
+  @override
+  String get deviceOnline => 'オンライン · 識別情報確認済み';
 }

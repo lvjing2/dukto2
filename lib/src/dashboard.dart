@@ -634,7 +634,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
           children: [
             Expanded(
               child: Text(
-                context.l10n.sendToPeer((c.selected!.name).toString()),
+                '${context.l10n.sendToPeer(c.selected!.name)} · $_connectionText',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
@@ -711,16 +711,50 @@ class _TransferDashboardState extends State<TransferDashboard> {
     ),
   );
 
+  String get _connectionText => switch (c.connectionState) {
+    PeerConnectionState.online => context.l10n.deviceOnline,
+    PeerConnectionState.offline => context.l10n.deviceOffline,
+    PeerConnectionState.checking => context.l10n.deviceChecking,
+    PeerConnectionState.identityChanged => context.l10n.deviceIdentityChanged,
+  };
+
+  Widget _connectionDot(PeerConnectionState state) => ExcludeSemantics(
+    child: Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: state == PeerConnectionState.online
+            ? (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.green.shade400
+                  : Colors.green.shade700)
+            : state == PeerConnectionState.identityChanged
+            ? colors.error
+            : colors.onSurfaceVariant,
+      ),
+    ),
+  );
+
+  Widget _connectionStatus() => Row(
+    children: [
+      _connectionDot(c.connectionState),
+      const SizedBox(width: 6),
+      Flexible(
+        child: Text(
+          _connectionText,
+          style: TextStyle(
+            fontSize: 12,
+            color: c.connectionState == PeerConnectionState.identityChanged
+                ? colors.error
+                : colors.onSurfaceVariant,
+          ),
+        ),
+      ),
+    ],
+  );
+
   Widget _devices() {
-    final selected = c.selected;
-    final peers = [...c.peers];
-    if (selected != null &&
-        !peers.any(
-          (p) =>
-              p.fingerprint == selected.fingerprint && p.host == selected.host,
-        )) {
-      peers.insert(0, selected);
-    }
+    final peers = c.peers;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -763,12 +797,6 @@ class _TransferDashboardState extends State<TransferDashboard> {
     final selected =
         c.selected?.fingerprint == peer.fingerprint &&
         c.selected?.host == peer.host;
-    final discovered = c.peers.any(
-      (p) =>
-          p.fingerprint == peer.fingerprint &&
-          p.host == peer.host &&
-          p.port == peer.port,
-    );
     return Semantics(
       selected: selected,
       child: Material(
@@ -799,16 +827,30 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        peer.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      Row(
+                        children: [
+                          _connectionDot(
+                            selected
+                                ? c.connectionState
+                                : PeerConnectionState.online,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              peer.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         selected
-                            ? (discovered
+                            ? (c.connectionState == PeerConnectionState.online
                                   ? context.l10n.verifiedSelected
-                                  : context.l10n.verifiedOffline)
+                                  : _connectionText)
                             : context.l10n.unverified,
                         style: TextStyle(
                           fontSize: 12,
@@ -917,25 +959,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.verified_user_outlined,
-                            size: 14,
-                            color: colors.tertiary,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              context.l10n.codeVerified,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.tertiary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _connectionStatus(),
                     ],
                   ),
                 ),
@@ -948,7 +972,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
             ),
           )
         else
-          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: _connectionStatus(),
+          ),
         SegmentedButton<TransferKind>(
           segments: [
             ButtonSegment(
@@ -1274,6 +1301,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
                     onPressed:
                         c.ready &&
                             !c.busy &&
+                            c.canSendToSelected &&
                             supported &&
                             (fromFile ||
                                 (!tooLarge && _text.text.trim().isNotEmpty))
@@ -1563,7 +1591,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
                     child: Text(context.l10n.chooseAgain),
                   ),
                   FilledButton.icon(
-                    onPressed: c.ready && !c.busy ? c.sendFile : null,
+                    onPressed: c.ready && !c.busy && c.canSendToSelected
+                        ? c.sendFile
+                        : null,
                     icon: const Icon(Icons.near_me_outlined, size: 18),
                     label: Text(
                       c.completedFiles > 0

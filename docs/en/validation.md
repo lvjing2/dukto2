@@ -4,6 +4,12 @@ English | [Simplified Chinese](../validation.md)
 
 As of 2026-10-19. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
 
+## Device connection status (2026-10-20)
+
+The selected endpoint is checked every five seconds, with full certificate-fingerprint and device-ID matching, and checked again before sending. Green means online; gray means offline or checking. Changed identities are reported separately. File and text sends are disabled while unreachable, checking or mismatched. Old selections are no longer inserted into the nearby list; a directly reachable selected endpoint remains usable without discovery.
+
+134 application tests, 49 core tests and 18 script tests passed. macOS Debug / Release builds passed. The actual Mac GUI connected to a controlled loopback TLS endpoint: sending was enabled online, disabled with a gray dot after shutdown, and restored after restarting the same identity and port. Captures are saved locally under `artifacts/peer-availability/`. This is a single-host check, not cross-device or Windows-tablet acceptance.
+
 ## Windows QR increment (2026-10-20)
 
 Camera scanning and local image recognition retain full certificate fingerprint and device-ID matching. Both analyzers, 18 script tests and 49 core tests passed. After the application suite passed, additional orientation/theme combinations brought the new QR tests to 10 passing tests. Layouts cover 375×500, 900×500, 500×900, large text and reduced motion. Camera doubles cover unavailable/denied cameras, switching, background release and temporary-photo cleanup.

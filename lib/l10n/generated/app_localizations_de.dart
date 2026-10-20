@@ -942,4 +942,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get qrImageUnreadable =>
       'Bild nicht lesbar. Wähle PNG, JPEG oder BMP.';
+
+  @override
+  String get deviceOffline => 'Offline';
+
+  @override
+  String get deviceChecking => 'Verbindung wird geprüft…';
+
+  @override
+  String get deviceIdentityChanged => 'Geräteidentität geändert';
+
+  @override
+  String get deviceOnline => 'Online · Identität geprüft';
 }

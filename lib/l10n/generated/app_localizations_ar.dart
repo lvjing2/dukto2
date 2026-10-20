@@ -913,4 +913,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get qrImageUnreadable => 'تعذر قراءة الصورة. اختر PNG أو JPEG أو BMP.';
+
+  @override
+  String get deviceOffline => 'غير متصل';
+
+  @override
+  String get deviceChecking => 'جارٍ التحقق من الاتصال…';
+
+  @override
+  String get deviceIdentityChanged => 'تغيّرت هوية الجهاز';
+
+  @override
+  String get deviceOnline => 'متصل · تم التحقق من الهوية';
 }

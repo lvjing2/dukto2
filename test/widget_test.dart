@@ -23,6 +23,12 @@ final class TestFile extends PlatformFile {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+// General UI fixtures use fixed state; connection lifecycle has its own tests.
+class WidgetPeerConnection extends PeerConnection {
+  @override
+  void watch(Peer peer) {}
+}
+
 class TestController extends Dukto2Controller {
   int sends = 0;
   bool? answer;
@@ -34,7 +40,10 @@ class TestController extends Dukto2Controller {
   }
 
   TestController({Future<List<PlatformFile>> Function()? filePicker})
-    : super(filePicker: filePicker ?? (() async => [TestFile()])) {
+    : super(
+        connection: WidgetPeerConnection(),
+        filePicker: filePicker ?? (() async => [TestFile()]),
+      ) {
     settings = const AppSettings(language: AppLanguage.zhHans);
     starting = false;
     name = '测试 Mac';
@@ -47,6 +56,10 @@ class TestController extends Dukto2Controller {
       supportsText: true,
     );
   }
+  @override
+  bool get canSendToSelected => true;
+  @override
+  PeerConnectionState get connectionState => PeerConnectionState.online;
   @override
   bool get ready => true;
   @override
@@ -93,6 +106,14 @@ class TestController extends Dukto2Controller {
     super.answerOffer(accept);
     notifyListeners();
   }
+}
+
+class AvailabilityController extends TestController {
+  PeerConnectionState state = PeerConnectionState.offline;
+  @override
+  PeerConnectionState get connectionState => state;
+  @override
+  bool get canSendToSelected => state == PeerConnectionState.online;
 }
 
 class StorageTestController extends TestController {
@@ -261,13 +282,57 @@ void main() {
       final controller = TestController();
       await show(tester, controller, const Size(1024, 768));
       expect(find.text('附近设备 0'), findsOneWidget);
-      expect(find.text('已核对 · 未发现'), findsOneWidget);
+      expect(find.text('已核对 · 未发现'), findsNothing);
+      expect(find.text('还没有发现设备'), findsOneWidget);
       controller.peers = [controller.selected!];
       controller.notifyListeners();
       await tester.pump();
       expect(find.text('附近设备 1'), findsOneWidget);
       expect(find.text('已核对 · 已选择'), findsOneWidget);
       controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'offline, checking and changed identity disable both send buttons',
+    (tester) async {
+      final c = AvailabilityController();
+      clean(tester, c);
+      await c.pickFile();
+      await show(tester, c, const Size(1024, 768));
+      for (final state in PeerConnectionState.values) {
+        c.state = state;
+        c.sendKind = TransferKind.file;
+        c.notifyListeners();
+        await tester.pump();
+        final fileButton = tester.widget<FilledButton>(
+          find
+              .ancestor(
+                of: find.text('发送文件'),
+                matching: find.byWidgetPredicate((w) => w is FilledButton),
+              )
+              .first,
+        );
+        expect(
+          fileButton.onPressed != null,
+          state == PeerConnectionState.online,
+        );
+        if (state == PeerConnectionState.offline)
+          expect(find.text('离线'), findsOneWidget);
+        c.sendKind = TransferKind.text;
+        c.notifyListeners();
+        await tester.pump();
+        await tester.enterText(find.byType(TextField).first, 'hello');
+        final textButton = tester.widget<FilledButton>(
+          find.byKey(const ValueKey('send-text')),
+        );
+        expect(
+          textButton.onPressed != null,
+          state == PeerConnectionState.online,
+        );
+      }
+      expect(c.sends, 0);
+      expect(c.sentText, isNull);
     },
   );
 

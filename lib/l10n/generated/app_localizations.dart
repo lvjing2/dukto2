@@ -1717,6 +1717,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cannot read this image. Choose a PNG, JPEG or BMP image.'**
   String get qrImageUnreadable;
+
+  /// Selected device connection status; separate from discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get deviceOffline;
+
+  /// Selected device connection status; separate from discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking connection…'**
+  String get deviceChecking;
+
+  /// Selected device connection status; separate from discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Device identity changed'**
+  String get deviceIdentityChanged;
+
+  /// Selected device is reachable and its full identity matches.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · Identity verified'**
+  String get deviceOnline;
 }
 
 class _AppLocalizationsDelegate

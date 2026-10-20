@@ -17,6 +17,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 class PreviewController extends Dukto2Controller {
   @override
+  PeerConnectionState get connectionState => PeerConnectionState.online;
+  @override
+  bool get canSendToSelected => true;
+  @override
   bool get ready => true;
   @override
   bool get canScanQr => true;

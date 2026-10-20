@@ -931,4 +931,16 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get qrImageUnreadable =>
       'Не удалось прочитать изображение. Выберите PNG, JPEG или BMP.';
+
+  @override
+  String get deviceOffline => 'Не в сети';
+
+  @override
+  String get deviceChecking => 'Проверка соединения…';
+
+  @override
+  String get deviceIdentityChanged => 'Идентификатор устройства изменился';
+
+  @override
+  String get deviceOnline => 'В сети · Личность подтверждена';
 }

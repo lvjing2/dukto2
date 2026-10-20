@@ -1273,5 +1273,21 @@
   },
   "@qrImageUnreadable": {
     "description": "Windows QR scanner: qrImageUnreadable"
+  },
+  "deviceOffline": "Offline",
+  "@deviceOffline": {
+    "description": "Selected device connection status; separate from discovery."
+  },
+  "deviceChecking": "Checking connection…",
+  "@deviceChecking": {
+    "description": "Selected device connection status; separate from discovery."
+  },
+  "deviceIdentityChanged": "Device identity changed",
+  "@deviceIdentityChanged": {
+    "description": "Selected device connection status; separate from discovery."
+  },
+  "deviceOnline": "Online · Identity verified",
+  "@deviceOnline": {
+    "description": "Selected device is reachable and its full identity matches."
   }
 }

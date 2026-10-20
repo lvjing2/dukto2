@@ -939,6 +939,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get qrImageUnreadable =>
       'Não foi possível ler a imagem. Escolha PNG, JPEG ou BMP.';
+
+  @override
+  String get deviceOffline => 'Offline';
+
+  @override
+  String get deviceChecking => 'A verificar ligação…';
+
+  @override
+  String get deviceIdentityChanged => 'A identidade do dispositivo mudou';
+
+  @override
+  String get deviceOnline => 'Online · Identidade verificada';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1875,4 +1887,16 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get qrImageUnreadable =>
       'Não foi possível ler a imagem. Escolha PNG, JPEG ou BMP.';
+
+  @override
+  String get deviceOffline => 'Offline';
+
+  @override
+  String get deviceChecking => 'Verificando conexão…';
+
+  @override
+  String get deviceIdentityChanged => 'A identidade do dispositivo mudou';
+
+  @override
+  String get deviceOnline => 'Online · Identidade verificada';
 }

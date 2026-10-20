@@ -266,5 +266,9 @@
   "qrOpenCamera": "カメラを開く",
   "qrImageNotFound": "QRコードが見つかりません。より鮮明な画像を選んでください。",
   "qrImageTooLarge": "画像が大きすぎます。20 MiB、1600万画素以下にしてください。",
-  "qrImageUnreadable": "画像を読み込めません。PNG、JPEG、BMPを選んでください。"
+  "qrImageUnreadable": "画像を読み込めません。PNG、JPEG、BMPを選んでください。",
+  "deviceOffline": "オフライン",
+  "deviceChecking": "接続を確認中…",
+  "deviceIdentityChanged": "デバイスの識別情報が変更されました",
+  "deviceOnline": "オンライン · 識別情報確認済み"
 }

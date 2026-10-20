@@ -266,5 +266,9 @@
   "qrOpenCamera": "Ouvrir la caméra",
   "qrImageNotFound": "Aucun code QR détecté. Choisissez une image plus nette.",
   "qrImageTooLarge": "Image trop grande. Utilisez moins de 20 Mio et 16 mégapixels.",
-  "qrImageUnreadable": "Image illisible. Choisissez un fichier PNG, JPEG ou BMP."
+  "qrImageUnreadable": "Image illisible. Choisissez un fichier PNG, JPEG ou BMP.",
+  "deviceOffline": "Hors ligne",
+  "deviceChecking": "Vérification de la connexion…",
+  "deviceIdentityChanged": "Identité de l’appareil modifiée",
+  "deviceOnline": "En ligne · Identité vérifiée"
 }

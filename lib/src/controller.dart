@@ -21,6 +21,8 @@ import 'desktop_receive_folders.dart';
 import 'transfer_session.dart';
 import 'transfer_log.dart';
 import 'transfer_failure_message.dart';
+import 'peer_connection.dart';
+export 'peer_connection.dart' show PeerConnection, PeerConnectionState;
 export 'transfer_session.dart' show SendPhase;
 
 class HistoryEntry {
@@ -96,6 +98,15 @@ class Dukto2Controller extends ChangeNotifier {
   List<Peer> peers = [];
   List<String> addresses = [];
   Peer? selected;
+  final PeerConnection connection;
+  bool _checkingSend = false;
+  PeerConnectionState get connectionState =>
+      selected != null && connection.watches(selected!)
+      ? connection.state
+      : PeerConnectionState.checking;
+  bool get canSendToSelected =>
+      selected != null && connectionState == PeerConnectionState.online;
+
   DeviceIdentity? identity;
   Directory? receiveDirectory;
   Directory? _support;
@@ -155,11 +166,14 @@ class Dukto2Controller extends ChangeNotifier {
   bool _linuxNotificationSettingsAvailable = false;
   bool get canEditSettings => _settingsStore != null;
   Dukto2Controller({
+    PeerConnection? connection,
     SettingsStore? settingsStore,
     DesktopReceiveFolders? desktopFolders,
     Future<List<PlatformFile>> Function()? filePicker,
     Future<String?> Function()? directoryPicker,
-  }) : _pickFiles = filePicker ?? FilePicker.pickFiles {
+  }) : connection = connection ?? PeerConnection(),
+       _pickFiles = filePicker ?? FilePicker.pickFiles {
+    this.connection.addListener(_notify);
     _pickDirectory =
         directoryPicker ??
         (() => FilePicker.getDirectoryPath(dialogTitle: strings.chooseFolder));
@@ -253,7 +267,7 @@ class Dukto2Controller extends ChangeNotifier {
   DateTime _lastProgress = DateTime.fromMillisecondsSinceEpoch(0);
   bool get ready => server != null && !starting;
   bool get canScanQr => _isAndroid || _isIOS || _isMacOS || Platform.isWindows;
-  bool get busy => picking || (_session?.active ?? false);
+  bool get busy => _checkingSend || picking || (_session?.active ?? false);
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -363,6 +377,7 @@ class Dukto2Controller extends ChangeNotifier {
               if (peer.fingerprint == chosen.fingerprint &&
                   peer.id == chosen.id) {
                 selected = peer;
+                if (!connection.watches(peer)) connection.watch(peer);
               }
             }
           }
@@ -403,6 +418,7 @@ class Dukto2Controller extends ChangeNotifier {
           .where((a) => !a.isLoopback)
           .map((a) => '${a.address}:${server?.port ?? 0}')
           .toList();
+      if (selected != null) connection.watch(selected!);
       await discovery?.refresh(force: true);
       if (!busy && server != null) await server!.ensureListening();
       _notify();
@@ -869,6 +885,7 @@ class Dukto2Controller extends ChangeNotifier {
       _statusText = (strings) => strings.selectedPeer((peer.name).toString());
     }
     selected = peer;
+    connection.watch(peer);
     unawaited(discovery?.rememberPeer(peer) ?? Future<void>.value());
     _errorText = null;
     _notify();
@@ -1160,6 +1177,23 @@ class Dukto2Controller extends ChangeNotifier {
     String? sourceUri,
     bool recordHistory = true,
   }) async {
+    if (busy || _disposed) return;
+    _checkingSend = true;
+    _notify();
+    bool available;
+    try {
+      if (!connection.watches(peer)) connection.watch(peer);
+      available = await connection.check();
+    } finally {
+      _checkingSend = false;
+      _notify();
+    }
+    if (!available ||
+        _disposed ||
+        selected == null ||
+        !connection.watches(selected!)) {
+      return;
+    }
     final current = beginOutgoingSession(
       fileCount: recordHistory ? 1 : _files.where((f) => !f.sent).length,
     );
@@ -1207,6 +1241,13 @@ class Dukto2Controller extends ChangeNotifier {
         platformCode: exception is PlatformException ? exception.code : null,
       );
       lastTransferFailure = failure;
+      if ({
+        TransferFailureKind.network,
+        TransferFailureKind.timeout,
+        TransferFailureKind.certificate,
+      }.contains(failure.kind)) {
+        if (selected != null) connection.watch(selected!);
+      }
       diagnostics.recordFailure(failure);
       if (current.cancellation.isCancelled) {
         _sendPhase = SendPhase.cancelled;
@@ -1411,9 +1452,24 @@ class Dukto2Controller extends ChangeNotifier {
     _notify();
   }
 
+  bool _connectionClosed = false;
+  void _closeConnection() {
+    if (_connectionClosed) return;
+    _connectionClosed = true;
+    connection.removeListener(_notify);
+    connection.dispose();
+  }
+
+  @override
+  void dispose() {
+    _closeConnection();
+    super.dispose();
+  }
+
   Future<void> shutdown() async {
     if (_disposed) return;
     _disposed = true;
+    _closeConnection();
     _networkDebounce?.cancel();
     _session?.cancel();
     answerOffer(false);

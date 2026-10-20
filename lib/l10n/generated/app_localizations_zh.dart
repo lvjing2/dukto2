@@ -883,6 +883,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get qrImageUnreadable => '无法读取图片，请选择 PNG、JPEG 或 BMP 图片。';
+
+  @override
+  String get deviceOffline => '离线';
+
+  @override
+  String get deviceChecking => '正在检查连接…';
+
+  @override
+  String get deviceIdentityChanged => '设备身份已变化';
+
+  @override
+  String get deviceOnline => '在线 · 已核对';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1763,4 +1775,16 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get qrImageUnreadable => '无法读取图片，请选择 PNG、JPEG 或 BMP 图片。';
+
+  @override
+  String get deviceOffline => '离线';
+
+  @override
+  String get deviceChecking => '正在检查连接…';
+
+  @override
+  String get deviceIdentityChanged => '设备身份已变化';
+
+  @override
+  String get deviceOnline => '在线 · 已核对';
 }
