@@ -22,3 +22,5 @@ Windows 和 Linux 原图含其他桌面内容，正式宣传可重拍单独应�
 图片显示实际界面和已有测试传输记录，本轮验收未新增传输记录。
 
 Android 真机主动搜索验收（REDMI K90，0.1.6-rc.5 工作区，2026-10-21）：[搜索中](android-discovery-search.png) · [搜索结束](android-discovery-ready.png)。实际下拉触发，同一轮期间保留附近 Mac；历史记录来自此前测试，本轮没有新增文件传输。
+
+Windows 11 x64 主动搜索验收（提交 `7e6d7a4`，2026-10-21）：[搜索中](windows-discovery-search.png) · [搜索结束](windows-discovery-ready.png)。仅截取实际 Dukto2 窗口，按钮触发搜索，未新增文件传输；实体触屏下拉未验收。

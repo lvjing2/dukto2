@@ -4,6 +4,15 @@ English | [Simplified Chinese](../validation.md)
 
 As of 2026-10-21. Current-workspace checks and prior device tests are separate; an older package passing does not validate every current change on that platform.
 
+## Windows active-search acceptance (2026-10-21)
+
+Commit `7e6d7a4` was validated natively on Windows 11 x64, OS build 26200, with Flutter 3.47.7 / Dart 3.13.5. The uploaded source snapshot was independently SHA-256 checked and built in a separate directory, retaining the previous application and user data.
+
+- All 139 application tests, 50 core tests and both analyzers passed on Windows. The Release build and complete DLL/data package succeeded. Archive SHA-256: `b5fc455e94cc10e84025db21e4b6bf8950c7092f298320a0d5b031b53bb6889e`. This local validation package does not replace a published Release asset.
+- The real desktop process ran from the verified build path. Existing settings were not cleared, and prior history remained visible. Clicking refresh showed the searching label and spinner, then restored the refresh action. The live list discovered Mac and Android peers. A read-only UDP observer on the Mac received the active-discovery announcements.
+- This PC has a mouse and no touchscreen. Mouse dragging does not trigger the touch pull gesture. Further pull validation was stopped at the maintainer's request. A prior [Windows SDK touch injection](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-injecttouchinput) reached the searching UI, but is not counted as manual physical-touchscreen acceptance. File transfers and cameras were not retested in this round.
+- The existing `Dukto2.lnk` now targets this build, with its previous link backed up. The temporary desktop verification task and input tools were removed. Captures: [button-triggered search](../screenshots/windows-discovery-search.png) / [finished](../screenshots/windows-discovery-ready.png). History entries are from earlier transfers.
+
 ## Active device search (2026-10-21)
 
 The refresh button and a pull at the top of the list share one active discovery operation: reannounce, reconnect verified endpoints, and run the bounded private IPv4 subnet scan even when peers are already visible. Apple also restarts Bonjour; Android ensures its multicast lock is held. Repeated gestures join the current task, and periodic network checks do not interrupt it. Existing peers stay visible. A single heading and spinner show searching; short lists also support the gesture.
@@ -25,7 +34,7 @@ Camera scanning and local image recognition retain full certificate fingerprint 
 
 [Windows CI 39361156061](https://github.com/lvjing2/dukto2/actions/runs/39361156061) passed native host tests, Release compilation and packaging at source `0f39205`. The archive SHA-256 is `d333b74184c77320a02d49272788f31f34dcc8fefec068f6f1f76faa327b0fda`. Its camera plugin, Flutter DLL, three CRT DLLs and runtime license resources were checked independently. This private CI validation build does not replace an existing tag or Release asset.
 
-These are automated checks. With no Windows device environment available, the maintainer deferred camera recognition, transfers after image connection, tablet hardware and device screenshots. Earlier Windows file-transfer results do not substitute for them.
+Those were the automated checks on 2026-10-20. With no Windows device environment available then, the maintainer deferred camera recognition, transfers after image connection, tablet hardware and device screenshots. Earlier Windows file-transfer results do not substitute for them.
 
 ## Current source
 
