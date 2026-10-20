@@ -4,6 +4,13 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.7+14 — Release candidate
+
+- Show the same project version in the app and release metadata, keeping the platform build number separate.
+- Simplify empty-device and empty-history states across desktop and mobile layouts.
+- Correct the multicast observer in the macOS departure-broadcast regression test; preserve the three-second expiry behavior.
+- Use project-version release tags and increase Android versionCode to 14.
+
 ## 0.1.6-rc.6+13 — Release candidate
 
 - Unify refresh-button and touch pull-to-refresh actions into active discovery, with a searching indicator and coalesced repeated requests.
