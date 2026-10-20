@@ -46,6 +46,7 @@ jobs:
         run: python3 tool/ci/install_flutter.py
       - name: Verify native SDK
         run: |
+          git config --global --add safe.directory "$RUNNER_TEMP/dukto2-flutter/flutter"
           flutter --version
           python3 tool/ci/verify_native.py sdk
       - name: Analyze and test
@@ -60,7 +61,7 @@ jobs:
           set -euo pipefail
           bundle="build/linux/$TARGET_ARCH/release/bundle"
           python tool/ci/package_linux_portable.py appimage --arch "$TARGET_ARCH" --bundle "$bundle"
-          python tool/ci/package_linux_portable.py flatpak --arch "$TARGET_ARCH" --bundle "$bundle"
+          tar -czf "$RUNNER_TEMP/dukto2-native.tar.gz" -C "$bundle" .
           (cd dist && sha256sum --check *.sha256)
           xvfb-run -a dbus-run-session -- python tool/ci/smoke_linux_portable.py --report dist/appimage-startup.json -- dist/*.AppImage
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -68,6 +69,13 @@ jobs:
         with:
           name: linux-portable-${{ matrix.arch }}
           path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-portable-native-${{ matrix.arch }}
+          path: ${{ runner.temp }}/dukto2-native.tar.gz
           if-no-files-found: error
           retention-days: 14
 
@@ -89,12 +97,20 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: linux-portable-${{ matrix.arch }}
-          path: dist
-      - name: Install sandbox runtime and candidate
+          name: linux-portable-native-${{ matrix.arch }}
+          path: native-input
+      - name: Package baseline bundle on the host
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak xvfb xauth xdotool dbus-x11
+          sudo apt-get install -y flatpak desktop-file-utils appstream binutils xvfb xauth xdotool dbus-x11
+          mkdir -p build/baseline-bundle
+          tar -xzf native-input/dukto2-native.tar.gz -C build/baseline-bundle
+          python3 tool/ci/package_linux_portable.py flatpak --arch "$TARGET_ARCH" --bundle build/baseline-bundle
+          (cd dist && sha256sum --check *.sha256)
+      - name: Install sandbox runtime and candidate
+        run: |
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --user --noninteractive -y dist/*.flatpak
       - name: Start with declared sandbox permissions
@@ -104,10 +120,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: linux-flatpak-startup-${{ matrix.arch }}
-          path: |
-            dist/flatpak-*.json
-            dist/flatpak-*.log
-            dist/flatpak-permissions.txt
+          name: linux-flatpak-${{ matrix.arch }}
+          path: dist/*
           if-no-files-found: warn
           retention-days: 14

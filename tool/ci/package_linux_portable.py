@@ -17,7 +17,7 @@ import subprocess
 import tempfile
 import urllib.request
 
-from verify_native import verify_bundle
+from verify_native import architecture, verify_bundle
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = json.loads((ROOT / 'linux/packaging/portable/toolchain.json').read_text())
@@ -71,6 +71,8 @@ def audit(bundle, arch, readelf='readelf'):
     limit = tuple(map(int, CONFIG['maximumGlibc'].split('.')))
     entries = []
     for path in elf_files(bundle):
+        if architecture(path) != arch:
+            raise ValueError('Wrong ELF architecture: ' + str(path))
         result = subprocess.check_output([readelf, '--version-info', str(path)], text=True)
         versions = glibc_versions(result)
         maximum = max(versions, default=(0, 0))
@@ -174,6 +176,8 @@ exec "$APPDIR/usr/bin/dukto2" "$@"
     # Check newly bundled system libraries as well as Flutter and plugins.
     audit(prefix / 'lib/dukto2', arch)
     for path in elf_files(appdir):
+        if architecture(path) != arch:
+            raise ValueError('Wrong AppImage dependency architecture: ' + str(path))
         requirements = glibc_versions(subprocess.check_output(['readelf', '--version-info', path], text=True))
         if max(requirements, default=(0, 0)) > tuple(map(int, CONFIG['maximumGlibc'].split('.'))):
             raise ValueError('Newer GLIBC bundled into AppImage: ' + str(path))

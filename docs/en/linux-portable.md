@@ -28,7 +28,7 @@ python3 tool/ci/package_linux_portable.py flatpak --arch x64 --bundle build/linu
 
 Each package includes a `.sha256` and `.json` sidecar recording source commit, version, architecture, baseline, native files and Flatpak permissions. Private CI artifacts expire after 14 days. This workflow creates no release, tag, store listing or public download.
 
-CI also checks a visible window and process survival under Xvfb; Flatpak installs and starts on a host runner with its declared sandbox permissions. This is a startup check, not acceptance of portals, desktop integration or physical LAN transfers.
+CI also checks a visible window and process survival under Xvfb; The same baseline bundle is exported as Flatpak on a host runner, then installed and started with its declared sandbox permissions. This avoids privileged nested sandboxes in build containers. This is a startup check, not acceptance of portals, desktop integration or physical LAN transfers.
 
 ## Install a candidate
 

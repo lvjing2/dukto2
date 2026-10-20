@@ -35,6 +35,17 @@ class PortablePackagingTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'exceeds baseline'):
                     portable.audit(root, 'x64')
 
+    def test_rejects_wrong_architecture_in_versioned_library(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.bundle(root)
+            data = bytearray((root / 'dukto2').read_bytes())
+            struct.pack_into('<H', data, 18, 183)
+            (root / 'lib/libextra.so.1').write_bytes(data)
+            with patch.object(portable.subprocess, 'check_output', return_value='GLIBC_2.35'):
+                with self.assertRaisesRegex(ValueError, 'Wrong ELF architecture'):
+                    portable.audit(root, 'x64')
+
     def test_requires_complete_bundle(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
