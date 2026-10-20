@@ -15,6 +15,8 @@ class ReleasePackageTest(unittest.TestCase):
     def test_manual_platform_selection_and_tag_builds(self):
         self.assertEqual(package.release_matrix('refs/heads/main', 'android')['include'], [{'target': 'android', 'runner': 'ubuntu-24.04'}])
         self.assertEqual(len(package.release_matrix('refs/tags/v1.2.3', 'android')['include']), 7)
+        for target, runner in [('linux-arm64', 'ubuntu-24.04-arm'), ('windows-arm64', 'windows-11-arm')]:
+            self.assertEqual(package.release_matrix('refs/heads/main', target)['include'], [{'target': target, 'runner': runner}])
         with self.assertRaises(ValueError):
             package.release_matrix('refs/heads/unreviewed', 'android')
         with self.assertRaises(ValueError):

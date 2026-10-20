@@ -17,15 +17,15 @@ Dukto2 shares files and text directly between computers, phones and tablets on t
 
 ## Version and platform coverage
 
-The source is a **0.1.6-rc.3+10 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
+The source is a **0.1.6-rc.4+11 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
 | Platform | Verified | Not yet covered |
 | --- | --- | --- |
 | macOS | Apple Silicon hardware; files, text, receiving folders and batches | Intel and all minimum OS versions |
 | Android | Android 16 hardware; files, text and selected large-file, screen-off, background and interruption scenarios | Other vendors and older devices; indefinite background execution |
 | iPhone / iPad | File and text exchange in simulators; physical iPad ↔ Mac | Physical iPhone, older OS versions and background scenarios |
-| Windows | Windows 11 x64 builds, desktop launch and bidirectional files / text with Mac | Windows 10, ARM64, large files and full revalidation of current shared code |
-| Linux | Ubuntu 24.04.3 x64 builds and bidirectional files with Mac; 0.1.6 receiving folders, opening folders, notifications and sleep inhibition | Text, full revalidation of current GUI sending, other distributions and ARM64 |
+| Windows | Windows 11 x64 builds, desktop launch and bidirectional files / text with Mac | Windows 10, ARM64 hardware, large files and full revalidation of current shared code |
+| Linux | Ubuntu 24.04.3 x64 builds and bidirectional files with Mac; 0.1.6 receiving folders, opening folders, notifications and sleep inhibition | Text, full revalidation of current GUI sending, other distributions and ARM64 hardware |
 
 These are tested environments, not a guarantee for every device. See [validation coverage](docs/en/validation.md).
 

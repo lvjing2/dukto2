@@ -91,7 +91,9 @@ try {
     if ($Mode -eq 'release') {
         $taskStage = 'package'
         $bundle = Join-Path $taskRoot "build/windows/$taskArch/runner/Release"
-        foreach ($taskRequired in @('Dukto2.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'data/icudtl.dat', 'data/flutter_assets')) {
+        $taskRequiredFiles = @('Dukto2.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'data/icudtl.dat', 'data/flutter_assets')
+        if ($taskArch -eq 'x64') { $taskRequiredFiles += 'vcruntime140_1.dll' }
+        foreach ($taskRequired in $taskRequiredFiles) {
             if (!(Test-Path (Join-Path $bundle $taskRequired))) {
                 throw "Incomplete release bundle: missing $taskRequired"
             }
