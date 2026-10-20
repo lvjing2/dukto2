@@ -12,6 +12,8 @@ Flatpak and AppImage candidates target native x86_64 and ARM64. Their separate C
 
 Flatpak does not remove kernel, driver, portal or network differences. AppImage does not replace system glibc. Building on Ubuntu 22.04 is a compatibility baseline, not evidence of testing every older distribution. These candidates do not target 32-bit systems or musl environments.
 
+Current result: AppImage and Flatpak passed packaging and Xvfb window startup on x64 and ARM64, including Flatpak installation. See the [validation record](../validation/linux-portable-20261021.json). Physical desktop and transfer acceptance remains pending.
+
 ## Build and verify
 
 On native Ubuntu 22.04 of the target architecture, install the existing Linux build dependencies plus `binutils patchelf file squashfs-tools desktop-file-utils appstream flatpak`. Use the repository's pinned Flutter SDK:

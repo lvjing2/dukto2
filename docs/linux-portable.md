@@ -4,6 +4,8 @@
 
 通用打包采用 Flatpak 和 AppImage，覆盖原生 x86_64 与 ARM64。它们目前是独立 CI 的候选产物，不会自动发布到 Release 或 Flathub，也不改变现有 tar.gz 的构建流程。
 
+本轮记录：x64 / ARM64 的 AppImage 与 Flatpak 均已通过打包及 Xvfb 窗口启动检查，Flatpak 已完成安装；详见 [验证记录](validation/linux-portable-20261021.json)。真实桌面与互传验收仍待完成。
+
 ## 选择安装方式
 
 | 格式 | 用途 | 前提 |
