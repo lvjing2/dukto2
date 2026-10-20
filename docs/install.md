@@ -12,7 +12,7 @@
 
 ## Windows
 
-使用 Windows x64 包：右键 ZIP →「全部解压」，将文件夹保留在固定位置，运行 `Dukto2.exe`。可右键为它创建快捷方式。更新前退出应用，把新版解压到独立目录，确认能运行后再移除旧程序目录；不要删除接收目录或应用设置。
+按处理器选择 Windows x64 或 ARM64 包（ARM64 需 Windows 11）：右键 ZIP →「全部解压」，将文件夹保留在固定位置，运行 `Dukto2.exe`。可右键为它创建快捷方式。更新前退出应用，把新版解压到独立目录，确认能运行后再移除旧程序目录；不要删除接收目录或应用设置。
 
 新构建会附带 Visual C++ 运行库。现有 rc.2 如果提示缺少 `MSVCP140.dll` 或 `VCRUNTIME140*.dll`，安装微软官方 [Visual C++ x64 运行库](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)，不要从 DLL 下载站补文件。
 
@@ -26,9 +26,9 @@
 
 ## Linux
 
-当前二进制基线为 Ubuntu 24.04 x64；旧版 Ubuntu 和其他发行版不能保证兼容。
+当前二进制基线为 Ubuntu 24.04 x64 / ARM64（分别下载对应架构）；旧版 Ubuntu 和其他发行版不能保证兼容。
 
-把 TAR.GZ 完整解压到长期保留的位置，在解压后的 `Dukto2-linux-x64` 目录打开终端：
+把 TAR.GZ 完整解压到长期保留的位置，在解压后的 `Dukto2-linux-x64` 或 `Dukto2-linux-arm64` 目录打开终端：
 
 ```sh
 bash install.sh

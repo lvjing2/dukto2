@@ -48,3 +48,5 @@ bash install.sh
 - 使用 UDP 45878 发现与默认 TCP 45879 传输。虚拟机 NAT / WSL2 可能影响入站连接，不能代替普通桌面的局域网验证。
 
 参考：[Flutter Linux 环境](https://docs.flutter.dev/platform-integration/linux/setup)、[Linux 分发](https://docs.flutter.dev/platform-integration/linux/building)。
+
+构建脚本在原生 ARM64 主机上使用 `arm64` 构建目录与附件名；x64 主机继续使用 `x64`。ARM64 包在 CI 检查原生二进制架构；桌面启动与互传需要另做真机验证。

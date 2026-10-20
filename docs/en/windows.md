@@ -51,3 +51,5 @@ Use the camera selector on devices with multiple cameras. The current Windows ca
 If camera access fails, check Windows Settings → Privacy & security → Camera, including desktop-app access. Image recognition and manual connection remain available. Switching cameras, backgrounding or leaving the scanner releases the camera. Temporary capture photos are deleted after processing and never added to transfer history; selected images are left unchanged. Abrupt process termination can leave an unprocessed photo in the system temporary directory.
 
 QR connections still match the complete certificate fingerprint and device ID. Transfer consent remains separate.
+
+Native ARM64 hosts use `arm64` build directories and package names; x64 hosts continue to use `x64`. CI checks binary architecture. ARM64 desktop launch and LAN transfers still require physical-device validation.

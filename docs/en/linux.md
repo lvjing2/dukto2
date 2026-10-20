@@ -48,3 +48,5 @@ Registration installs the current user's desktop entry and icon without sudo or 
 - UDP discovery uses 45878; TCP defaults to 45879. VM NAT / WSL2 can affect inbound connections and does not replace normal desktop LAN validation.
 
 References: [Flutter Linux setup](https://docs.flutter.dev/platform-integration/linux/setup), [distribution](https://docs.flutter.dev/platform-integration/linux/building).
+
+Native ARM64 hosts use `arm64` build directories and package names; x64 hosts continue to use `x64`. CI checks binary architecture. ARM64 desktop launch and LAN transfers still require physical-device validation.
