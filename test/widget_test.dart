@@ -231,7 +231,7 @@ void main() {
   }
 
   testWidgets(
-    'nearby devices and selected target use their advertised type icons',
+    'nearby devices use their advertised type icons without a duplicate target',
     (tester) async {
       final c = TestController();
       clean(tester, c);
@@ -271,7 +271,7 @@ void main() {
       }
       c.select(c.peers[1]);
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.tablet_mac_outlined), findsNWidgets(2));
+      expect(find.byIcon(Icons.tablet_mac_outlined), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -297,6 +297,7 @@ void main() {
     'offline, checking and changed identity disable both send buttons',
     (tester) async {
       final c = AvailabilityController();
+      c.peers = [c.selected!];
       clean(tester, c);
       await c.pickFile();
       await show(tester, c, const Size(1024, 768));
@@ -317,8 +318,9 @@ void main() {
           fileButton.onPressed != null,
           state == PeerConnectionState.online,
         );
-        if (state == PeerConnectionState.offline)
+        if (state == PeerConnectionState.offline) {
           expect(find.text('离线'), findsOneWidget);
+        }
         c.sendKind = TransferKind.text;
         c.notifyListeners();
         await tester.pump();

@@ -730,27 +730,9 @@ class _TransferDashboardState extends State<TransferDashboard> {
                   : Colors.green.shade700)
             : state == PeerConnectionState.identityChanged
             ? colors.error
-            : colors.onSurfaceVariant,
+            : colors.outline,
       ),
     ),
-  );
-
-  Widget _connectionStatus() => Row(
-    children: [
-      _connectionDot(c.connectionState),
-      const SizedBox(width: 6),
-      Flexible(
-        child: Text(
-          _connectionText,
-          style: TextStyle(
-            fontSize: 12,
-            color: c.connectionState == PeerConnectionState.identityChanged
-                ? colors.error
-                : colors.onSurfaceVariant,
-          ),
-        ),
-      ),
-    ],
   );
 
   Widget _devices() {
@@ -931,51 +913,6 @@ class _TransferDashboardState extends State<TransferDashboard> {
       else if (c.selected == null)
         _emptyState()
       else ...[
-        Text(
-          context.l10n.sendTo(
-            (desktop ? '' : ' ${c.selected!.name}').toString(),
-          ),
-          style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
-        ),
-        if (desktop)
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 20),
-            child: Row(
-              children: [
-                _BadgeIcon(
-                  deviceIcon(c.selected!.deviceType),
-                  semanticLabel: deviceTypeLabel(
-                    c.selected!.deviceType,
-                    localization: context.l10n,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        c.selected!.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 3),
-                      _connectionStatus(),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  tooltip: context.l10n.viewVerification,
-                  onPressed: c.busy ? null : () => _verify(c.selected!),
-                  icon: const Icon(Icons.info_outline, size: 20),
-                ),
-              ],
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: _connectionStatus(),
-          ),
         SegmentedButton<TransferKind>(
           segments: [
             ButtonSegment(
@@ -1013,17 +950,6 @@ class _TransferDashboardState extends State<TransferDashboard> {
       _history(),
       const SizedBox(height: 24),
       _note(Icons.lock_outline, context.l10n.encryptedLan),
-      if (!c.sending && !c.receiving && c.ready)
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Semantics(
-            liveRegion: true,
-            child: Text(
-              c.status,
-              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-            ),
-          ),
-        ),
     ],
   );
 
