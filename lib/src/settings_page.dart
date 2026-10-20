@@ -177,6 +177,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(context.l10n.folderBusy, style: secondary),
                     ),
+                  _section(context.l10n.deviceName, Icons.devices_outlined, [
+                    Text(
+                      c.name.isEmpty ? context.l10n.readingDeviceName : c.name,
+                    ),
+                  ]),
                   _section(
                     context.l10n.receiveLocation,
                     Icons.folder_open_outlined,
@@ -208,11 +213,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ],
                   ),
-                  _section(context.l10n.deviceName, Icons.devices_outlined, [
-                    Text(
-                      c.name.isEmpty ? context.l10n.readingDeviceName : c.name,
-                    ),
-                  ]),
                   _section(
                     context.l10n.notifications,
                     Icons.notifications_outlined,
