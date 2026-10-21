@@ -16,6 +16,10 @@ class PeerDiscovery {
   Peer _local;
   Peer get local => _local;
   final int port;
+
+  /// Receive-port override for isolated transports on one host.
+  /// Outgoing announcements still target [port].
+  final int? bindPort;
   final int transferPort;
   final bool subnetFallback;
   final bool useMulticast;
@@ -49,6 +53,7 @@ class PeerDiscovery {
   Future<void>? _refreshWork;
   Future<void>? _scanWork;
   Future<void>? _searchWork;
+  Future<void>? _announcementWork;
   int _generation = 0;
   DateTime _lastInterfaces = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastScan = DateTime.fromMillisecondsSinceEpoch(0);
@@ -56,6 +61,7 @@ class PeerDiscovery {
   PeerDiscovery(
     Peer local, {
     this.port = defaultPort,
+    this.bindPort,
     this.transferPort = defaultTransferPort,
     this.subnetFallback = true,
     this.useMulticast = true,
@@ -178,7 +184,7 @@ class PeerDiscovery {
     try {
       final socket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
-        port,
+        bindPort ?? port,
         reuseAddress: true,
         reusePort: !Platform.isAndroid && !Platform.isWindows,
       );
@@ -225,7 +231,8 @@ class PeerDiscovery {
           }
         },
         onError: (Object _) {
-          // A transient ICMP/VPN error is not proof that the socket is dead.
+          // Dart closes UDP sockets on asynchronous errors. The next refresh
+          // recreates the listener; HTTPS discovery remains available.
         },
         onDone: () {
           if (identical(_socket, socket)) _socket = null;
@@ -524,54 +531,93 @@ class PeerDiscovery {
     await Future.wait(List.generate(8, (_) => worker()));
   }
 
-  void announce() => _announce();
-
-  void _announce({bool departing = false}) {
-    if (_closed) return;
-    final socket = _socket;
-    if (socket == null) return;
-    final bytes = utf8.encode(
-      jsonEncode({
-        'app': 'dukto2',
-        ...local.toJson(),
-        'event': departing ? 'offline' : 'online',
+  void announce() {
+    if (_closed || _socket == null || _announcementWork != null) return;
+    final work = _announce();
+    _announcementWork = work;
+    unawaited(
+      work.whenComplete(() {
+        if (identical(_announcementWork, work)) _announcementWork = null;
       }),
     );
-    // Unicast can cross routed subnets even when multicast cannot. This also
-    // lets a manually connected device discover the initiator in return.
-    for (final peer in peers) {
-      try {
-        socket.send(bytes, InternetAddress(peer.host), port);
-      } on SocketException {
-        /* A disappeared endpoint will expire normally. */
-      }
-    }
-    if (!useMulticast) return;
-    for (final address in _interfaces.expand((i) => i.addresses)) {
-      try {
-        socket.setRawOption(
-          RawSocketOption(
-            RawSocketOption.levelIPv4,
-            RawSocketOption.IPv4MulticastInterface,
-            address.rawAddress,
-          ),
-        );
-        socket.send(bytes, group, port);
-      } on SocketException {
-        /* Continue on remaining interfaces. */
-      }
-    }
+  }
+
+  Future<void> _announce({bool departing = false}) async {
+    RawDatagramSocket? socket;
+    StreamSubscription<RawSocketEvent>? subscription;
     try {
-      socket.send(bytes, InternetAddress('255.255.255.255'), port);
+      // An asynchronous route error closes Dart's UDP socket. Isolate sending
+      // from the receiver, and use a fresh sender for the final departure.
+      final sender = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+      socket = sender;
+      subscription = sender.listen(
+        (event) {
+          if (event == RawSocketEvent.read) {
+            while (sender.receive() != null) {
+              /* No reply is expected here. */
+            }
+          }
+        },
+        onError: (Object _) {
+          // An unavailable route may close this disposable sender only.
+        },
+      );
+      if (_closed && !departing) return;
+      sender.broadcastEnabled = useMulticast;
+      sender.multicastHops = 1;
+      sender.multicastLoopback = true;
+      final bytes = utf8.encode(
+        jsonEncode({
+          'app': 'dukto2',
+          ...local.toJson(),
+          'event': departing ? 'offline' : 'online',
+        }),
+      );
+      // Announcements advertise the HTTPS port, never their ephemeral UDP
+      // source port. Known peers always receive them at the discovery port.
+      for (final peer in peers) {
+        try {
+          sender.send(bytes, InternetAddress(peer.host), port);
+        } on SocketException {
+          /* The peer will expire normally. */
+        }
+      }
+      if (useMulticast) {
+        for (final address in _interfaces.expand((i) => i.addresses)) {
+          try {
+            sender.setRawOption(
+              RawSocketOption(
+                RawSocketOption.levelIPv4,
+                RawSocketOption.IPv4MulticastInterface,
+                address.rawAddress,
+              ),
+            );
+            sender.send(bytes, group, port);
+          } on SocketException {
+            /* Continue on remaining interfaces. */
+          }
+        }
+        try {
+          sender.send(bytes, InternetAddress('255.255.255.255'), port);
+        } on SocketException {
+          /* HTTPS fallback remains available. */
+        }
+      }
+      // send() submits to the OS. Give the I/O loop time to process it before
+      // disposing this bounded, send-only socket, including during app exit.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     } on SocketException {
-      /* HTTPS fallback remains available. */
+      // Announcement failures must not stop receiving or HTTPS discovery.
+    } finally {
+      await subscription?.cancel();
+      socket?.close();
     }
   }
 
   Future<void> close() async {
     if (_closed) return;
     // Best effort only: crashes, force-stop and lost Wi-Fi still need expiry.
-    _announce(departing: true);
+    final wasListening = _socket != null || _timer != null;
     _closed = true;
     _generation++;
     _timer?.cancel();
@@ -584,6 +630,8 @@ class PeerDiscovery {
     for (final timer in _burst) {
       timer.cancel();
     }
+    await _announcementWork;
+    if (wasListening) await _announce(departing: true);
     await _subscription?.cancel();
     _socket?.close();
     await _cacheWrites;

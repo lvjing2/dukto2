@@ -254,9 +254,8 @@ void main() {
         reusePort: !Platform.isAndroid && !Platform.isWindows,
       );
       addTearDown(receiver.close);
-      // This observer and discovery share one host and port. Unicast with
-      // SO_REUSEPORT can reach either socket, unlike two separate LAN devices.
-      // Join the announcement group so multicast loopback fans out to both.
+      // Use separate receive ports on this host, unlike two sockets competing
+      // for the same datagrams. Also observe multicast where it is available.
       for (final interface in await NetworkInterface.list(
         type: InternetAddressType.IPv4,
       )) {
@@ -291,6 +290,7 @@ void main() {
           fingerprint: other.fingerprint,
         ),
         port: receiver.port,
+        bindPort: 0,
         subnetFallback: false,
       );
       addTearDown(discovery.close);
