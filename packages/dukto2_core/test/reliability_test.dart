@@ -430,6 +430,195 @@ void main() {
   );
 
   test(
+    'sender times out a stalled source and releases it before retry',
+    () async {
+      // Keep the receiver alive so only the sender's watchdog can stop this.
+      final server = await start(idle: const Duration(seconds: 10));
+      final client = TransferClient(
+        uploadIdleTimeout: const Duration(milliseconds: 250),
+      );
+      addTearDown(client.close);
+      final released = Completer<void>();
+      final source = StreamController<List<int>>(
+        onCancel: () => released.complete(),
+      );
+      final cancellation = CancellationToken();
+      final sending = client.sendStream(
+        peer: server.localPeer,
+        name: 'stalled-source.bin',
+        size: 10000000,
+        openRead: () => source.stream,
+        sender: 'Sender',
+        cancellation: cancellation,
+      );
+      source.add(List.filled(65536, 7));
+      try {
+        await expectLater(
+          sending.timeout(const Duration(seconds: 3)),
+          throwsA(
+            isA<TransferFailure>()
+                .having((f) => f.kind, 'kind', TransferFailureKind.timeout)
+                .having((f) => f.stage, 'stage', TransferStage.upload),
+          ),
+        );
+        await released.future.timeout(const Duration(seconds: 1));
+        expect(await server.receiveDirectory.list().toList(), isEmpty);
+        final receipt = await client.sendStream(
+          peer: server.localPeer,
+          name: 'after-idle.bin',
+          size: 3,
+          openRead: () => Stream.value([1, 2, 3]),
+          sender: 'Sender',
+        );
+        expect(receipt.size, 3);
+      } finally {
+        cancellation.cancel();
+        await sending.catchError(
+          (Object _) => TransferReceipt(name: 'cleanup', size: 0, sha256: ''),
+        );
+        await source.close();
+      }
+    },
+  );
+
+  test(
+    'ongoing upload can exceed the idle timeout in total duration',
+    () async {
+      final server = await start();
+      final client = TransferClient(
+        uploadIdleTimeout: const Duration(milliseconds: 400),
+      );
+      addTearDown(client.close);
+      final chunk = List.filled(65536, 9);
+      Stream<List<int>> source() async* {
+        for (var i = 0; i < 8; i++) {
+          yield chunk;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+      }
+
+      final received = server.received.first;
+      final receipt = await client.sendStream(
+        peer: server.localPeer,
+        name: 'paced-source.bin',
+        size: chunk.length * 8,
+        openRead: source,
+        sender: 'Sender',
+      );
+      expect(receipt.size, chunk.length * 8);
+      final file = (await received).file!;
+      expect(await file.length(), receipt.size);
+      expect(
+        sha256.convert(await file.readAsBytes()).toString(),
+        receipt.sha256,
+      );
+    },
+  );
+
+  for (final cancelLocally in [false, true]) {
+    test(
+      'unread receiver releases sender: local cancellation=$cancelLocally',
+      () async {
+        final server = await HttpServer.bindSecure(
+          InternetAddress.loopbackIPv4,
+          0,
+          identity.securityContext(),
+        );
+        addTearDown(() => server.close(force: true));
+        final cancellation = CancellationToken();
+        Timer? cancelTimer;
+        addTearDown(() => cancelTimer?.cancel());
+        final offered = randomId();
+        final requests = <String>[];
+        final subscription = server.listen((request) async {
+          requests.add(request.uri.path);
+          if (request.uri.path == '/v1/offer') {
+            await request.drain<void>();
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(jsonEncode({'token': offered}));
+            await request.response.close();
+          } else if (request.method == 'DELETE') {
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(jsonEncode({'cancelled': true}));
+            await request.response.close();
+          }
+          if (request.method == 'PUT' && cancelLocally) {
+            cancelTimer = Timer(
+              const Duration(milliseconds: 200),
+              cancellation.cancel,
+            );
+          }
+          // Deliberately leave the PUT unread: TCP backpressure stalls the sender.
+        });
+        addTearDown(subscription.cancel);
+        final client = TransferClient(
+          uploadIdleTimeout: cancelLocally
+              ? const Duration(seconds: 10)
+              : const Duration(milliseconds: 400),
+        );
+        addTearDown(client.close);
+        var sourceReleased = false;
+        var produced = 0;
+        const chunks = 4096;
+        final chunk = List.filled(65536, 1);
+        Stream<List<int>> source() async* {
+          try {
+            for (var i = 0; i < chunks; i++) {
+              produced++;
+              yield chunk;
+            }
+          } finally {
+            sourceReleased = true;
+          }
+        }
+
+        final sending = client.sendStream(
+          peer: Peer(
+            id: identity.id,
+            name: 'Stalled receiver',
+            host: '127.0.0.1',
+            port: server.port,
+            fingerprint: identity.fingerprint,
+          ),
+          name: 'backpressure.bin',
+          size: chunk.length * chunks,
+          openRead: source,
+          sender: 'Sender',
+          cancellation: cancellation,
+        );
+        try {
+          await expectLater(
+            sending.timeout(const Duration(seconds: 6)),
+            throwsA(
+              cancelLocally
+                  ? isA<TransferCancelled>().having(
+                      (e) => e.byPeer,
+                      'byPeer',
+                      false,
+                    )
+                  : isA<TransferFailure>()
+                        .having(
+                          (f) => f.kind,
+                          'kind',
+                          TransferFailureKind.timeout,
+                        )
+                        .having((f) => f.stage, 'stage', TransferStage.upload),
+            ),
+          );
+          expect(sourceReleased, isTrue);
+          expect(produced, lessThan(chunks));
+          expect(requests, isNot(contains('/v1/commit/$offered')));
+        } finally {
+          cancellation.cancel();
+          await sending.catchError(
+            (Object _) => TransferReceipt(name: 'cleanup', size: 0, sha256: ''),
+          );
+        }
+      },
+    );
+  }
+
+  test(
     'receiver cancellation interrupts a stalled stream without waiting for idle timeout',
     () async {
       final server = await start();

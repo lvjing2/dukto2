@@ -833,9 +833,19 @@ class TransferServer {
 class TransferClient {
   final TransferDiagnostics diagnostics;
   final bool _ownsDiagnostics;
-  TransferClient({TransferDiagnostics? diagnostics})
-    : diagnostics = diagnostics ?? TransferDiagnostics(),
-      _ownsDiagnostics = diagnostics == null;
+
+  /// Maximum upload time without the HTTP sink consuming non-empty data.
+  /// Sustained progress is not subject to a fixed whole-file deadline.
+  final Duration uploadIdleTimeout;
+  TransferClient({
+    TransferDiagnostics? diagnostics,
+    this.uploadIdleTimeout = _idleTimeout,
+  }) : diagnostics = diagnostics ?? TransferDiagnostics(),
+       _ownsDiagnostics = diagnostics == null {
+    if (uploadIdleTimeout <= Duration.zero) {
+      throw ArgumentError.value(uploadIdleTimeout, 'uploadIdleTimeout');
+    }
+  }
   final _progress = StreamController<TransferProgress>.broadcast();
   Stream<TransferProgress> get progress => _progress.stream;
 
@@ -1062,15 +1072,18 @@ class TransferClient {
     }, '');
     final client = _client(peer.fingerprint);
     final uploadCancellation = CancellationToken();
+    final uploadStopped = Completer<void>();
     void abort() {
       uploadCancellation.cancel();
       client.close(force: true);
+      if (!uploadStopped.isCompleted) uploadStopped.complete();
     }
 
     token.onCancel(abort);
     _CancellationMonitor? cancellationMonitor;
     String? transferId;
     var committed = false;
+    var uploadTimedOut = false;
     final operation = diagnostics.begin(incoming: false);
     Uri uri(String path) =>
         Uri(scheme: 'https', host: peer.host, port: peer.port, path: path);
@@ -1134,10 +1147,24 @@ class TransferClient {
       final digest = _DigestSink();
       final hash = crypto.sha256.startChunkedConversion(digest);
       var bytes = 0;
-      await request
-          .addStream(
+      Timer? uploadTimer;
+      void resetUploadTimer() {
+        uploadTimer?.cancel();
+        uploadTimer = Timer(uploadIdleTimeout, () {
+          uploadTimedOut = true;
+          // Abort resources as well as finishing the caller's wait. Closing a
+          // socket alone may leave addStream waiting on a paused subscription.
+          abort();
+        });
+      }
+
+      resetUploadTimer();
+      try {
+        await Future.any<void>([
+          request.addStream(
             _withCancellation(openRead(), uploadCancellation).map((chunk) {
               token.check();
+              if (chunk.isNotEmpty) resetUploadTimer();
               bytes += chunk.length;
               hash.add(chunk);
               _progress.add(
@@ -1151,8 +1178,18 @@ class TransferClient {
               );
               return chunk;
             }),
-          )
-          .timeout(const Duration(hours: 2));
+          ),
+          uploadStopped.future.then<void>((_) => throw TransferCancelled()),
+        ]);
+      } finally {
+        uploadTimer?.cancel();
+      }
+      // A forcibly closed HttpClient may finish addStream without an error.
+      // Never advance to verification/commit after the watchdog stopped it.
+      if (uploadTimedOut) {
+        throw TimeoutException('Upload made no progress', uploadIdleTimeout);
+      }
+      uploadCancellation.check();
       hash.close();
       operation.move(TransferStage.verification);
       final response = await request.close().timeout(_idleTimeout);
@@ -1193,7 +1230,10 @@ class TransferClient {
         operation.fail(cancelled, stack);
         throw cancelled;
       }
-      Error.throwWithStackTrace(operation.fail(error, stack), stack);
+      final cause = uploadTimedOut
+          ? TimeoutException('Upload made no progress', uploadIdleTimeout)
+          : error;
+      Error.throwWithStackTrace(operation.fail(cause, stack), stack);
     } finally {
       token.remove(abort);
       await cancellationMonitor?.close();

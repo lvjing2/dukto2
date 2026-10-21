@@ -20,6 +20,12 @@ The in-memory journal retains 200 entries by default. JSON Lines are written und
 
 Serialized logs omit transfer filenames, storage paths, text bodies, raw exception messages and authorization tokens. Limited source stack locations, failure kinds and OS codes remain. Diagnostic IDs are independent of transfer tokens.
 
+## Upload inactivity timeout
+
+The sender aborts an upload after 30 seconds without non-empty data being consumed by the HTTP sink. It cancels the source subscription and closes the connection; sustained uploads no longer have a fixed two-hour whole-file deadline. This timer does not prove remote persistence: completion still requires size, SHA-256 and commit acknowledgement. Approval, connection and response waits have separate budgets.
+
+Stalled sources and TCP backpressure from an unread receiver share an explicit stop signal. Timeouts retain the `upload` stage and `timeout` kind; local cancellation and confirmed peer cancellation preserve their distinct meanings. Cancelled or timed-out uploads must not reach commit. New requests still require consent after cleanup.
+
 ## Discovery and networking
 
 UDP / Bonjour provide candidates, confirmed through HTTPS before appearing as peers. Certificate fingerprints deduplicate peers; stale peers expire. Interface changes and foreground resume rebuild subscriptions. Refreshing discovery does not deliberately interrupt file transfers.
@@ -32,6 +38,8 @@ Bounded probing of directly connected private IPv4 /24 networks and manual addre
 - Android 10+ defaults to MediaStore pending entries; selected folders use SAF. MethodChannel writes at most 256 KiB per block and waits for native worker acknowledgement.
 - iOS privately stages, coordinates copying into the selected folder and rechecks the result. Extra disk space is required; external providers may add delays.
 - Android foreground service, CPU and Wi-Fi locks cover explicitly started transfers. Desktop platforms inhibit idle sleep; Apple mobile transfers mainly run in the foreground. Resources are released after completion, failure or cancellation.
+
+A controlled test on REDMI K90 / Android 17 found that HyperOS smart background restriction can freeze the app and disable its CPU lock despite an active foreground transfer service, interrupting screen-off sending. Setting Dukto2 to unrestricted under the system app information → battery policy let the identical screen-off batch complete, including after restoring the original service type. Users control this setting in the system; the application does not change it automatically. This does not validate every Android vendor or deep-sleep condition.
 
 Network loss or process termination requires sending from the start. Startup cleans only app-recorded uncommitted targets. If a commit acknowledgement is lost, the receiver may have saved the file while the sender reports failure; retraction and exactly-once delivery are not guaranteed.
 
