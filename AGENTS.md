@@ -7,3 +7,5 @@
 - Keep any future Dukto compatibility adapter separate from protocol v1.
 - Use `tool/check.sh` for verification. Current Flutter's LSP analyzer breaks with this workspace's Unicode path; `dart analyze` works.
 - Distinguish core loopback tests, Mac CLI ↔ Android tests, and macOS GUI ↔ Android tests in reports.
+
+- Write all release notes in English, including GitHub release bodies and Markdown under `docs/releases/`. Use the English changelog for release-note fallback links.

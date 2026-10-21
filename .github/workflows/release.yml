@@ -145,14 +145,17 @@ jobs:
           from pathlib import Path
           tag = os.environ['RELEASE_TAG']
           source = Path('docs/releases') / (tag + '.md')
-          fallback = '更新内容见 [变更记录](https://github.com/' + os.environ['GH_REPO'] + '/blob/' + tag + '/CHANGELOG.zh-CN.md)。\n'
-          Path('notes.md').write_text(source.read_text() if source.is_file() else fallback)
+          fallback = 'See the [changelog](https://github.com/' + os.environ['GH_REPO'] + '/blob/' + tag + '/CHANGELOG.md) for changes.\n'
+          notes = source.read_text() if source.is_file() else fallback
+          if any('\u4e00' <= char <= '\u9fff' for char in notes):
+              raise SystemExit('Release notes must be written in English.')
+          Path('notes.md').write_text(notes)
           PYNOTES
           RELEASE_TITLE="Dukto2 ${RELEASE_TAG#v}"
           if gh release view "$RELEASE_TAG" --json isDraft > release.json 2>/dev/null; then
             python3 -c 'import json; assert json.load(open("release.json"))["isDraft"], "Refusing to overwrite a published release"'
             gh release upload "$RELEASE_TAG" release-assets/* --clobber
-            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE"
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file notes.md
           else
             release_flags=(--draft)
             if [[ "$RELEASE_TAG" == *-* ]]; then
