@@ -4,6 +4,12 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.8+15 — Release candidate
+
+- Isolate outgoing discovery announcements from the receive socket, so unavailable multicast or broadcast routes cannot disable reception or the next departure announcement.
+- Use separate receive ports in the same-host departure regression test.
+- Increase Android versionCode to 15, retaining the existing application and upload signing keys.
+
 ## 0.1.6-rc.7+14 — Release candidate
 
 - Show the same project version in the app and release metadata, keeping the platform build number separate.
