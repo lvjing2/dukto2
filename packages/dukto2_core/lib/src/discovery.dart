@@ -23,7 +23,10 @@ class PeerDiscovery {
   final int transferPort;
   final bool subnetFallback;
   final bool useMulticast;
+
+  /// Budget for endpoints supplied by announcements, Bonjour or the user.
   final Duration probeTimeout;
+  static const scanProbeTimeout = Duration(milliseconds: 800);
 
   /// Optional local cache of addresses explicitly confirmed by the user.
   final File? knownPeersFile;
@@ -38,6 +41,9 @@ class PeerDiscovery {
   // liveness checks behind candidate throttling or its eight occupied slots.
   static const presenceLifetime = Duration(seconds: 3);
   static const presenceInterval = Duration(seconds: 1);
+  // Known online endpoints deserve more time than bounded subnet candidates.
+  // Keep the three-second expiry independent of this request budget.
+  static const presenceProbeTimeout = Duration(seconds: 2);
   final _expiry = <String, Timer>{};
   final _presencePending = <String>{};
   final _lastDepartureCheck = <String, DateTime>{};
@@ -65,7 +71,7 @@ class PeerDiscovery {
     this.transferPort = defaultTransferPort,
     this.subnetFallback = true,
     this.useMulticast = true,
-    this.probeTimeout = const Duration(milliseconds: 800),
+    this.probeTimeout = const Duration(seconds: 2),
     this.knownPeersFile,
   }) : _local = local;
   void updateLocal(Peer peer) {
@@ -349,7 +355,12 @@ class PeerDiscovery {
     }
   }
 
-  Future<void> _confirm(String host, int targetPort, {Peer? expected}) async {
+  Future<void> _confirm(
+    String host,
+    int targetPort, {
+    Peer? expected,
+    Duration? timeout,
+  }) async {
     final key = '$host:$targetPort';
     final now = DateTime.now();
     if (_closed ||
@@ -367,7 +378,7 @@ class PeerDiscovery {
       final peer = await TransferClient.probe(
         host,
         targetPort,
-        timeout: probeTimeout,
+        timeout: timeout ?? probeTimeout,
       );
       if (_closed ||
           generation != _generation ||
@@ -448,7 +459,7 @@ class PeerDiscovery {
       final peer = await TransferClient.probe(
         snapshot.host,
         snapshot.port,
-        timeout: probeTimeout,
+        timeout: presenceProbeTimeout,
       );
       if (_closed ||
           generation != _generation ||
@@ -524,7 +535,14 @@ class PeerDiscovery {
           continue;
         }
         final host = hosts[index++];
-        await _confirm(host, transferPort);
+        // Do not lengthen a whole subnet scan to accommodate a known endpoint.
+        await _confirm(
+          host,
+          transferPort,
+          timeout: probeTimeout < scanProbeTimeout
+              ? probeTimeout
+              : scanProbeTimeout,
+        );
       }
     }
 

@@ -7,6 +7,8 @@ enum PeerConnectionState { checking, online, offline, identityChanged }
 
 /// Reachability is independent of multicast discovery and never grants trust.
 class PeerConnection extends ChangeNotifier {
+  static const probeTimeout = Duration(seconds: 2);
+  static const failureThreshold = 3;
   final Future<Peer> Function(Peer) _probe;
   final Duration interval;
   Peer? _peer;
@@ -15,6 +17,7 @@ class PeerConnection extends ChangeNotifier {
   int _generation = 0;
   Future<bool>? _pending;
   bool _closed = false;
+  int _failures = 0;
 
   PeerConnection({
     Future<Peer> Function(Peer)? probe,
@@ -24,7 +27,7 @@ class PeerConnection extends ChangeNotifier {
            ((peer) => TransferClient.probe(
              peer.host,
              peer.port,
-             timeout: const Duration(milliseconds: 800),
+             timeout: probeTimeout,
            ));
 
   bool watches(Peer peer) =>
@@ -38,6 +41,7 @@ class PeerConnection extends ChangeNotifier {
     _generation++;
     _peer = peer;
     _pending = null;
+    _failures = 0;
     state = PeerConnectionState.checking;
     _timer?.cancel();
     _timer = Timer.periodic(interval, (_) => unawaited(check()));
@@ -45,16 +49,27 @@ class PeerConnection extends ChangeNotifier {
     unawaited(check());
   }
 
-  Future<bool> check() {
-    if (_closed || _peer == null) return Future.value(false);
-    return _pending ??= _check(_peer!, _generation);
+  Future<bool> check({bool forTransfer = false}) async {
+    if (_closed || _peer == null) return false;
+    final generation = _generation;
+    final reachable = await (_pending ??= _check(_peer!, generation));
+    // A send needs a fresh success, not the display's transient-failure grace.
+    if (forTransfer &&
+        !reachable &&
+        !_closed &&
+        generation == _generation &&
+        state == PeerConnectionState.online) {
+      state = PeerConnectionState.offline;
+      notifyListeners();
+    }
+    return reachable;
   }
 
   Future<bool> _check(Peer peer, int generation) async {
     var result = PeerConnectionState.offline;
     try {
       final observed = await Future.sync(() => _probe(peer))
-          .timeout(const Duration(seconds: 1));
+          .timeout(probeTimeout);
       result =
           observed.id == peer.id && observed.fingerprint == peer.fingerprint
           ? PeerConnectionState.online
@@ -64,7 +79,21 @@ class PeerConnection extends ChangeNotifier {
     }
     if (_closed || generation != _generation) return false;
     _pending = null;
-    state = result;
+    if (result == PeerConnectionState.online) {
+      _failures = 0;
+      state = result;
+    } else if (result == PeerConnectionState.identityChanged) {
+      _failures = 0;
+      state = result;
+    } else {
+      _failures++;
+      // Only a previously verified online selection gets this grace. New,
+      // mismatched and already-offline selections never become online on error.
+      if (state == PeerConnectionState.online && _failures < failureThreshold) {
+        return false;
+      }
+      state = result;
+    }
     notifyListeners();
     return result == PeerConnectionState.online;
   }

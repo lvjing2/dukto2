@@ -25,6 +25,94 @@ class ReadyController extends Dukto2Controller {
 }
 
 void main() {
+  test(
+    'a transient miss preserves online status but does not approve a send',
+    () async {
+      var reachable = true;
+      final connection = PeerConnection(
+        probe: (p) async {
+          if (!reachable) throw const SocketException('temporary loss');
+          return p;
+        },
+      );
+      addTearDown(connection.dispose);
+      connection.watch(peer());
+      expect(await connection.check(), isTrue);
+      reachable = false;
+      expect(await connection.check(), isFalse);
+      expect(connection.state, PeerConnectionState.online);
+      reachable = true;
+      expect(await connection.check(), isTrue);
+      reachable = false;
+      expect(await connection.check(), isFalse);
+      expect(connection.state, PeerConnectionState.online);
+    },
+  );
+
+  testWidgets('a slow verified response remains usable', (tester) async {
+    final connection = PeerConnection(
+      probe: (p) async {
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+        return p;
+      },
+    );
+    connection.watch(peer());
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(connection.state, PeerConnectionState.online);
+    connection.dispose();
+  });
+
+  testWidgets('hanging probes expire and concurrent checks share one request', (
+    tester,
+  ) async {
+    var requests = 0;
+    final connection = PeerConnection(
+      probe: (_) {
+        requests++;
+        return Completer<Peer>().future;
+      },
+    );
+    connection.watch(peer());
+    final first = connection.check();
+    final second = connection.check();
+    await tester.pump(const Duration(seconds: 2));
+    expect(await first, isFalse);
+    expect(await second, isFalse);
+    expect(requests, 1);
+    expect(connection.state, PeerConnectionState.offline);
+    connection.dispose();
+  });
+
+  test('a new selection does not inherit the previous online grace', () async {
+    var reachable = true;
+    final connection = PeerConnection(
+      probe: (p) async {
+        if (!reachable) throw const SocketException('offline');
+        return p;
+      },
+    );
+    addTearDown(connection.dispose);
+    connection.watch(peer());
+    expect(await connection.check(), isTrue);
+    reachable = false;
+    expect(await connection.check(), isFalse);
+    expect(connection.state, PeerConnectionState.online);
+    connection.watch(peer(id: 'new'));
+    expect(await connection.check(), isFalse);
+    expect(connection.state, PeerConnectionState.offline);
+  });
+
+  test('identity changes bypass the transient-failure grace', () async {
+    var target = peer();
+    final connection = PeerConnection(probe: (_) async => target);
+    addTearDown(connection.dispose);
+    connection.watch(peer());
+    expect(await connection.check(), isTrue);
+    target = peer(fingerprint: 'b' * 64);
+    expect(await connection.check(), isFalse);
+    expect(connection.state, PeerConnectionState.identityChanged);
+  });
+
   test('reachability is independent of nearby discovery and recovers after failure', () async {
     var reachable = true;
     final connection = PeerConnection(
@@ -42,6 +130,10 @@ void main() {
     expect(await connection.check(), isTrue);
     expect(c.canSendToSelected, isTrue);
     reachable = false;
+    await connection.check();
+    expect(c.connectionState, PeerConnectionState.online);
+    await connection.check();
+    expect(c.connectionState, PeerConnectionState.online);
     await connection.check();
     expect(c.connectionState, PeerConnectionState.offline);
     expect(c.canSendToSelected, isFalse);
@@ -64,6 +156,10 @@ void main() {
     await tester.pump();
     expect(connection.state, PeerConnectionState.online);
     reachable = false;
+    await tester.pump(const Duration(seconds: 1));
+    expect(connection.state, PeerConnectionState.online);
+    await tester.pump(const Duration(seconds: 1));
+    expect(connection.state, PeerConnectionState.online);
     await tester.pump(const Duration(seconds: 1));
     expect(connection.state, PeerConnectionState.offline);
     reachable = true;

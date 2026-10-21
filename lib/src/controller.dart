@@ -1230,7 +1230,7 @@ class Dukto2Controller extends ChangeNotifier {
     bool available;
     try {
       if (!connection.watches(peer)) connection.watch(peer);
-      available = await connection.check();
+      available = await connection.check(forTransfer: true);
     } finally {
       _checkingSend = false;
       _notify();

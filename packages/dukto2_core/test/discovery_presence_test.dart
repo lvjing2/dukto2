@@ -17,6 +17,7 @@ void main() {
   var available = true;
   var requests = 0;
   var failNext = false;
+  var responseDelay = Duration.zero;
   Completer<void>? hold;
 
   setUpAll(() async {
@@ -34,6 +35,7 @@ void main() {
     available = true;
     requests = 0;
     failNext = false;
+    responseDelay = Duration.zero;
     hold = null;
     endpoint = await HttpServer.bindSecure(
       InternetAddress.loopbackIPv4,
@@ -53,6 +55,7 @@ void main() {
       failNext = false;
       try {
         await hold?.future;
+        await Future<void>.delayed(responseDelay);
         request.response.headers.contentType = ContentType.json;
         request.response.statusCode = failed ? 503 : 200;
         request.response.write(
@@ -106,6 +109,43 @@ void main() {
       discoveryPort,
     );
   }
+
+  test(
+    'a slow announced endpoint can be confirmed for the first time',
+    () async {
+      final localPeer = discovery.local;
+      await discovery.close();
+      discovery = PeerDiscovery(
+        localPeer,
+        port: discoveryPort,
+        useMulticast: false,
+        subnetFallback: false,
+      );
+      addTearDown(discovery.close);
+      await discovery.start();
+      responseDelay = const Duration(milliseconds: 1100);
+      final appeared = discovery.changes.firstWhere(
+        (peers) => peers.isNotEmpty,
+      );
+      broadcast('online');
+      expect(
+        (await appeared.timeout(const Duration(seconds: 3))).single.id,
+        remote.id,
+      );
+    },
+  );
+
+  test('slow authenticated heartbeats keep an online peer visible', () async {
+    final removals = <List<Peer>>[];
+    final subscription = discovery.changes
+        .where((peers) => peers.isEmpty)
+        .listen(removals.add);
+    addTearDown(subscription.cancel);
+    responseDelay = const Duration(milliseconds: 1100);
+    await Future<void>.delayed(const Duration(milliseconds: 4200));
+    expect(discovery.peers.single.id, remote.id);
+    expect(removals, isEmpty);
+  });
 
   test(
     'a disconnected peer expires after three seconds without a departure',
