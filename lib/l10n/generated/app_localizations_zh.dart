@@ -901,6 +901,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aboutAuthor => '作者：lvjing2';
+
+  @override
+  String get peerCancelledTransfer => '对方已取消传输';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1799,4 +1802,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get aboutAuthor => '作者：lvjing2';
+
+  @override
+  String get peerCancelledTransfer => '对方已取消传输';
 }

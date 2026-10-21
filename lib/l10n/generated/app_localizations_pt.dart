@@ -956,6 +956,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aboutAuthor => 'Autor: lvjing2';
+
+  @override
+  String get peerCancelledTransfer =>
+      'O outro dispositivo cancelou a transferência';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1909,4 +1913,8 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get aboutAuthor => 'Autor: lvjing2';
+
+  @override
+  String get peerCancelledTransfer =>
+      'O outro dispositivo cancelou a transferência';
 }

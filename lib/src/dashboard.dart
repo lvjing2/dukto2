@@ -855,18 +855,17 @@ class _TransferDashboardState extends State<TransferDashboard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        selected
-                            ? (c.connectionState == PeerConnectionState.online
-                                  ? context.l10n.verifiedSelected
-                                  : _connectionText)
-                            : context.l10n.unverified,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.onSurfaceVariant,
+                      if (!selected ||
+                          c.connectionState != PeerConnectionState.online) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          selected ? _connectionText : context.l10n.unverified,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -1197,7 +1196,11 @@ class _TransferDashboardState extends State<TransferDashboard> {
             ),
           ] else if (!expanded && phase == SendPhase.cancelled) ...[
             const SizedBox(height: 12),
-            Text(context.l10n.textCancelled),
+            Text(
+              c.sendCancelledByPeer
+                  ? context.l10n.peerCancelledTransfer
+                  : context.l10n.textCancelled,
+            ),
           ],
           const SizedBox(height: 8),
           Row(
@@ -1355,7 +1358,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
             SendPhase.uploading => context.l10n.sending,
             SendPhase.verifying => context.l10n.waitingVerification,
             SendPhase.sent => context.l10n.sentVerified,
-            SendPhase.cancelled => context.l10n.sendCancelled,
+            SendPhase.cancelled =>
+              c.sendCancelledByPeer
+                  ? context.l10n.peerCancelledTransfer
+                  : context.l10n.sendCancelled,
             SendPhase.failed => context.l10n.sendFailedRetry,
           };
     final batch = !incoming && c.files.length > 1;

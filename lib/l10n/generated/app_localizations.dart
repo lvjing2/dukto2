@@ -1753,6 +1753,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Author: lvjing2'**
   String get aboutAuthor;
+
+  /// Shown to the sender after authenticated confirmation that the receiver cancelled this transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'The other device cancelled the transfer'**
+  String get peerCancelledTransfer;
 }
 
 class _AppLocalizationsDelegate

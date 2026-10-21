@@ -213,8 +213,14 @@ class Dukto2Controller extends ChangeNotifier {
       _files.isEmpty ? null : _files[_fileIndex].file;
   int? get chosenSize => _files.isEmpty ? null : _files[_fileIndex].size;
   SendPhase _sendPhase = SendPhase.idle;
+  bool _sendCancelledByPeer = false;
+  bool get sendCancelledByPeer => _sendCancelledByPeer;
   SendPhase get sendPhase => sending ? _session!.sendPhase : _sendPhase;
-  set sendPhase(SendPhase phase) => _sendPhase = phase;
+  set sendPhase(SendPhase phase) {
+    _sendPhase = phase;
+    if (phase != SendPhase.cancelled) _sendCancelledByPeer = false;
+  }
+
   FileOffer? get receivingOffer => _session?.offer;
   bool _disposed = false;
   bool directReceive = false;
@@ -1247,6 +1253,7 @@ class Dukto2Controller extends ChangeNotifier {
     final settled = Completer<void>();
     _outgoingSettled = settled;
     lastTransferFailure = null;
+    _sendCancelledByPeer = false;
     _errorText = null;
     _statusText = (strings) => strings.waitingPeer((peer.name).toString());
     _notify();
@@ -1271,12 +1278,13 @@ class Dukto2Controller extends ChangeNotifier {
       _statusText = (strings) => strings.sentName(label(strings));
       completed = receipt;
       terminal = SessionPhase.completed;
-    } on TransferCancelled {
-      diagnostics
-          .begin(incoming: false)
-          .fail(TransferCancelled(), StackTrace.current);
+    } on TransferCancelled catch (cancelled) {
+      _sendCancelledByPeer = cancelled.byPeer;
+      diagnostics.begin(incoming: false).fail(cancelled, StackTrace.current);
       _sendPhase = SendPhase.cancelled;
-      _statusText = (strings) => strings.sendCancelled;
+      _statusText = (strings) => cancelled.byPeer
+          ? strings.peerCancelledTransfer
+          : strings.sendCancelled;
       terminal = SessionPhase.cancelled;
     } on Object catch (exception, stack) {
       final failure = TransferFailure.capture(
@@ -1297,6 +1305,7 @@ class Dukto2Controller extends ChangeNotifier {
       }
       diagnostics.recordFailure(failure);
       if (current.cancellation.isCancelled) {
+        _sendCancelledByPeer = false;
         _sendPhase = SendPhase.cancelled;
         _statusText = (strings) => strings.sendCancelled;
         terminal = SessionPhase.cancelled;

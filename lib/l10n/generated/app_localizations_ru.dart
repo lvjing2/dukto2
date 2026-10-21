@@ -948,4 +948,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aboutAuthor => 'Автор: lvjing2';
+
+  @override
+  String get peerCancelledTransfer => 'Другое устройство отменило передачу';
 }

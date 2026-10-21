@@ -272,5 +272,6 @@
   "deviceChecking": "Vérification de la connexion…",
   "deviceIdentityChanged": "Identité de l’appareil modifiée",
   "deviceOnline": "En ligne · Identité vérifiée",
-  "aboutAuthor": "Auteur : lvjing2"
+  "aboutAuthor": "Auteur : lvjing2",
+  "peerCancelledTransfer": "L’autre appareil a annulé le transfert"
 }

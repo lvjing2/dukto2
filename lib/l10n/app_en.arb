@@ -260,7 +260,9 @@
     "description": "Dukto2 refreshDevices. Keep names, paths and codes unchanged."
   },
   "searchingDevices": "Searching…",
-  "@searchingDevices": {"description": "Active nearby-device search is in progress."},
+  "@searchingDevices": {
+    "description": "Active nearby-device search is in progress."
+  },
   "findingDevices": "Looking for nearby devices…",
   "@findingDevices": {
     "description": "Dukto2 findingDevices. Keep names, paths and codes unchanged."
@@ -1292,5 +1294,9 @@
   "@deviceOnline": {
     "description": "Selected device is reachable and its full identity matches."
   },
-  "aboutAuthor": "Author: lvjing2"
+  "aboutAuthor": "Author: lvjing2",
+  "peerCancelledTransfer": "The other device cancelled the transfer",
+  "@peerCancelledTransfer": {
+    "description": "Shown to the sender after authenticated confirmation that the receiver cancelled this transfer."
+  }
 }

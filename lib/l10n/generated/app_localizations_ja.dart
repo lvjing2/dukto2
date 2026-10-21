@@ -903,4 +903,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aboutAuthor => '作者：lvjing2';
+
+  @override
+  String get peerCancelledTransfer => '相手のデバイスが転送をキャンセルしました';
 }

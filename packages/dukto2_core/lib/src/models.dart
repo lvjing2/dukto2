@@ -251,8 +251,11 @@ class TransferReceipt {
 }
 
 class TransferCancelled implements Exception {
+  final bool byPeer;
+  TransferCancelled({this.byPeer = false});
   @override
-  String toString() => 'Transfer cancelled';
+  String toString() =>
+      byPeer ? 'Transfer cancelled by peer' : 'Transfer cancelled';
 }
 
 class CancellationToken {

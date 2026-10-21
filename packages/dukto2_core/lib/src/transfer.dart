@@ -36,6 +36,63 @@ class _DigestSink implements Sink<crypto.Digest> {
   void close() {}
 }
 
+/// An optional v1 extension. Only an authenticated, token-scoped positive
+/// response establishes peer cancellation; missing/failed checks mean nothing.
+class _CancellationMonitor {
+  final Uri endpoint;
+  final HttpClient Function() createClient;
+  final void Function() onCancelled;
+  HttpClient? _client;
+  Timer? _timer;
+  Future<bool>? _pending;
+  bool confirmed = false;
+  bool _closed = false;
+
+  _CancellationMonitor(this.endpoint, this.createClient, this.onCancelled);
+
+  void start() {
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => unawaited(check()),
+    );
+  }
+
+  Future<bool> check() {
+    if (confirmed) return Future.value(true);
+    if (_closed) return Future.value(false);
+    return _pending ??= _check().whenComplete(() => _pending = null);
+  }
+
+  Future<bool> _check() async {
+    try {
+      final http = _client ??= createClient()
+        ..connectionTimeout = const Duration(seconds: 2);
+      final cancelled = await (() async {
+        final request = await http.getUrl(endpoint);
+        request.followRedirects = false;
+        final response = await request.close();
+        final body = await _json(response);
+        return response.statusCode == 200 && body['cancelled'] == true;
+      })().timeout(const Duration(seconds: 2));
+      if (!_closed && cancelled) {
+        confirmed = true;
+        onCancelled();
+      }
+    } on Object {
+      _client?.close(force: true);
+      _client = null;
+    }
+    return confirmed;
+  }
+
+  Future<void> close() async {
+    _closed = true;
+    _timer?.cancel();
+    _client?.close(force: true);
+    await _pending;
+  }
+}
+
 Future<Map<String, dynamic>> _json(
   Stream<List<int>> stream, {
   int limit = 8192,
@@ -122,6 +179,8 @@ class TransferServer {
   final ReceiveTargetFactory? createTarget;
   final Duration idleTimeout;
   final Duration batchIdleTimeout;
+  final Duration cancellationReceiptLifetime;
+  final _cancelled = <String, ({String address, DateTime expires})>{};
   final _progress = StreamController<TransferProgress>.broadcast();
   final _received = StreamController<TransferReceipt>.broadcast();
   final _errors = StreamController<TransferFailure>.broadcast();
@@ -149,6 +208,7 @@ class TransferServer {
     this.createTarget,
     this.idleTimeout = _idleTimeout,
     this.batchIdleTimeout = const Duration(minutes: 2),
+    this.cancellationReceiptLifetime = const Duration(minutes: 2),
     TransferDiagnostics? diagnostics,
   }) : _name = name,
        diagnostics = diagnostics ?? TransferDiagnostics(),
@@ -281,7 +341,18 @@ class TransferServer {
   void cancelIncoming() {
     _batch = null;
     final ticket = _ticket;
-    if (ticket != null) {
+    // Once commit starts it may already have published a file. Never advertise
+    // cancellation for that completed/committing transaction.
+    if (ticket != null && ticket.operation.stage != TransferStage.commit) {
+      final now = DateTime.now();
+      _cancelled.removeWhere((_, receipt) => !receipt.expires.isAfter(now));
+      _cancelled[ticket.id] = (
+        address: ticket.offer.remoteAddress,
+        expires: now.add(cancellationReceiptLifetime),
+      );
+      while (_cancelled.length > 128) {
+        _cancelled.remove(_cancelled.keys.first);
+      }
       ticket.operation.fail(TransferCancelled(), StackTrace.current);
       unawaited(
         _discard(ticket).catchError((Object error, StackTrace stack) {
@@ -516,13 +587,28 @@ class TransferServer {
             operation,
             batchToken: batch?.token,
           );
-          await _reply(request, 200, {'token': id});
+          await _reply(request, 200, {'token': id, 'cancelStatus': true});
         } finally {
           _awaitingApproval = false;
         }
         return;
       }
       final segments = request.uri.pathSegments;
+      if (request.method == 'GET' &&
+          segments.length == 3 &&
+          segments[0] == 'v1' &&
+          segments[1] == 'status') {
+        final receipt = _cancelled[segments[2]];
+        if (receipt != null &&
+            receipt.address == request.connectionInfo!.remoteAddress.address &&
+            receipt.expires.isAfter(DateTime.now())) {
+          await _reply(request, 200, {'cancelled': true});
+          return;
+        }
+        if (receipt != null && !receipt.expires.isAfter(DateTime.now())) {
+          _cancelled.remove(segments[2]);
+        }
+      }
       final ticket = _ticket;
       if (segments.length != 3 ||
           segments[0] != 'v1' ||
@@ -532,6 +618,12 @@ class TransferServer {
               ticket.offer.remoteAddress ||
           DateTime.now().isAfter(ticket.expires)) {
         await _reply(request, 404, {'error': 'Unknown or expired transfer'});
+        return;
+      }
+      if (request.method == 'GET' && segments[1] == 'status') {
+        // A read-only poll must never own cleanup or emit a transfer failure if
+        // its connection closes while a separate upload/commit is running.
+        await _reply(request, 200, {'cancelled': false});
         return;
       }
       activeTicket = ticket;
@@ -721,6 +813,7 @@ class TransferServer {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    _cancelled.clear();
     _batch = null;
     _shutdown.complete();
     _expiry?.cancel();
@@ -968,8 +1061,14 @@ class TransferClient {
       if (kind == TransferKind.text) 'kind': 'text',
     }, '');
     final client = _client(peer.fingerprint);
-    void abort() => client.close(force: true);
+    final uploadCancellation = CancellationToken();
+    void abort() {
+      uploadCancellation.cancel();
+      client.close(force: true);
+    }
+
     token.onCancel(abort);
+    _CancellationMonitor? cancellationMonitor;
     String? transferId;
     var committed = false;
     final operation = diagnostics.begin(incoming: false);
@@ -1010,6 +1109,13 @@ class TransferClient {
       if (!RegExp(r'^[a-f0-9]{48}$').hasMatch(transferId)) {
         throw const FormatException('Invalid transfer token');
       }
+      if (accepted['cancelStatus'] == true) {
+        cancellationMonitor = _CancellationMonitor(
+          uri('/v1/status/$transferId'),
+          () => _client(peer.fingerprint),
+          abort,
+        )..start();
+      }
       token.check();
       final request = await client.putUrl(uri('/v1/file/$transferId'));
       operation.move(TransferStage.upload);
@@ -1030,7 +1136,7 @@ class TransferClient {
       var bytes = 0;
       await request
           .addStream(
-            openRead().map((chunk) {
+            _withCancellation(openRead(), uploadCancellation).map((chunk) {
               token.check();
               bytes += chunk.length;
               hash.add(chunk);
@@ -1082,9 +1188,15 @@ class TransferClient {
         operation.fail(TransferCancelled(), stack);
         throw TransferCancelled();
       }
+      if (await cancellationMonitor?.check() == true) {
+        final cancelled = TransferCancelled(byPeer: true);
+        operation.fail(cancelled, stack);
+        throw cancelled;
+      }
       Error.throwWithStackTrace(operation.fail(error, stack), stack);
     } finally {
       token.remove(abort);
+      await cancellationMonitor?.close();
       client.close(force: true);
       if (!committed && transferId != null) {
         final cleanup = _client(peer.fingerprint);

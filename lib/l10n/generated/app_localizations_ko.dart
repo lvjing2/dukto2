@@ -907,4 +907,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aboutAuthor => '제작자: lvjing2';
+
+  @override
+  String get peerCancelledTransfer => '상대 기기에서 전송을 취소했습니다';
 }

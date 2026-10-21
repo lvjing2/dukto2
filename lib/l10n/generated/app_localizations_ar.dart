@@ -930,4 +930,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aboutAuthor => 'المؤلف: lvjing2';
+
+  @override
+  String get peerCancelledTransfer => 'ألغى الجهاز الآخر عملية النقل';
 }

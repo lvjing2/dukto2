@@ -272,5 +272,6 @@
   "deviceChecking": "Проверка соединения…",
   "deviceIdentityChanged": "Идентификатор устройства изменился",
   "deviceOnline": "В сети · Личность подтверждена",
-  "aboutAuthor": "Автор: lvjing2"
+  "aboutAuthor": "Автор: lvjing2",
+  "peerCancelledTransfer": "Другое устройство отменило передачу"
 }

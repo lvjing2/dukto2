@@ -959,4 +959,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aboutAuthor => 'Auteur : lvjing2';
+
+  @override
+  String get peerCancelledTransfer => 'L’autre appareil a annulé le transfert';
 }

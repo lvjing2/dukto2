@@ -135,6 +135,11 @@ class PhoneConnectionController extends TestController {
   bool get canScanQr => true;
 }
 
+class PeerCancelledController extends TestController {
+  @override
+  bool get sendCancelledByPeer => true;
+}
+
 class SearchTestController extends TestController {
   int searches = 0;
   Completer<void> searchFinished = Completer<void>();
@@ -383,7 +388,19 @@ void main() {
       controller.notifyListeners();
       await tester.pump();
       expect(find.text('附近设备 1'), findsOneWidget);
-      expect(find.text('已核对 · 已选择'), findsOneWidget);
+      expect(find.text('已核对 · 已选择'), findsNothing);
+      expect(
+        find
+            .ancestor(
+              of: find.text(controller.selected!.name),
+              matching: find.byType(Semantics),
+            )
+            .evaluate()
+            .map(
+              (element) => (element.widget as Semantics).properties.selected,
+            ),
+        contains(true),
+      );
       controller.dispose();
     },
   );
@@ -432,6 +449,20 @@ void main() {
       expect(c.sentText, isNull);
     },
   );
+
+  for (final kind in [TransferKind.file, TransferKind.text]) {
+    testWidgets('peer cancellation is visible in the $kind panel', (
+      tester,
+    ) async {
+      final c = PeerCancelledController();
+      clean(tester, c);
+      await c.pickFile();
+      c.sendKind = kind;
+      c.sendPhase = SendPhase.cancelled;
+      await show(tester, c, const Size(1024, 768));
+      expect(find.text('对方已取消传输'), findsOneWidget);
+    });
+  }
 
   testWidgets(
     'changing recipient makes an already sent file ready for explicit send',

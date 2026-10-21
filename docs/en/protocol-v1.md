@@ -32,6 +32,12 @@ Tokens bind to source IP, are single-use and expire after two idle minutes; acti
 
 Filenames reject path separators, NUL, control characters, `.` / `..`, `.partial`, Windows reserved names and trailing periods / spaces. Targets are constructed only inside receiver-controlled random subdirectories. Directory trees, symbolic links and remote path writes are not supported.
 
+## Receiver cancellation confirmation (optional v1 extension)
+
+An approved `/v1/offer` response may include `cancelStatus: true`. Only then does the sender poll certificate-pinned `GET /v1/status/:token` once per second, sharing one pending check and reusing its HTTPS connection. Each check has a two-second budget. The response is `{cancelled: false}` for an active, source-IP-bound transaction, or `{cancelled: true}` after that receiver explicitly cancels it. Unknown, expired or differently sourced tokens return 404. Missing responses, disconnects and HTTP errors never establish cancellation.
+
+Cancellation confirmations expire after two minutes and confer no permission to upload, commit or read files. Their in-memory cache is bounded to 128 tokens. A positive confirmation stops both the outgoing source subscription and upload connection and produces a peer-cancelled result; local cancellation takes precedence. Final error handling also checks for a confirmation to cover an upload closing before the next poll. Once commit starts, receiver-initiated cancellation cannot advertise the transaction as cancelled or remove its file. A receiver without the offer flag is not polled; its interrupted uploads may still appear as ordinary transfer failures.
+
 ## Batch authorization (0.1.4)
 
 The `batch` capability enables certificate-pinned HTTPS `POST /v1/batch` with `{token, sender, files: [{name, size}, ...]}`. Clients generate the random 192-bit request token. Manifests contain 2–1000 regular files, at most 1 TiB total and 1 MiB of JSON. The dialog displays sender, count, total and files; one confirmation enables this grant. Peers without capability are asked to update rather than silently falling back to repeated approvals.

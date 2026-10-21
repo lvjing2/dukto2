@@ -948,4 +948,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutAuthor => 'Author: lvjing2';
+
+  @override
+  String get peerCancelledTransfer => 'The other device cancelled the transfer';
 }

@@ -272,5 +272,6 @@
   "deviceChecking": "جارٍ التحقق من الاتصال…",
   "deviceIdentityChanged": "تغيّرت هوية الجهاز",
   "deviceOnline": "متصل · تم التحقق من الهوية",
-  "aboutAuthor": "المؤلف: lvjing2"
+  "aboutAuthor": "المؤلف: lvjing2",
+  "peerCancelledTransfer": "ألغى الجهاز الآخر عملية النقل"
 }

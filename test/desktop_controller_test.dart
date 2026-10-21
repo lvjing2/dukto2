@@ -90,6 +90,62 @@ void main() {
     await root.delete(recursive: true);
   });
 
+  test(
+    'peer cancellation shows its own message and releases foreground resources',
+    () async {
+      final identity = await DeviceIdentity.loadOrCreate(
+        Directory(p.join(root.path, 'identity')),
+      );
+      final receiver = TransferServer(
+        identity: identity,
+        name: 'Receiver',
+        receiveDirectory: Directory(p.join(root.path, 'received')),
+        onOffer: (_) async => true,
+        bindAddress: InternetAddress.loopbackIPv4,
+      );
+      await receiver.start();
+      addTearDown(receiver.close);
+      final cancel = receiver.progress.listen((event) {
+        if (event.bytes > 0) receiver.cancelIncoming();
+      });
+      addTearDown(cancel.cancel);
+      final file = await File(p.join(root.path, 'cancel.bin'))
+          .writeAsBytes(List.filled(4 * 1024 * 1024, 7));
+      final c = DesktopController(
+        'android',
+        connection: PeerConnection(probe: (peer) async => peer),
+        filePicker: () async => [DiskSelection(file)],
+      );
+      try {
+        c.name = 'Controlled sender';
+        c.select(receiver.localPeer);
+        await c.connection.check();
+        await c.pickFile();
+        await c.sendFile();
+        expect(
+          c.sendPhase,
+          SendPhase.cancelled,
+          reason: '${c.lastTransferFailure?.cause}',
+        );
+        expect(c.status, c.strings.peerCancelledTransfer);
+        expect(c.sendCancelledByPeer, isTrue);
+        expect(c.busy, false);
+        expect(c.history, isEmpty);
+        expect(c.error, isNull);
+        expect(
+          calls.where((call) => call.method == 'stopTransfer'),
+          hasLength(1),
+        );
+        expect(await receiver.receiveDirectory.list().toList(), isEmpty);
+      await c.pickFile();
+      expect(c.sendCancelledByPeer, isFalse);
+      } finally {
+        await c.shutdown();
+        c.dispose();
+      }
+    },
+  );
+
   for (final failure in ['none', 'scan', 'native']) {
     test(
       'active search restarts native discovery and resets state: failure=$failure',
