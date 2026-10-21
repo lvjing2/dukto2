@@ -12,7 +12,9 @@ Flatpak and AppImage candidates target native x86_64 and ARM64. Their separate C
 
 Flatpak does not remove kernel, driver, portal or network differences. AppImage does not replace system glibc. Building on Ubuntu 22.04 is a compatibility baseline, not evidence of testing every older distribution. These candidates do not target 32-bit systems or musl environments.
 
-Current result: AppImage and Flatpak passed packaging and Xvfb window startup on x64 and ARM64, including Flatpak installation. See the [validation record](../validation/linux-portable-20261021.json). Physical desktop and transfer acceptance remains pending.
+CI result: AppImage and Flatpak passed packaging and Xvfb window startup on x64 and ARM64, including Flatpak installation. See the [CI validation record](../validation/linux-portable-20261021.json).
+
+Additional rc.6 hardware coverage: on Ubuntu 24.04.3 x64 / Wayland, the ordinary tar.gz build passed bidirectional macOS GUI ↔ Linux GUI small-file transfers with independent SHA-256 checks. AppImage starts, but system GIO and input-method modules report unresolved-symbol errors; publication acceptance remains incomplete. The 4GiB transfer was cancelled in the GUI; receiver cleanup was not verified. The 128MiB transfer and Flatpak hardware tests were not run. Connection-state flapping on a high-latency link remains unresolved. See the [hardware validation record](../validation/linux-hardware-rc6-20261021.json). These observations do not establish acceptance of rc.7 or other distributions.
 
 ## Build and verify
 

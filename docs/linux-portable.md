@@ -4,7 +4,9 @@
 
 通用打包采用 Flatpak 和 AppImage，覆盖原生 x86_64 与 ARM64。它们目前是独立 CI 的候选产物，不会自动发布到 Release 或 Flathub，也不改变现有 tar.gz 的构建流程。
 
-本轮记录：x64 / ARM64 的 AppImage 与 Flatpak 均已通过打包及 Xvfb 窗口启动检查，Flatpak 已完成安装；详见 [验证记录](validation/linux-portable-20261021.json)。真实桌面与互传验收仍待完成。
+CI 中 x64 / ARM64 的 AppImage 与 Flatpak 均通过打包及 Xvfb 窗口启动检查，Flatpak 完成安装；详见 [CI 验证记录](validation/linux-portable-20261021.json)。
+
+rc.6 真机补测：Ubuntu 24.04.3 x64 / Wayland 上，普通 tar.gz 版完成 macOS GUI ↔ Linux GUI 双向小文件传输与两端 SHA-256 校验。AppImage 可以启动，但发现 GIO 和输入法模块的符号加载错误，尚未完成发布验收。4GiB 传输从界面取消，接收端残留清理未核验；128MiB 与 Flatpak 真机测试未执行。高时延下设备连接状态波动也尚未修复。详见 [真机验证记录](validation/linux-hardware-rc6-20261021.json)；这些结果不代表 rc.7 或其他发行版已通过验收。
 
 ## 选择安装方式
 
