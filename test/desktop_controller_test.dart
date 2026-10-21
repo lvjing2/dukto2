@@ -137,8 +137,8 @@ void main() {
           hasLength(1),
         );
         expect(await receiver.receiveDirectory.list().toList(), isEmpty);
-      await c.pickFile();
-      expect(c.sendCancelledByPeer, isFalse);
+        await c.pickFile();
+        expect(c.sendCancelledByPeer, isFalse);
       } finally {
         await c.shutdown();
         c.dispose();
