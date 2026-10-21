@@ -973,17 +973,10 @@ class _TransferDashboardState extends State<TransferDashboard> {
         else
           _transferCard(),
       ],
-      if (c.receiving || c.chosenFile != null)
-        Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: _note(Icons.lock_outline, context.l10n.betweenDevices),
-        ),
       const SizedBox(height: 28),
       const Divider(height: 1),
       const SizedBox(height: 20),
       _history(),
-      const SizedBox(height: 24),
-      _note(Icons.lock_outline, context.l10n.encryptedLan),
     ],
   );
 
@@ -1877,20 +1870,6 @@ class _TransferDashboardState extends State<TransferDashboard> {
       ),
     );
   }
-
-  Widget _note(IconData icon, String text) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(icon, size: 14),
-      const SizedBox(width: 5),
-      Expanded(
-        child: Text(
-          text,
-          style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-        ),
-      ),
-    ],
-  );
 }
 
 class _VerificationCode extends StatelessWidget {

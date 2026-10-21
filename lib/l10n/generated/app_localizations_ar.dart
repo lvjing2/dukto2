@@ -203,7 +203,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendingContent => 'إرسال محتوى';
 
   @override
-  String get directTransfer => 'تُنقل الملفات والنصوص مباشرة بين الأجهزة.';
+  String get directTransfer =>
+      'تُنقل الملفات والنصوص مشفّرة ومباشرة بين الجهازين فقط عبر الشبكة المحلية.';
 
   @override
   String sendTo(String arg0) {
@@ -221,12 +222,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get text => 'نص';
-
-  @override
-  String get betweenDevices => 'يُنقل المحتوى بين هذين الجهازين فقط.';
-
-  @override
-  String get encryptedLan => 'شبكة محلية مباشرة · مشفّر';
 
   @override
   String get statusPrefix => 'مكتمل';

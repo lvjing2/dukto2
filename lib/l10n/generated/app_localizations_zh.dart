@@ -200,7 +200,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendingContent => '发送内容';
 
   @override
-  String get directTransfer => '文件与文本在设备之间直接传输。';
+  String get directTransfer => '文件与文本仅在两台设备之间通过局域网直接加密传输。';
 
   @override
   String sendTo(String arg0) {
@@ -218,12 +218,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get text => '文本';
-
-  @override
-  String get betweenDevices => '内容仅在这两台设备之间传输。';
-
-  @override
-  String get encryptedLan => '局域网直连 · 加密传输';
 
   @override
   String get statusPrefix => '已';
@@ -1101,7 +1095,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get sendingContent => '发送内容';
 
   @override
-  String get directTransfer => '文件与文本在设备之间直接传输。';
+  String get directTransfer => '文件与文本仅在两台设备之间通过局域网直接加密传输。';
 
   @override
   String sendTo(String arg0) {
@@ -1119,12 +1113,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get text => '文本';
-
-  @override
-  String get betweenDevices => '内容仅在这两台设备之间传输。';
-
-  @override
-  String get encryptedLan => '局域网直连 · 加密传输';
 
   @override
   String get statusPrefix => '已';

@@ -207,7 +207,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get directTransfer =>
-      'Los archivos y textos se transfieren directamente entre dispositivos.';
+      'Los archivos y textos se transfieren cifrados y directamente solo entre los dos dispositivos a través de la red local.';
 
   @override
   String sendTo(String arg0) {
@@ -225,13 +225,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get text => 'Texto';
-
-  @override
-  String get betweenDevices =>
-      'El contenido solo se transfiere entre estos dos dispositivos.';
-
-  @override
-  String get encryptedLan => 'LAN directa · Cifrado';
 
   @override
   String get statusPrefix => 'Completado';

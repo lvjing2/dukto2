@@ -206,7 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get directTransfer =>
-      'Files and text transfer directly between devices.';
+      'Files and text are encrypted and transferred directly between the two devices over the local network.';
 
   @override
   String sendTo(String arg0) {
@@ -224,13 +224,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get text => 'Text';
-
-  @override
-  String get betweenDevices =>
-      'Content transfers only between these two devices.';
-
-  @override
-  String get encryptedLan => 'Direct LAN · Encrypted';
 
   @override
   String get statusPrefix => 'Completed';

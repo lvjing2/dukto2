@@ -201,7 +201,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sendingContent => '콘텐츠 전송';
 
   @override
-  String get directTransfer => '파일과 텍스트는 기기 간에 직접 전송됩니다.';
+  String get directTransfer =>
+      '파일과 텍스트는 로컬 네트워크를 통해 두 기기 사이에서만 암호화되어 직접 전송됩니다.';
 
   @override
   String sendTo(String arg0) {
@@ -219,12 +220,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get text => '텍스트';
-
-  @override
-  String get betweenDevices => '콘텐츠는 이 두 기기 사이에서만 전송됩니다.';
-
-  @override
-  String get encryptedLan => 'LAN 직접 전송 · 암호화';
 
   @override
   String get statusPrefix => '완료';

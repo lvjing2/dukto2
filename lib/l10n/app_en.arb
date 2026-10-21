@@ -291,7 +291,7 @@
   "@sendingContent": {
     "description": "Dukto2 sendingContent. Keep names, paths and codes unchanged."
   },
-  "directTransfer": "Files and text transfer directly between devices.",
+  "directTransfer": "Files and text are encrypted and transferred directly between the two devices over the local network.",
   "@directTransfer": {
     "description": "Dukto2 directTransfer. Keep names, paths and codes unchanged."
   },
@@ -319,14 +319,6 @@
   "text": "Text",
   "@text": {
     "description": "Dukto2 text. Keep names, paths and codes unchanged."
-  },
-  "betweenDevices": "Content transfers only between these two devices.",
-  "@betweenDevices": {
-    "description": "Dukto2 betweenDevices. Keep names, paths and codes unchanged."
-  },
-  "encryptedLan": "Direct LAN · Encrypted",
-  "@encryptedLan": {
-    "description": "Dukto2 encryptedLan. Keep names, paths and codes unchanged."
   },
   "statusPrefix": "Completed",
   "@statusPrefix": {

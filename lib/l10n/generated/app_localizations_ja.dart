@@ -200,7 +200,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sendingContent => 'コンテンツを送信';
 
   @override
-  String get directTransfer => 'ファイルとテキストをデバイス間で直接転送します。';
+  String get directTransfer =>
+      'ファイルとテキストは、ローカルネットワーク経由で2台のデバイス間でのみ直接、暗号化して転送されます。';
 
   @override
   String sendTo(String arg0) {
@@ -218,12 +219,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get text => 'テキスト';
-
-  @override
-  String get betweenDevices => 'この 2 台の間でのみ転送されます。';
-
-  @override
-  String get encryptedLan => 'LAN 直接転送 · 暗号化';
 
   @override
   String get statusPrefix => '完了';

@@ -455,7 +455,7 @@ abstract class AppLocalizations {
   /// Dukto2 directTransfer. Keep names, paths and codes unchanged.
   ///
   /// In en, this message translates to:
-  /// **'Files and text transfer directly between devices.'**
+  /// **'Files and text are encrypted and transferred directly between the two devices over the local network.'**
   String get directTransfer;
 
   /// Dukto2 sendTo. Keep names, paths and codes unchanged.
@@ -487,18 +487,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text'**
   String get text;
-
-  /// Dukto2 betweenDevices. Keep names, paths and codes unchanged.
-  ///
-  /// In en, this message translates to:
-  /// **'Content transfers only between these two devices.'**
-  String get betweenDevices;
-
-  /// Dukto2 encryptedLan. Keep names, paths and codes unchanged.
-  ///
-  /// In en, this message translates to:
-  /// **'Direct LAN · Encrypted'**
-  String get encryptedLan;
 
   /// Dukto2 statusPrefix. Keep names, paths and codes unchanged.
   ///
