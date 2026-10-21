@@ -4,6 +4,14 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6-rc.9+16 — Release candidate
+
+- Distinguish confirmed peer cancellation from network failures, stop uploads, and clean up temporary resources.
+- Tolerate transient or slow peer identity probes without bypassing identity checks before sending.
+- Simplify selected-device rows and combine repeated encrypted LAN transfer descriptions across all supported languages.
+- Keep nearby-device counts visible during active discovery.
+- Increase Android versionCode to 16, retaining the existing application and upload signing keys.
+
 ## 0.1.6-rc.8+15 — Release candidate
 
 - Isolate outgoing discovery announcements from the receive socket, so unavailable multicast or broadcast routes cannot disable reception or the next departure announcement.

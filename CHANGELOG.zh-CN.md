@@ -4,6 +4,14 @@
 
 版本号描述源码演进，不表示已经发布对应安装包。各平台实际构建和互传范围以 [验证记录](docs/validation.md) 为准。
 
+## 0.1.6-rc.9+16 — Release candidate
+
+- Distinguish confirmed peer cancellation from network failures, stop uploads, and clean up temporary resources.
+- Tolerate transient or slow peer identity probes without bypassing identity checks before sending.
+- Simplify selected-device rows and combine repeated encrypted LAN transfer descriptions across all supported languages.
+- Keep nearby-device counts visible during active discovery.
+- Increase Android versionCode to 16, retaining the existing application and upload signing keys.
+
 ## 0.1.6-rc.8+15 — 发布候选
 
 - 发现公告使用独立发送 socket，避免不支持组播或广播的路由错误关闭接收端，影响继续接收公告和下一次离线通知。

@@ -754,9 +754,7 @@ class _TransferDashboardState extends State<TransferDashboard> {
               child: Semantics(
                 liveRegion: true,
                 child: Text(
-                  c.searchingDevices
-                      ? context.l10n.searchingDevices
-                      : context.l10n.nearbyDevices((c.peers.length).toString()),
+                  context.l10n.nearbyDevices(peers.length.toString()),
                   style: TextStyle(
                     fontSize: 13,
                     color: colors.onSurfaceVariant,

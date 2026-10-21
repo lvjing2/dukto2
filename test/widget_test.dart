@@ -214,7 +214,8 @@ void main() {
       await tester.tap(find.byTooltip('刷新设备'));
       await tester.pump();
       expect(c.searches, 1);
-      expect(find.text('正在搜索…'), findsOneWidget);
+      expect(find.text('正在搜索…'), findsNothing);
+      expect(find.text('附近设备 0'), findsOneWidget);
       expect(
         tester
             .widget<IconButton>(
@@ -252,7 +253,8 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(c.searches, 2);
       expect(c.searchingDevices, isTrue);
-      expect(find.text('正在搜索…'), findsOneWidget);
+      expect(find.text('正在搜索…'), findsNothing);
+      expect(find.text('附近设备 0'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.byType(RefreshProgressIndicator), findsNothing);
       c.searchFinished.complete();
