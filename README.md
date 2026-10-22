@@ -149,7 +149,7 @@ GitHub Actions provides analysis, tests and native builds for five platforms; ve
 
 Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/dukto/), and to [xuzhen/dukto](https://github.com/xuzhen/dukto) and the community for maintaining and porting the project.
 
-On 2026-10-22 (China time), Dukto creator Emanuele Colombo agreed to the name “Dukto2” on the condition that its source remains open source, preferably under MIT or Apache-2.0. Dukto2 continues under [Apache License 2.0](LICENSE) and is independently maintained by lvjing2. Please direct support and feature requests to [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues); the original author does not maintain or support this project.
+The original author has agreed to the Dukto2 name, provided the source remains open. Dukto2 uses [Apache-2.0](LICENSE), is independently maintained by lvjing2, and handles support through [Issues](https://github.com/lvjing2/dukto2/issues).
 
 The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. Legacy Dukto protocol compatibility is planned for future work. See [acknowledgements](ACKNOWLEDGEMENTS.md).
 

@@ -164,7 +164,7 @@ GitHub Actions 提供分析、测试及五平台原生构建，标签可触发�
 
 感谢 **Emanuele Colombo** 创作了 [Dukto](https://www.msec.it/blog/dukto/)，让不同系统之间的局域网传输变得简单。也感谢 [xuzhen/dukto](https://github.com/xuzhen/dukto) 及社区贡献者持续维护和移植这个项目。
 
-Dukto 原作者 Emanuele Colombo 已于 2026-10-22（北京时间）同意使用「Dukto2」名称，条件是项目源码保持开源，并表示倾向继续使用 MIT 或 Apache-2.0。Dukto2 继续采用 [Apache License 2.0](LICENSE)，由 lvjing2 独立维护；使用问题与功能请求请提交到 [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues)，原作者不承担本项目的维护或支持。
+原作者已同意使用 Dukto2 名称，条件是源码保持开源。项目采用 [Apache-2.0](LICENSE)，由 lvjing2 独立维护，问题反馈请至 [Issues](https://github.com/lvjing2/dukto2/issues)。
 
 项目以 Flutter / Dart 独立重写为目标，使用新的传输核心与协议；旧 Dukto 协议兼容留待后续实现。
 
