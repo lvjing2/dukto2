@@ -147,6 +147,7 @@ jobs:
           source = Path('docs/releases') / (tag + '.md')
           fallback = 'See the [changelog](https://github.com/' + os.environ['GH_REPO'] + '/blob/' + tag + '/CHANGELOG.md) for changes.\n'
           notes = source.read_text() if source.is_file() else fallback
+          notes += '\n\n' + Path('docs/releases/DISTRIBUTION.md').read_text()
           if any('\u4e00' <= char <= '\u9fff' for char in notes):
               raise SystemExit('Release notes must be written in English.')
           Path('notes.md').write_text(notes)

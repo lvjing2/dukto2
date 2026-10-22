@@ -10,7 +10,7 @@ Thank you to **Emanuele Colombo** for creating Dukto. Dukto2 aims to continue it
 - Community maintenance: [xuzhen/dukto](https://github.com/xuzhen/dukto).
 - Thanks to the [community contributors](https://github.com/xuzhen/dukto/graphs/contributors) who maintain and port it.
 
-Dukto2 aims to be an independent Flutter / Dart rewrite and does not currently support the old protocol. The [initial provenance review](docs/en/source-provenance-audit.md) records comparisons and historical evidence gaps; changing language or framework alone does not prove the absence of copying, adaptation or translation. We hope to discuss continuity with the original author. No official successor authorization, approval or endorsement is claimed. This description will reflect further provenance findings and actual communication.
+Dukto2 aims to be an independent Flutter / Dart rewrite and does not currently support the old protocol. The [initial provenance review](docs/en/source-provenance-audit.md) records comparisons and historical evidence gaps; changing language or framework alone does not prove the absence of copying, adaptation or translation. On 2026-10-22 (China time), Dukto creator Emanuele Colombo agreed to the name “Dukto2” on the condition that its source remains open source, preferably under MIT or Apache-2.0. Dukto2 continues under [Apache License 2.0](LICENSE) and is independently maintained by lvjing2. Please direct support and feature requests to [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues); the original author does not maintain or support this project. Naming permission does not change third-party code or asset licenses or assign code-review or release responsibility to the original author.
 
 ## LocalSend design references
 

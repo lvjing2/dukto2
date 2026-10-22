@@ -10,7 +10,7 @@
 - 社区维护版本：[xuzhen/dukto](https://github.com/xuzhen/dukto)
 - 感谢参与移植和维护的[社区贡献者](https://github.com/xuzhen/dukto/graphs/contributors)。
 
-Dukto2 以使用 Flutter / Dart 独立重写为目标，目前尚不兼容旧协议。[首轮来源核查](docs/source-provenance-audit.md) 记录了源码对照结果和历史证据缺口；更换语言或框架不能单独证明不存在复制、改写或翻译。我们希望与原作者沟通延续项目的意向；当前没有声称获得原作者的官方继任授权、认可或背书。后续介绍将根据来源核查和实际沟通结果更新。
+Dukto2 以使用 Flutter / Dart 独立重写为目标，目前尚不兼容旧协议。[首轮来源核查](docs/source-provenance-audit.md) 记录了源码对照结果和历史证据缺口；更换语言或框架不能单独证明不存在复制、改写或翻译。Dukto 原作者 Emanuele Colombo 已于 2026-10-22（北京时间）同意使用「Dukto2」名称，条件是项目源码保持开源，并表示倾向继续使用 MIT 或 Apache-2.0。Dukto2 继续采用 [Apache License 2.0](LICENSE)，由 lvjing2 独立维护；使用问题与功能请求请提交到 [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues)，原作者不承担本项目的维护或支持。 名称使用同意不改变第三方代码与素材的许可，也不表示原作者承担代码审核或发行责任。
 
 ## LocalSend 设计参考
 

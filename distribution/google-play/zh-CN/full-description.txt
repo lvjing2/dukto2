@@ -21,6 +21,6 @@
 两端设备必须能够直接通信，访客网络或路由器隔离可能阻止连接。后台传输受系统限制。中断的文件需要重新发送，尚未实现断点续传、文件夹传输及旧 Dukto 协议兼容。
 
 致敬与创作说明
-感谢 Emanuele Colombo 创作 Dukto，以及社区的持续维护。Dukto2 是表达致敬的独立项目，不代表原作者的官方继任或背书。项目由人在指导和审阅下，主要借助 AI 创作，自有源码采用 Apache License 2.0。
+感谢 Emanuele Colombo 创作 Dukto，以及社区的持续维护。Dukto2 是表达致敬的独立项目，原作者已同意 Dukto2 名称，条件是源码保持开源；项目由 lvjing2 独立维护，支持请求请提交至 Dukto2 Issues。项目由人在指导和审阅下，主要借助 AI 创作，自有源码采用 Apache License 2.0。
 
 Android 扫码使用 Google ML Kit。隐私政策会分别说明 Dukto2 的本机存储、设备间传输和扫码 SDK 的诊断与使用数据行为。

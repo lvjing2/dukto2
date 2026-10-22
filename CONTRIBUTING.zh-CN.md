@@ -42,3 +42,5 @@ Flutter 可安装在 PATH 中，也可用 `FLUTTER_BIN` 指定绝对路径。Win
 ## 贡献许可
 
 除非另有明确约定，有意提交并纳入 Dukto2 的贡献按项目的 [Apache License 2.0](LICENSE) 提供。请保留第三方版权和许可说明，并注明引入或改写代码的来源。
+
+Dukto2 由本项目独立维护，使用问题和功能请求请提交到本仓库 Issues，不向原 Dukto 作者提出支持请求。

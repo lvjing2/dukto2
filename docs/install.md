@@ -1,6 +1,6 @@
 # 安装 Dukto2
 
-下载对应系统的一个附件即可。APK 可直接安装；桌面压缩包需要完整解压，不能只取出可执行文件。当前仍是开发预览，公开下载渠道尚未启用。
+下载对应系统的一个附件即可。APK 可直接安装；桌面压缩包需要完整解压，不能只取出可执行文件。当前为开发预览，从 [GitHub Releases](https://github.com/lvjing2/dukto2/releases) 下载。无商店账号阶段的分发范围与校验方法见 [直接下载发行方案](direct-downloads.md)。
 
 ## Android
 

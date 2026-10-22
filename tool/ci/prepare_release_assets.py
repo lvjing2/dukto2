@@ -19,6 +19,9 @@ import zipfile
 TARGETS = {'android': '.apk', 'windows': '-x64.zip', 'linux': '-x64.tar.gz',
            'windows-arm64': '.zip', 'linux-arm64': '.tar.gz',
            'macos': '-adhoc.zip', 'ios': '-device-unsigned.zip'}
+# Keep unsigned iOS output in CI, outside the public installation downloads.
+PUBLIC_TARGETS = tuple(target for target in TARGETS if target != 'ios')
+INSTALL_GUIDE = Path(__file__).resolve().parents[2] / 'docs/releases/DISTRIBUTION.md'
 EXTRA = {'RELEASE-INFO.json', 'SHA256SUMS.txt'}
 
 
@@ -98,7 +101,8 @@ def prepare(source, dest, version):
     prefix = 'Dukto2-' + version.replace('+', '-build.') + '-'
     inputs = []
     commits = set()
-    for target, suffix in TARGETS.items():
+    for target in PUBLIC_TARGETS:
+        suffix = TARGETS[target]
         artifact = source / (prefix + target + suffix)
         info = json.loads((source / (prefix + target + '.json')).read_text())
         if info['target'] != target or info['version'] != version or not re.fullmatch(r'[0-9a-f]{40}', info['commit']):
@@ -118,6 +122,9 @@ def prepare(source, dest, version):
         inputs.append((target, artifact, info))
     if len(commits) != 1:
         raise ValueError('Cannot combine builds from different source commits')
+    install_guide = INSTALL_GUIDE.read_text()
+    if any('\u4e00' <= char <= '\u9fff' for char in install_guide):
+        raise ValueError('Release installation guide must be written in English')
     dest.mkdir(parents=True)
     for target, artifact, info in inputs:
         output = dest / artifact.name
@@ -129,6 +136,9 @@ def prepare(source, dest, version):
             repack_tar(artifact, output, info)
         else:
             repack_zip(artifact, output, info)
+    (dest / 'INSTALL.md').write_text('# Dukto2 ' + version.split('+')[0] + '\n\n' + install_guide)
+    files = sorted(dest.iterdir())
+    (dest / 'SHA256SUMS.txt').write_text(''.join(digest(path) + '  ' + path.name + '\n' for path in files))
     return sorted(dest.iterdir())
 
 

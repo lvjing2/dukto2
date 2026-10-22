@@ -25,10 +25,10 @@
 
 ## 致谢与 AI 创作
 
-感谢 Emanuele Colombo 创作 Dukto，以及 xuzhen/dukto 和社区的维护。Dukto2 表达致敬与延续意愿，目前没有原作者的官方继任授权或背书。
+感谢 Emanuele Colombo 创作 Dukto，以及 xuzhen/dukto 和社区的维护。原作者已同意 Dukto2 名称，条件是源码保持开源。项目采用 Apache-2.0，由 lvjing2 独立维护；支持请求请提交到 Dukto2 Issues，不由原作者处理。
 
-项目主要由 OpenAI Codex 在人的指导和审阅下生成、测试和迭代。源码自有部分选择 Apache-2.0，第三方依赖保留各自许可。仓库当前仍为私有，开源公开和下载渠道会在维护者确认后公布。
+项目主要由 OpenAI Codex 在人的指导和审阅下生成、测试和迭代。源码自有部分选择 Apache-2.0，第三方依赖保留各自许可。源码已公开：[lvjing2/dukto2](https://github.com/lvjing2/dukto2)，预览包通过 GitHub Releases 分发。
 
-候选版本：0.1.6-rc.3+10。下载链接：待维护者指定公开分发渠道后填写，本文尚未发布。
+预览下载：[GitHub Releases](https://github.com/lvjing2/dukto2/releases)。安装限制与校验方法见 [直接下载发行方案](../../docs/direct-downloads.md)。本文仍是社区发布草稿，未代为发布。
 
 反馈邮箱：leojames.googol@gmail.com。请提供两端版本、系统、网络环境、操作步骤和错误提示；日志或截图提交前请移除个人文件内容、姓名及地址。不同设备实际验证范围以随包说明为准。

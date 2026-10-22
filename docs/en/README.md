@@ -12,5 +12,6 @@ English | [Simplified Chinese](../README.md)
 | Protocol and implementation | [Protocol v1](protocol-v1.md), [reliability and sessions](reliability.md) |
 | Validation and UI | [Coverage](validation.md), [screenshots](../screenshots/README.en.md), [UI guidelines](../../design/DESIGN.en.md) |
 | Sources and licenses | [Provenance review](source-provenance-audit.md), [third-party notices](../../THIRD_PARTY_NOTICES.md), [acknowledgements and AI creation](../../ACKNOWLEDGEMENTS.md), [Apache-2.0](../../LICENSE) |
+| Distribution before store enrollment | [Direct-download guide](direct-downloads.md) |
 | Android releases | [Android channel signing](android-signing.md) |
 | Development and distribution | [Contributing](../../CONTRIBUTING.md), [changelog](../../CHANGELOG.md), [Release CI](release-ci.md), [security](../../SECURITY.md) |

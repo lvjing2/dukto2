@@ -17,7 +17,7 @@ Dukto2 是一款跨平台局域网文件与文本传输工具，让电脑、手�
 
 ## 版本与平台验证
 
-当前源码为 **0.1.6-rc.10 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，尚未发布正式安装包。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
+当前源码为 **0.1.6-rc.10 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，[GitHub Releases](https://github.com/lvjing2/dukto2/releases) 已提供预览下载；Android APK 使用项目应用签名密钥，桌面签名与安装限制见 [直接下载发行方案](docs/direct-downloads.md)，应用商店分发尚待接入。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
 
 | 平台 | 已完成验证 | 尚未覆盖或完成 |
 | --- | --- | --- |
@@ -164,7 +164,7 @@ GitHub Actions 提供分析、测试及五平台原生构建，标签可触发�
 
 感谢 **Emanuele Colombo** 创作了 [Dukto](https://www.msec.it/blog/dukto/)，让不同系统之间的局域网传输变得简单。也感谢 [xuzhen/dukto](https://github.com/xuzhen/dukto) 及社区贡献者持续维护和移植这个项目。
 
-Dukto2 的目标是延续原作的实用精神，用现代框架继续探索跨系统文件互传。目前是独立重写项目；名称表达致敬与延续意愿，尚不代表原作者授予的官方继任身份或背书。项目发起人计划与原作者沟通，相关关系将以实际沟通结果更新。
+Dukto 原作者 Emanuele Colombo 已于 2026-10-22（北京时间）同意使用「Dukto2」名称，条件是项目源码保持开源，并表示倾向继续使用 MIT 或 Apache-2.0。Dukto2 继续采用 [Apache License 2.0](LICENSE)，由 lvjing2 独立维护；使用问题与功能请求请提交到 [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues)，原作者不承担本项目的维护或支持。
 
 项目以 Flutter / Dart 独立重写为目标，使用新的传输核心与协议；旧 Dukto 协议兼容留待后续实现。
 

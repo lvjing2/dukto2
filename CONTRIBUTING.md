@@ -40,3 +40,5 @@ See [SECURITY.md](SECURITY.md) for vulnerabilities and [Release CI](docs/en/rele
 ## Contribution license
 
 Unless explicitly agreed otherwise, contributions intentionally submitted for inclusion are provided under the project's [Apache License 2.0](LICENSE). Retain third-party copyright and license notices and record sources for introduced or adapted code.
+
+Dukto2 is independently maintained. Please use this repository’s Issues for support and feature requests rather than contacting the original Dukto author.

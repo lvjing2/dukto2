@@ -20,7 +20,7 @@
 
 每个平台上传独立 artifact，默认保留 30 天；解压后得到版本化压缩包或 APK / AAB、SHA-256 sidecar 和 JSON 构建元数据。Actions artifact 有保留期限，草稿 Release 中的附件另行保存。当前不创建商店版本、安装器或自动更新服务；Android 签名及 Play 首次配置见 [双渠道签名说明](android-signing.md)。
 
-GitHub Release 面向用户只附七个文件：Android APK、Windows x64 / ARM64 zip、Linux x64 / ARM64 tar.gz、macOS 通用 zip、iOS unsigned zip。Android APK 保持原始字节和签名，应用许可已在 APK 内；其他压缩包内附 `RELEASE-INFO.json` 和 `SHA256SUMS.txt`，原始文件、权限和链接保留。iOS 仍需自行签名后使用。Play AAB、独立 JSON、外置校验文件及许可包保留在 CI artifact；推广素材保留在仓库与本机。CI 重跑已有草稿时保留人工整理的 Release Note。
+GitHub Release 面向用户提供六个应用附件（Android APK、Windows x64 / ARM64 ZIP、Linux x64 / ARM64 TAR.GZ、macOS ZIP），以及 `INSTALL.md` 和外置 `SHA256SUMS.txt`。APK 字节和签名保持不变；压缩包保留原文件、权限、链接，并附构建元数据与内部校验。未签名 iOS、Play AAB 和详细元数据仅留 CI artifact。Release 正文追加统一英文 [发行说明](releases/DISTRIBUTION.md)。CI 重跑会从源码更新草稿说明，但拒绝覆盖已发布 Release。本策略仅影响后续构建，不改变已有附件；详见 [直接下载发行方案](direct-downloads.md)。
 
 ```sh
 gh workflow run release.yml --repo lvjing2/dukto2 --ref main

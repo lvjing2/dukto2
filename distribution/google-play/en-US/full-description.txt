@@ -21,6 +21,6 @@ CURRENT LIMITS
 Devices must be directly reachable on the network. Guest Wi-Fi and router isolation can prevent connections. Background transfers depend on the operating system. Interrupted files must be sent again; resumable transfers and folder transfers are not implemented. Compatibility with the original Dukto protocol is not yet available.
 
 ABOUT THE PROJECT
-Dukto2 is an independent project inspired by Dukto, created by Emanuele Colombo, with thanks to the community. It is not an officially endorsed successor. The project is created with AI assistance under human direction and uses Apache License 2.0 for its own source code.
+Dukto2 is an independent project inspired by Dukto, created by Emanuele Colombo, with thanks to the community. The original creator agreed to the Dukto2 name on the condition that the source remains open source. Dukto2 is independently maintained; support requests belong in the Dukto2 issue tracker. The project is created with AI assistance under human direction and uses Apache License 2.0 for its own source code.
 
 Android QR scanning uses Google ML Kit. Its diagnostic and usage-data practices are described in the privacy policy alongside Dukto2's local storage and device-to-device transfers.

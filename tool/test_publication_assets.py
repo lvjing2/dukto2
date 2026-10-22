@@ -57,7 +57,15 @@ class PublicationAssetsTest(unittest.TestCase):
             root = Path(temp)
             version = self.fixtures(root)
             outputs = publication.prepare(root, root / 'publish', version)
-            self.assertEqual(len(outputs), 7)
+            self.assertEqual(len(outputs), 8)
+            self.assertFalse(any('ios' in p.name for p in outputs))
+            self.assertFalse(any(p.suffix == '.aab' for p in outputs))
+            self.assertIn('Dukto2 1.2.3-rc.1', (root / 'publish/INSTALL.md').read_text())
+            sums = (root / 'publish/SHA256SUMS.txt').read_text().splitlines()
+            self.assertEqual(len(sums), 7)
+            for line in sums:
+                expected, name = line.split('  ', 1)
+                self.assertEqual(publication.digest(root / 'publish' / name), expected)
             apk = next(p for p in outputs if p.suffix == '.apk')
             self.assertEqual(apk.read_bytes(), (root / apk.name).read_bytes())
             for archive in (p for p in outputs if p.suffix == '.zip'):
@@ -74,6 +82,16 @@ class PublicationAssetsTest(unittest.TestCase):
                 self.assertEqual(z.getmember('bundle/current').linkname, 'dukto2')
                 self.assertIn('RELEASE-INFO.json', z.getnames())
                 self.assertIn('SHA256SUMS.txt', z.getnames())
+
+    def test_unsigned_ios_artifacts_are_not_required_for_public_downloads(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            version = self.fixtures(root)
+            for path in root.glob('*ios*'):
+                path.unlink()
+            outputs = publication.prepare(root, root / 'publish', version)
+            self.assertEqual(len(outputs), 8)
+            self.assertFalse(any('ios' in path.name for path in outputs))
 
     def test_changed_payload_or_mixed_source_is_rejected_before_output(self):
         for corrupt_payload in (True, False):

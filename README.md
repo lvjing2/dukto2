@@ -17,7 +17,7 @@ Dukto2 shares files and text directly between computers, phones and tablets on t
 
 ## Version and platform coverage
 
-The source is a **0.1.6-rc.10 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). There is no official signed distribution yet. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
+The source is a **0.1.6-rc.10 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). Preview downloads are available from [GitHub Releases](https://github.com/lvjing2/dukto2/releases); Android APKs use the project application-signing key, while desktop signing and installation limits are listed in the [direct-download guide](docs/en/direct-downloads.md). Store distribution is pending. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
 | Platform | Verified | Not yet covered |
 | --- | --- | --- |
@@ -149,7 +149,7 @@ GitHub Actions provides analysis, tests and native builds for five platforms; ve
 
 Thank you to **Emanuele Colombo**, creator of [Dukto](https://www.msec.it/blog/dukto/), and to [xuzhen/dukto](https://github.com/xuzhen/dukto) and the community for maintaining and porting the project.
 
-Dukto2 aims to continue the original's practical spirit with a modern implementation. Its name expresses a tribute and an intention to continue that experience; it does not imply official successor status, authorization or endorsement by the original author. The initiator plans to contact the author, and this description will be updated to reflect any actual agreement.
+On 2026-10-22 (China time), Dukto creator Emanuele Colombo agreed to the name “Dukto2” on the condition that its source remains open source, preferably under MIT or Apache-2.0. Dukto2 continues under [Apache License 2.0](LICENSE) and is independently maintained by lvjing2. Please direct support and feature requests to [Dukto2 Issues](https://github.com/lvjing2/dukto2/issues); the original author does not maintain or support this project.
 
 The project aims to be an independent Flutter / Dart rewrite with its own transfer core and protocol. Legacy Dukto protocol compatibility is planned for future work. See [acknowledgements](ACKNOWLEDGEMENTS.md).
 
