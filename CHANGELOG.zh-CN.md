@@ -4,6 +4,12 @@
 
 版本号描述源码演进，不表示已经发布对应安装包。各平台实际构建和互传范围以 [验证记录](docs/validation.md) 为准。
 
+## 0.1.6+19
+
+- Publish the pre-background-reception baseline as a numbered release.
+- Abort stalled uploads and clean up temporary resources without publishing partial files.
+- Update naming acknowledgements and direct-download guidance.
+
 ## 0.1.6-rc.10+17 — Release candidate
 
 - Distinguish confirmed peer cancellation from network failures, stop uploads, and clean up temporary resources.

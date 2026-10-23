@@ -4,6 +4,12 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.6+19
+
+- Publish the pre-background-reception baseline as a numbered release.
+- Abort stalled uploads and clean up temporary resources without publishing partial files.
+- Update naming acknowledgements and direct-download guidance.
+
 ## 0.1.6-rc.10+17 — Release candidate
 
 - Distinguish confirmed peer cancellation from network failures, stop uploads, and clean up temporary resources.
