@@ -37,7 +37,7 @@ bash install.sh
 # Original rc.2 package: python3 install_linux_user.py .
 ```
 
-Registration installs the current user's desktop entry and icon without sudo or moving the bundle. Re-register after moving or updating it. Completion notifications need a desktop service and the installed desktop file for the app ID. No deb, rpm or AppImage is provided.
+Registration installs the current user's desktop entry and icon without sudo or moving the bundle. Re-register after moving or updating it. Completion notifications need a desktop service and the installed desktop file for the app ID. The existing release does not include deb or rpm packages. See [portable package candidates](linux-portable.md) for the separate Flatpak / AppImage build and validation workflow.
 
 ## System behavior
 
