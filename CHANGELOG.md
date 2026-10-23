@@ -4,10 +4,12 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
-## Unreleased
+## 0.1.6-rc.11+18 — Release candidate
 
 - Add optional Android background reception, off by default, with a 30-minute waiting window and notifications that open the existing receive confirmation.
 - Preserve the receive runtime across Activity recreation; stop waiting on opt-out or expiry without granting automatic file consent.
+
+- Abort stalled uploads without publishing partial files.
 
 ## 0.1.6-rc.10+17 — Release candidate
 

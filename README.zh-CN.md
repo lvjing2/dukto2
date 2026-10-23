@@ -17,7 +17,7 @@ Dukto2 是一款跨平台局域网文件与文本传输工具，让电脑、手�
 
 ## 版本与平台验证
 
-当前源码为 **0.1.6-rc.10 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，[GitHub Releases](https://github.com/lvjing2/dukto2/releases) 已提供预览下载；Android APK 使用项目应用签名密钥，桌面签名与安装限制见 [直接下载发行方案](docs/direct-downloads.md)，应用商店分发尚待接入。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
+当前源码为 **0.1.6-rc.11 开发预览**，仓库为 [lvjing2/dukto2](https://github.com/lvjing2/dukto2)，[GitHub Releases](https://github.com/lvjing2/dukto2/releases) 已提供预览下载；Android APK 使用项目应用签名密钥，桌面签名与安装限制见 [直接下载发行方案](docs/direct-downloads.md)，应用商店分发尚待接入。未实现旧 Dukto 协议兼容、断点续传或文件夹传输。
 
 | 平台 | 已完成验证 | 尚未覆盖或完成 |
 | --- | --- | --- |
