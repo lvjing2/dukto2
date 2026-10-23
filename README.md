@@ -17,7 +17,7 @@ Dukto2 shares files and text directly between computers, phones and tablets on t
 
 ## Version and platform coverage
 
-The source is a **0.1.6-rc.11 development preview**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). Preview downloads are available from [GitHub Releases](https://github.com/lvjing2/dukto2/releases); Android APKs use the project application-signing key, while desktop signing and installation limits are listed in the [direct-download guide](docs/en/direct-downloads.md). Store distribution is pending. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
+The source is a **0.1.7 release**, hosted at [lvjing2/dukto2](https://github.com/lvjing2/dukto2). Preview downloads are available from [GitHub Releases](https://github.com/lvjing2/dukto2/releases); Android APKs use the project application-signing key, while desktop signing and installation limits are listed in the [direct-download guide](docs/en/direct-downloads.md). Store distribution is pending. Legacy Dukto compatibility, resumable transfers and folder transfers are not implemented. Repository documentation is available in English and Simplified Chinese; the app supports 10 languages, follows the system by default, and remembers a language selected in Settings.
 
 | Platform | Verified | Not yet covered |
 | --- | --- | --- |
