@@ -944,4 +944,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get peerCancelledTransfer => 'Другое устройство отменило передачу';
+
+  @override
+  String get backgroundReceive => 'Фоновый приём';
+
+  @override
+  String get backgroundReceiveHint =>
+      'Ожидание запросов 30 минут после выхода. Ограничения энергосбережения системы сохраняются.';
+
+  @override
+  String get backgroundReceiveActive => 'Ожидание запросов · до 30 минут';
+
+  @override
+  String get stopBackgroundReceive => 'Завершить ожидание';
+
+  @override
+  String get receiveRequests => 'Запросы на приём';
+
+  @override
+  String get receiveRequestBody => 'Нажмите, проверьте список и подтвердите.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'Разрешите уведомления и оба канала приёма в настройках системы.';
 }

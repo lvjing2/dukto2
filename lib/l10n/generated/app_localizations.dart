@@ -1747,6 +1747,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The other device cancelled the transfer'**
   String get peerCancelledTransfer;
+
+  /// No description provided for @backgroundReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Background reception'**
+  String get backgroundReceive;
+
+  /// No description provided for @backgroundReceiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for requests for 30 minutes after leaving the app. System battery limits still apply.'**
+  String get backgroundReceiveHint;
+
+  /// No description provided for @backgroundReceiveActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for requests · up to 30 minutes'**
+  String get backgroundReceiveActive;
+
+  /// No description provided for @stopBackgroundReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop waiting'**
+  String get stopBackgroundReceive;
+
+  /// No description provided for @receiveRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive requests'**
+  String get receiveRequests;
+
+  /// No description provided for @receiveRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review the list and confirm.'**
+  String get receiveRequestBody;
+
+  /// No description provided for @backgroundReceiveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications and both background reception channels in system settings.'**
+  String get backgroundReceiveUnavailable;
 }
 
 class _AppLocalizationsDelegate

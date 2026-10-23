@@ -905,4 +905,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get peerCancelledTransfer => '상대 기기에서 전송을 취소했습니다';
+
+  @override
+  String get backgroundReceive => '백그라운드 수신 대기';
+
+  @override
+  String get backgroundReceiveHint =>
+      '앱을 나간 후 30분 동안 요청을 기다립니다. 시스템 절전 제한은 계속 적용됩니다.';
+
+  @override
+  String get backgroundReceiveActive => '수신 대기 중 · 최대 30분';
+
+  @override
+  String get stopBackgroundReceive => '대기 중지';
+
+  @override
+  String get receiveRequests => '수신 요청';
+
+  @override
+  String get receiveRequestBody => '눌러서 목록을 확인하고 승인하세요.';
+
+  @override
+  String get backgroundReceiveUnavailable => '시스템 설정에서 알림과 두 수신 알림 채널을 허용하세요.';
 }

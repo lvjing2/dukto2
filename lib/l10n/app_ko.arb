@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "기기 식별 정보가 변경됨",
   "deviceOnline": "온라인 · 식별 정보 확인됨",
   "aboutAuthor": "제작자: lvjing2",
-  "peerCancelledTransfer": "상대 기기에서 전송을 취소했습니다"
+  "peerCancelledTransfer": "상대 기기에서 전송을 취소했습니다",
+  "backgroundReceive": "백그라운드 수신 대기",
+  "backgroundReceiveHint": "앱을 나간 후 30분 동안 요청을 기다립니다. 시스템 절전 제한은 계속 적용됩니다.",
+  "backgroundReceiveActive": "수신 대기 중 · 최대 30분",
+  "stopBackgroundReceive": "대기 중지",
+  "receiveRequests": "수신 요청",
+  "receiveRequestBody": "눌러서 목록을 확인하고 승인하세요.",
+  "backgroundReceiveUnavailable": "시스템 설정에서 알림과 두 수신 알림 채널을 허용하세요."
 }

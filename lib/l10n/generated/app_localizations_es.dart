@@ -957,4 +957,28 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get peerCancelledTransfer =>
       'El otro dispositivo canceló la transferencia';
+
+  @override
+  String get backgroundReceive => 'Recepción en segundo plano';
+
+  @override
+  String get backgroundReceiveHint =>
+      'Espera solicitudes durante 30 minutos al salir. Se aplican los límites de batería del sistema.';
+
+  @override
+  String get backgroundReceiveActive =>
+      'Esperando solicitudes · hasta 30 minutos';
+
+  @override
+  String get stopBackgroundReceive => 'Dejar de esperar';
+
+  @override
+  String get receiveRequests => 'Solicitudes de recepción';
+
+  @override
+  String get receiveRequestBody => 'Toca para revisar la lista y confirmar.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'Permite las notificaciones y ambos canales de recepción en los ajustes del sistema.';
 }

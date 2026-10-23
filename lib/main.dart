@@ -55,6 +55,7 @@ class _Dukto2AppState extends State<Dukto2App> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    unawaited(controller.setAppVisible(state == AppLifecycleState.resumed));
     if (state == AppLifecycleState.resumed && controller.ready) {
       unawaited(controller.refreshAddresses());
       unawaited(controller.refreshSystemSettings());

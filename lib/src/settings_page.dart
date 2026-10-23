@@ -295,7 +295,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       else if (c.canOpenNotificationSettings &&
                           (c.notificationPermission == 'granted' ||
                               c.notificationPermission == 'denied' ||
-                              c.notificationPermission == 'managed'))
+                              c.notificationPermission == 'managed' ||
+                              c.backgroundReceive.unavailable))
                         TextButton(
                           onPressed: c.openNotificationSettings,
                           child: Text(context.l10n.systemNotificationSettings),
@@ -306,6 +307,26 @@ class _SettingsPageState extends State<SettingsPage> {
                           context.l10n.ongoingNotificationHint,
                           style: secondary,
                         ),
+                      if (c.supportsBackgroundReceive) ...[
+                        const Divider(),
+                        SwitchListTile.adaptive(
+                          key: const ValueKey('background-receive-switch'),
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(context.l10n.backgroundReceive),
+                          subtitle: Text(context.l10n.backgroundReceiveHint),
+                          value: c.backgroundReceive.enabled,
+                          onChanged: c.ready && !c.backgroundReceive.changing
+                              ? (value) =>
+                                    unawaited(c.setBackgroundReceiving(value))
+                              : null,
+                        ),
+                        if (c.backgroundReceive.unavailable) ...[
+                          Text(
+                            context.l10n.backgroundReceiveUnavailable,
+                            style: secondary,
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                   _section(context.l10n.language, Icons.language_outlined, [

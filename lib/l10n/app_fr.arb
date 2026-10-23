@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "Identité de l’appareil modifiée",
   "deviceOnline": "En ligne · Identité vérifiée",
   "aboutAuthor": "Auteur : lvjing2",
-  "peerCancelledTransfer": "L’autre appareil a annulé le transfert"
+  "peerCancelledTransfer": "L’autre appareil a annulé le transfert",
+  "backgroundReceive": "Réception en arrière-plan",
+  "backgroundReceiveHint": "Attend les demandes pendant 30 minutes après votre départ. Les limites de batterie du système restent applicables.",
+  "backgroundReceiveActive": "En attente · 30 minutes maximum",
+  "stopBackgroundReceive": "Arrêter l’attente",
+  "receiveRequests": "Demandes de réception",
+  "receiveRequestBody": "Touchez pour consulter la liste et confirmer.",
+  "backgroundReceiveUnavailable": "Autorisez les notifications et les deux canaux de réception dans les réglages du système."
 }

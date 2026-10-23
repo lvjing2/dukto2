@@ -1290,5 +1290,12 @@
   "peerCancelledTransfer": "The other device cancelled the transfer",
   "@peerCancelledTransfer": {
     "description": "Shown to the sender after authenticated confirmation that the receiver cancelled this transfer."
-  }
+  },
+  "backgroundReceive": "Background reception",
+  "backgroundReceiveHint": "Wait for requests for 30 minutes after leaving the app. System battery limits still apply.",
+  "backgroundReceiveActive": "Waiting for requests · up to 30 minutes",
+  "stopBackgroundReceive": "Stop waiting",
+  "receiveRequests": "Receive requests",
+  "receiveRequestBody": "Tap to review the list and confirm.",
+  "backgroundReceiveUnavailable": "Allow notifications and both background reception channels in system settings."
 }

@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "La identidad del dispositivo ha cambiado",
   "deviceOnline": "En línea · Identidad verificada",
   "aboutAuthor": "Autor: lvjing2",
-  "peerCancelledTransfer": "El otro dispositivo canceló la transferencia"
+  "peerCancelledTransfer": "El otro dispositivo canceló la transferencia",
+  "backgroundReceive": "Recepción en segundo plano",
+  "backgroundReceiveHint": "Espera solicitudes durante 30 minutos al salir. Se aplican los límites de batería del sistema.",
+  "backgroundReceiveActive": "Esperando solicitudes · hasta 30 minutos",
+  "stopBackgroundReceive": "Dejar de esperar",
+  "receiveRequests": "Solicitudes de recepción",
+  "receiveRequestBody": "Toca para revisar la lista y confirmar.",
+  "backgroundReceiveUnavailable": "Permite las notificaciones y ambos canales de recepción en los ajustes del sistema."
 }

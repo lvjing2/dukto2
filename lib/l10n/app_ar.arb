@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "تغيّرت هوية الجهاز",
   "deviceOnline": "متصل · تم التحقق من الهوية",
   "aboutAuthor": "المؤلف: lvjing2",
-  "peerCancelledTransfer": "ألغى الجهاز الآخر عملية النقل"
+  "peerCancelledTransfer": "ألغى الجهاز الآخر عملية النقل",
+  "backgroundReceive": "انتظار الاستقبال في الخلفية",
+  "backgroundReceiveHint": "انتظار الطلبات لمدة 30 دقيقة بعد مغادرة التطبيق. تظل قيود بطارية النظام سارية.",
+  "backgroundReceiveActive": "بانتظار الطلبات · حتى 30 دقيقة",
+  "stopBackgroundReceive": "إيقاف الانتظار",
+  "receiveRequests": "طلبات الاستقبال",
+  "receiveRequestBody": "اضغط لمراجعة القائمة والتأكيد.",
+  "backgroundReceiveUnavailable": "اسمح بالإشعارات وقناتي الاستقبال في إعدادات النظام."
 }

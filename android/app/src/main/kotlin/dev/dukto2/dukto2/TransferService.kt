@@ -111,6 +111,7 @@ class TransferService : Service() {
         if (wakeLock?.isHeld == true) wakeLock?.release()
         if (wifiLock?.isHeld == true) wifiLock?.release()
         if (!stopping) onStopped?.invoke("stopped")
+        DuktoRuntime.releaseIfUnused()
         super.onDestroy()
     }
 

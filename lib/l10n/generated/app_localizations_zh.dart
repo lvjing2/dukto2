@@ -898,6 +898,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get peerCancelledTransfer => '对方已取消传输';
+
+  @override
+  String get backgroundReceive => '后台等待接收';
+
+  @override
+  String get backgroundReceiveHint => '离开应用后继续等待30分钟，收到请求时通知。受系统省电限制。';
+
+  @override
+  String get backgroundReceiveActive => '等待接收 · 最多30分钟';
+
+  @override
+  String get stopBackgroundReceive => '停止等待';
+
+  @override
+  String get receiveRequests => '接收请求';
+
+  @override
+  String get receiveRequestBody => '点击查看清单并确认。';
+
+  @override
+  String get backgroundReceiveUnavailable => '请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1793,4 +1814,25 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get peerCancelledTransfer => '对方已取消传输';
+
+  @override
+  String get backgroundReceive => '后台等待接收';
+
+  @override
+  String get backgroundReceiveHint => '离开应用后继续等待30分钟，收到请求时通知。受系统省电限制。';
+
+  @override
+  String get backgroundReceiveActive => '等待接收 · 最多30分钟';
+
+  @override
+  String get stopBackgroundReceive => '停止等待';
+
+  @override
+  String get receiveRequests => '接收请求';
+
+  @override
+  String get receiveRequestBody => '点击查看清单并确认。';
+
+  @override
+  String get backgroundReceiveUnavailable => '请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。';
 }

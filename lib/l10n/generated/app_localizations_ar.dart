@@ -928,4 +928,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get peerCancelledTransfer => 'ألغى الجهاز الآخر عملية النقل';
+
+  @override
+  String get backgroundReceive => 'انتظار الاستقبال في الخلفية';
+
+  @override
+  String get backgroundReceiveHint =>
+      'انتظار الطلبات لمدة 30 دقيقة بعد مغادرة التطبيق. تظل قيود بطارية النظام سارية.';
+
+  @override
+  String get backgroundReceiveActive => 'بانتظار الطلبات · حتى 30 دقيقة';
+
+  @override
+  String get stopBackgroundReceive => 'إيقاف الانتظار';
+
+  @override
+  String get receiveRequests => 'طلبات الاستقبال';
+
+  @override
+  String get receiveRequestBody => 'اضغط لمراجعة القائمة والتأكيد.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'اسمح بالإشعارات وقناتي الاستقبال في إعدادات النظام.';
 }

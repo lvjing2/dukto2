@@ -953,6 +953,30 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get peerCancelledTransfer =>
       'O outro dispositivo cancelou a transferência';
+
+  @override
+  String get backgroundReceive => 'Recebimento em segundo plano';
+
+  @override
+  String get backgroundReceiveHint =>
+      'Aguarda solicitações por 30 minutos após sair. Sujeito aos limites de bateria do sistema.';
+
+  @override
+  String get backgroundReceiveActive =>
+      'Aguardando solicitações · até 30 minutos';
+
+  @override
+  String get stopBackgroundReceive => 'Parar de aguardar';
+
+  @override
+  String get receiveRequests => 'Solicitações de recebimento';
+
+  @override
+  String get receiveRequestBody => 'Toque para conferir a lista e confirmar.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'Permita notificações e os dois canais de recebimento nas configurações do sistema.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1903,4 +1927,28 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get peerCancelledTransfer =>
       'O outro dispositivo cancelou a transferência';
+
+  @override
+  String get backgroundReceive => 'Recebimento em segundo plano';
+
+  @override
+  String get backgroundReceiveHint =>
+      'Aguarda solicitações por 30 minutos após sair. Sujeito aos limites de bateria do sistema.';
+
+  @override
+  String get backgroundReceiveActive =>
+      'Aguardando solicitações · até 30 minutos';
+
+  @override
+  String get stopBackgroundReceive => 'Parar de aguardar';
+
+  @override
+  String get receiveRequests => 'Solicitações de recebimento';
+
+  @override
+  String get receiveRequestBody => 'Toque para conferir a lista e confirmar.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'Permita notificações e os dois canais de recebimento nas configurações do sistema.';
 }

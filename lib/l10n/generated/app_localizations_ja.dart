@@ -901,4 +901,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get peerCancelledTransfer => '相手のデバイスが転送をキャンセルしました';
+
+  @override
+  String get backgroundReceive => 'バックグラウンド受信待機';
+
+  @override
+  String get backgroundReceiveHint => 'アプリを離れても30分間待機します。システムの省電力制限は適用されます。';
+
+  @override
+  String get backgroundReceiveActive => '受信待機中 · 最大30分';
+
+  @override
+  String get stopBackgroundReceive => '待機を停止';
+
+  @override
+  String get receiveRequests => '受信リクエスト';
+
+  @override
+  String get receiveRequestBody => 'タップして一覧を確認し、受信を許可してください。';
+
+  @override
+  String get backgroundReceiveUnavailable => 'システム設定で通知と2つの受信通知チャンネルを許可してください。';
 }

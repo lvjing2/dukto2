@@ -9,7 +9,10 @@ object NativeLocalization {
         "cancel" to "Cancel", "transferChannel" to "File transfers",
         "completionChannel" to "Transfer completion notifications",
         "receiveTitle" to "Receiving complete", "receiveBody" to "File received and verified",
-        "sendTitle" to "Sending complete", "sendBody" to "File sent and verified")
+        "sendTitle" to "Sending complete", "sendBody" to "File sent and verified",
+        "backgroundTitle" to "Background reception", "backgroundBody" to "Waiting for requests",
+        "backgroundStop" to "Stop waiting", "requestChannel" to "Receive requests",
+        "requestTitle" to "Receive request", "requestBody" to "Tap to review and confirm")
 
     fun text(context: Context, key: String): String =
         context.getSharedPreferences("localization", Context.MODE_PRIVATE).getString(key, null)

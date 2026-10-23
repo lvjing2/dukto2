@@ -1,3 +1,5 @@
+import 'background_receive.dart';
+
 import 'dart:ui';
 
 import 'localization.dart';
@@ -99,6 +101,34 @@ class Dukto2Controller extends ChangeNotifier {
   List<String> addresses = [];
   Peer? selected;
   final PeerConnection connection;
+  bool appVisible = true;
+  String? _backgroundOfferId;
+  bool get supportsBackgroundReceive => _isAndroid;
+  late final backgroundReceive = BackgroundReceive(
+    channel: platform,
+    onDisabled: () {
+      if (!appVisible && pendingOffer != null) answerOffer(false);
+    },
+  )..addListener(_notify);
+
+  Future<void> setBackgroundReceiving(bool value) async {
+    if (!_isAndroid || !ready) return;
+    await backgroundReceive.setEnabled(value);
+  }
+
+  Future<void> setAppVisible(bool visible) async {
+    appVisible = visible;
+    if (_isAndroid && visible) await backgroundReceive.refreshPermission();
+    if (_isAndroid &&
+        !visible &&
+        backgroundReceive.enabled &&
+        pendingOffer != null) {
+      if (!await backgroundReceive.notifyRequest(_session!.id)) {
+        answerOffer(false);
+      }
+    }
+  }
+
   bool _checkingSend = false;
   PeerConnectionState get connectionState =>
       selected != null && connection.watches(selected!)
@@ -153,6 +183,12 @@ class Dukto2Controller extends ChangeNotifier {
         'receiveBody': strings.receivedVerified(strings.file),
         'sendTitle': strings.sendComplete,
         'sendBody': strings.sentContentVerified(strings.file),
+        'backgroundTitle': strings.backgroundReceive,
+        'backgroundBody': strings.backgroundReceiveActive,
+        'backgroundStop': strings.stopBackgroundReceive,
+        'requestChannel': strings.receiveRequests,
+        'requestTitle': strings.receiveRequests,
+        'requestBody': strings.receiveRequestBody,
       });
     } on Object {
       /* Platforms without this adapter still use Dart notification text. */
@@ -285,7 +321,18 @@ class Dukto2Controller extends ChangeNotifier {
     try {
       platform.setMethodCallHandler((call) async {
         if (_disposed) return;
-        if (call.method == 'networkChanged') {
+        if (call.method == 'runtimeStopping') {
+          await shutdown();
+        } else if (call.method == 'backgroundReceiveExpired') {
+          await backgroundReceive.setEnabled(false);
+        } else if (call.method == 'backgroundRequestOpened') {
+          final id = call.arguments;
+          if (id is String &&
+              backgroundReceive.matchesRequest(id) &&
+              pendingOffer != null) {
+            _notify();
+          }
+        } else if (call.method == 'networkChanged') {
           _networkDebounce?.cancel();
           _networkDebounce = Timer(const Duration(milliseconds: 700), () {
             if (ready) unawaited(refreshAddresses());
@@ -820,6 +867,7 @@ class Dukto2Controller extends ChangeNotifier {
 
   Future<void> _finishSession(TransferSession current, SessionPhase terminal) =>
       current.finish(terminal, () async {
+        if (_isAndroid) await backgroundReceive.setBusy(false);
         try {
           await endTransferSession();
         } on Object catch (error, stack) {
@@ -874,13 +922,22 @@ class Dukto2Controller extends ChangeNotifier {
   Future<bool> receiveOffer(FileOffer offer) async {
     if (_incomingCompletion != null) await _incomingCompletion;
     if (_disposed || busy) return false;
+    if (_isAndroid && !appVisible && !backgroundReceive.enabled) return false;
     final current = TransferSession.incoming(offer);
     _session = current;
     lastTransferFailure = null;
     _errorText = null;
     _statusText = (strings) => strings.newRequest;
     _notify();
+    if (_isAndroid && !appVisible) {
+      _backgroundOfferId = current.id;
+      if (!await backgroundReceive.notifyRequest(current.id)) {
+        current.answer(false);
+      }
+    }
     final accepted = await current.awaitApproval();
+    if (_isAndroid) await backgroundReceive.clearRequest(current.id);
+    if (_backgroundOfferId == current.id) _backgroundOfferId = null;
     if (identical(_session, current)) {
       _statusText = (strings) => accepted
           ? strings.waitingUpload
@@ -893,7 +950,18 @@ class Dukto2Controller extends ChangeNotifier {
     return accepted && !_disposed;
   }
 
-  void answerOffer(bool accept) => _session?.answer(accept);
+  void answerOffer(bool accept) {
+    if (accept &&
+        _backgroundOfferId == _session?.id &&
+        _backgroundOfferId != null &&
+        !backgroundReceive.matchesRequest(_backgroundOfferId!)) {
+      accept = false;
+    }
+    if (_isAndroid && accept && pendingOffer != null) {
+      unawaited(backgroundReceive.setBusy(true));
+    }
+    _session?.answer(accept);
+  }
 
   Future<bool> receiveApprovedBatchFile(FileOffer offer) async {
     if (_incomingCompletion != null) await _incomingCompletion;
@@ -1525,6 +1593,7 @@ class Dukto2Controller extends ChangeNotifier {
   Future<void> shutdown() async {
     if (_disposed) return;
     _disposed = true;
+    if (_isAndroid) await backgroundReceive.close();
     _closeConnection();
     _networkDebounce?.cancel();
     _session?.cancel();

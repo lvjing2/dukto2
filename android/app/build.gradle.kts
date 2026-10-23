@@ -4,6 +4,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val backgroundPreview = System.getenv("DUKTO2_BACKGROUND_PREVIEW") == "true"
+
 val signedRelease = System.getenv("DUKTO2_ANDROID_SIGNED") == "true"
 val unsignedRelease = System.getenv("DUKTO2_ANDROID_UNSIGNED") == "true"
 require(!(signedRelease && unsignedRelease)) { "Conflicting Android signing modes" }
@@ -24,7 +26,8 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "dev.dukto2.dukto2"
+        applicationId = if (backgroundPreview) "dev.dukto2.bgvalidation" else "dev.dukto2.dukto2"
+        manifestPlaceholders["dukto2Label"] = if (backgroundPreview) "Dukto2 后台预览" else "Dukto2"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

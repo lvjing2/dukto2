@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "Идентификатор устройства изменился",
   "deviceOnline": "В сети · Личность подтверждена",
   "aboutAuthor": "Автор: lvjing2",
-  "peerCancelledTransfer": "Другое устройство отменило передачу"
+  "peerCancelledTransfer": "Другое устройство отменило передачу",
+  "backgroundReceive": "Фоновый приём",
+  "backgroundReceiveHint": "Ожидание запросов 30 минут после выхода. Ограничения энергосбережения системы сохраняются.",
+  "backgroundReceiveActive": "Ожидание запросов · до 30 минут",
+  "stopBackgroundReceive": "Завершить ожидание",
+  "receiveRequests": "Запросы на приём",
+  "receiveRequestBody": "Нажмите, проверьте список и подтвердите.",
+  "backgroundReceiveUnavailable": "Разрешите уведомления и оба канала приёма в настройках системы."
 }

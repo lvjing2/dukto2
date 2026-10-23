@@ -956,4 +956,28 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get peerCancelledTransfer =>
       'Das andere Gerät hat die Übertragung abgebrochen';
+
+  @override
+  String get backgroundReceive => 'Empfang im Hintergrund';
+
+  @override
+  String get backgroundReceiveHint =>
+      'Nach Verlassen der App 30 Minuten auf Anfragen warten. Die Energiesparregeln des Systems gelten weiterhin.';
+
+  @override
+  String get backgroundReceiveActive =>
+      'Warten auf Anfragen · bis zu 30 Minuten';
+
+  @override
+  String get stopBackgroundReceive => 'Warten beenden';
+
+  @override
+  String get receiveRequests => 'Empfangsanfragen';
+
+  @override
+  String get receiveRequestBody => 'Tippen, Liste prüfen und bestätigen.';
+
+  @override
+  String get backgroundReceiveUnavailable =>
+      'Benachrichtigungen und beide Empfangskanäle in den Systemeinstellungen erlauben.';
 }

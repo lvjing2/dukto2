@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "Geräteidentität geändert",
   "deviceOnline": "Online · Identität geprüft",
   "aboutAuthor": "Autor: lvjing2",
-  "peerCancelledTransfer": "Das andere Gerät hat die Übertragung abgebrochen"
+  "peerCancelledTransfer": "Das andere Gerät hat die Übertragung abgebrochen",
+  "backgroundReceive": "Empfang im Hintergrund",
+  "backgroundReceiveHint": "Nach Verlassen der App 30 Minuten auf Anfragen warten. Die Energiesparregeln des Systems gelten weiterhin.",
+  "backgroundReceiveActive": "Warten auf Anfragen · bis zu 30 Minuten",
+  "stopBackgroundReceive": "Warten beenden",
+  "receiveRequests": "Empfangsanfragen",
+  "receiveRequestBody": "Tippen, Liste prüfen und bestätigen.",
+  "backgroundReceiveUnavailable": "Benachrichtigungen und beide Empfangskanäle in den Systemeinstellungen erlauben."
 }

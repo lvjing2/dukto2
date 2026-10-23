@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "デバイスの識別情報が変更されました",
   "deviceOnline": "オンライン · 識別情報確認済み",
   "aboutAuthor": "作者：lvjing2",
-  "peerCancelledTransfer": "相手のデバイスが転送をキャンセルしました"
+  "peerCancelledTransfer": "相手のデバイスが転送をキャンセルしました",
+  "backgroundReceive": "バックグラウンド受信待機",
+  "backgroundReceiveHint": "アプリを離れても30分間待機します。システムの省電力制限は適用されます。",
+  "backgroundReceiveActive": "受信待機中 · 最大30分",
+  "stopBackgroundReceive": "待機を停止",
+  "receiveRequests": "受信リクエスト",
+  "receiveRequestBody": "タップして一覧を確認し、受信を許可してください。",
+  "backgroundReceiveUnavailable": "システム設定で通知と2つの受信通知チャンネルを許可してください。"
 }

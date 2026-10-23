@@ -271,5 +271,12 @@
   "deviceIdentityChanged": "设备身份已变化",
   "deviceOnline": "在线 · 已核对",
   "aboutAuthor": "作者：lvjing2",
-  "peerCancelledTransfer": "对方已取消传输"
+  "peerCancelledTransfer": "对方已取消传输",
+  "backgroundReceive": "后台等待接收",
+  "backgroundReceiveHint": "离开应用后继续等待30分钟，收到请求时通知。受系统省电限制。",
+  "backgroundReceiveActive": "等待接收 · 最多30分钟",
+  "stopBackgroundReceive": "停止等待",
+  "receiveRequests": "接收请求",
+  "receiveRequestBody": "点击查看清单并确认。",
+  "backgroundReceiveUnavailable": "请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。"
 }
