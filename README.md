@@ -4,11 +4,15 @@ English | [Simplified Chinese](README.zh-CN.md)
 
 Dukto2 shares files and text directly between computers, phones and tablets on the same local network. No account or cloud upload is required: connect to a device, choose what to send, and transfer after the receiver approves.
 
+**Scan to connect, choose and share; optional background reception on Android.**
+
 ## Features
 
 - **Cross-platform sharing**: macOS, Windows, Linux, Android and iPhone / iPad, with layouts for desktops, phones and tablets. Tested coverage is listed below.
 - **Direct LAN transfers**: content travels between devices without an internet relay, over wireless or wired networks.
-- **Flexible connections**: discover nearby devices automatically, scan a connection QR code, or connect manually. Devices on different subnets can connect when direct communication is allowed.
+- **QR connections**: scan the other device’s QR code to connect and verify its identity, without typing an IP or comparing a separate code. Automatic discovery and manual connections remain available; different subnets work when directly reachable.
+- **Simple controls**: select a device, choose files or enter text, then send after the recipient approves. No account or cloud relay.
+- **Android background reception and notifications**: off by default. Enable it in Settings → Notifications to wait for up to 30 minutes; tap an incoming request notification and approve to receive. Approved transfers can continue in the background, subject to system power management. Restarting leaves waiting off.
 - **Files and text**: send a single file, a batch of files, text messages or UTF-8 text files. The receiver explicitly approves before transfer begins.
 - **Streaming large files**: bounded reads and writes avoid loading entire files into memory. Track progress and speed, cancel a transfer, and verify size and SHA-256 before completion.
 - **Encryption and identity checks**: HTTPS / TLS protects transfers. QR connections match the full certificate fingerprint; manual connections use a verification code. Sending pins the verified destination certificate.
@@ -70,8 +74,8 @@ Debug packages use development signing. Android release signing uses separate ap
 ## Use
 
 1. Open the app on both devices and select / approve transfers in the foreground. Allow the required local-network access. Android provides a foreground transfer service; see its [tested limits](docs/en/validation.md).
-2. Select a nearby device, or enter the IPv4 address and port shown in the other device's local information.
-3. **Read the verification code on the receiving device itself** and compare the 16 hexadecimal characters with the connection dialog. Names and discovery messages do not prove identity.
+2. Select a nearby device, or scan the other device’s connection QR code or enter its IPv4 address and port.
+3. QR connections already verify the full device fingerprint; no separate code comparison is needed. For manual connections, **read the verification code on the receiving device itself** and compare the 16 hexadecimal characters with the connection dialog. Names and discovery messages do not prove identity.
 4. Select files, review names and sizes, and explicitly send. The receiver approves; completion requires matching SHA-256 and a successful save acknowledgement.
 5. Change the destination in Settings. macOS, Windows, Linux and Android 10+ default to Downloads / Dukto2. Android 7–9 can use an authorized SAF folder; otherwise files remain in app storage for export. iPhone / iPad default to Files → Dukto2 → the default receiving folder shown in Settings. Directory access is remembered. Changing folders does not move or delete existing files.
 

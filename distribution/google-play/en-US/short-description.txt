@@ -1,1 +1,1 @@
-Share files and text directly between devices on your local network
+QR connections, simple file sharing and optional background reception

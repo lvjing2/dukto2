@@ -2,6 +2,12 @@ Move files and text between your own devices with Dukto2, a cross-platform local
 
 Connect your phone and computer to a network that allows devices to communicate, open Dukto2 on both, and choose the receiving device. Transfers go directly between the devices without an internet relay or a Dukto2 account.
 
+SIMPLE CONTROLS
+Choose a device and content, then send with the recipient’s approval. Scan a connection QR code without typing an IP or comparing a separate device code.
+
+BACKGROUND RECEPTION AND NOTIFICATIONS
+Off by default. Enable it in Settings → Notifications to wait for up to 30 minutes. Tap an incoming request notification and approve to receive. Approved transfers can continue in the background, subject to system power limits. Restarting leaves waiting off; long locked-screen availability is not guaranteed.
+
 FILES AND TEXT
 Select several files in one batch. The receiving device reviews the list and accepts the batch once. Write or paste text, send it, and copy received text from the viewer. Text messages support up to 16 MiB of UTF-8 data.
 
