@@ -37,7 +37,7 @@ bash install.sh
 # 旧 rc.2 包：python3 install_linux_user.py .
 ```
 
-注册脚本写入当前用户的 desktop 入口与图标，不需要 sudo，不移动 bundle。移动或更新后需重新注册。完成通知依赖桌面服务及对应应用 ID 的 desktop 文件，当前没有 deb、rpm 或 AppImage 安装包。
+注册脚本写入当前用户的 desktop 入口与图标，不需要 sudo，不移动 bundle。移动或更新后需重新注册。完成通知依赖桌面服务及对应应用 ID 的 desktop 文件，现有发行包不含 deb、rpm；新增的 Flatpak / AppImage 候选构建与测试说明见 [通用安装包](linux-portable.md)。
 
 ## 系统行为
 
