@@ -981,4 +981,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Permite las notificaciones y ambos canales de recepción en los ajustes del sistema.';
+
+  @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get privacyPolicyDescription => 'Disponible en chino';
 }

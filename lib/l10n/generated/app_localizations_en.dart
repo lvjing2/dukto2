@@ -968,4 +968,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Allow notifications and both background reception channels in system settings.';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get privacyPolicyDescription => 'Available in Chinese';
 }

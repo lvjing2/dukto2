@@ -977,6 +977,12 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Permita notificações e os dois canais de recebimento nas configurações do sistema.';
+
+  @override
+  String get privacyPolicy => 'Política de privacidade';
+
+  @override
+  String get privacyPolicyDescription => 'Disponível em chinês';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1951,4 +1957,10 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get backgroundReceiveUnavailable =>
       'Permita notificações e os dois canais de recebimento nas configurações do sistema.';
+
+  @override
+  String get privacyPolicy => 'Política de privacidade';
+
+  @override
+  String get privacyPolicyDescription => 'Disponível em chinês';
 }

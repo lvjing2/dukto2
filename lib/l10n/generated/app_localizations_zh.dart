@@ -919,6 +919,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backgroundReceiveUnavailable => '请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。';
+
+  @override
+  String get privacyPolicy => '隐私政策';
+
+  @override
+  String get privacyPolicyDescription => '查看数据使用与权限说明';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1835,4 +1841,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get backgroundReceiveUnavailable => '请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。';
+
+  @override
+  String get privacyPolicy => '隐私政策';
+
+  @override
+  String get privacyPolicyDescription => '查看数据使用与权限说明';
 }

@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "대기 중지",
   "receiveRequests": "수신 요청",
   "receiveRequestBody": "눌러서 목록을 확인하고 승인하세요.",
-  "backgroundReceiveUnavailable": "시스템 설정에서 알림과 두 수신 알림 채널을 허용하세요."
+  "backgroundReceiveUnavailable": "시스템 설정에서 알림과 두 수신 알림 채널을 허용하세요.",
+  "privacyPolicy": "개인정보 처리방침",
+  "privacyPolicyDescription": "중국어로 제공됩니다"
 }

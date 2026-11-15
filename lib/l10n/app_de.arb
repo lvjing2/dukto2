@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "Warten beenden",
   "receiveRequests": "Empfangsanfragen",
   "receiveRequestBody": "Tippen, Liste prüfen und bestätigen.",
-  "backgroundReceiveUnavailable": "Benachrichtigungen und beide Empfangskanäle in den Systemeinstellungen erlauben."
+  "backgroundReceiveUnavailable": "Benachrichtigungen und beide Empfangskanäle in den Systemeinstellungen erlauben.",
+  "privacyPolicy": "Datenschutzerklärung",
+  "privacyPolicyDescription": "Auf Chinesisch verfügbar"
 }

@@ -967,4 +967,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Разрешите уведомления и оба канала приёма в настройках системы.';
+
+  @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get privacyPolicyDescription => 'Доступна на китайском языке';
 }

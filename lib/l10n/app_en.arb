@@ -1297,5 +1297,13 @@
   "stopBackgroundReceive": "Stop waiting",
   "receiveRequests": "Receive requests",
   "receiveRequestBody": "Tap to review the list and confirm.",
-  "backgroundReceiveUnavailable": "Allow notifications and both background reception channels in system settings."
+  "backgroundReceiveUnavailable": "Allow notifications and both background reception channels in system settings.",
+  "privacyPolicy": "Privacy policy",
+  "privacyPolicyDescription": "Available in Chinese",
+  "@privacyPolicy": {
+    "description": "Title of the link to the public Dukto2 privacy policy."
+  },
+  "@privacyPolicyDescription": {
+    "description": "Explain that the linked privacy policy currently has Chinese content only. Chinese locales may describe its contents."
+  }
 }

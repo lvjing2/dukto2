@@ -376,23 +376,51 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: ListTile(
-                      key: const ValueKey('settings-about'),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      leading: ExcludeSemantics(
-                        child: Icon(
-                          Icons.info_outline,
-                          color: Theme.of(context).colorScheme.primary,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          key: const ValueKey('settings-privacy-policy'),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: ExcludeSemantics(
+                            child: Icon(
+                              Icons.privacy_tip_outlined,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          title: Text(context.l10n.privacyPolicy),
+                          subtitle: Text(context.l10n.privacyPolicyDescription),
+                          trailing: const ExcludeSemantics(
+                            child: Icon(Icons.open_in_new),
+                          ),
+                          onTap: () => _openLink(
+                            Uri.https('qtlink.cn', '/dukto2/privacy.html'),
+                            context.l10n.privacyPolicy,
+                          ),
                         ),
-                      ),
-                      title: Text(context.l10n.about),
-                      trailing: const ExcludeSemantics(
-                        child: Icon(Icons.chevron_right),
-                      ),
-                      onTap: _about,
+                        const Divider(height: 1),
+                        ListTile(
+                          key: const ValueKey('settings-about'),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: ExcludeSemantics(
+                            child: Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          title: Text(context.l10n.about),
+                          trailing: const ExcludeSemantics(
+                            child: Icon(Icons.chevron_right),
+                          ),
+                          onTap: _about,
+                        ),
+                      ],
                     ),
                   ),
                 ],

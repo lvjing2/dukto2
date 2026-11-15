@@ -980,4 +980,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Benachrichtigungen und beide Empfangskanäle in den Systemeinstellungen erlauben.';
+
+  @override
+  String get privacyPolicy => 'Datenschutzerklärung';
+
+  @override
+  String get privacyPolicyDescription => 'Auf Chinesisch verfügbar';
 }

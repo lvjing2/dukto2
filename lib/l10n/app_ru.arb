@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "Завершить ожидание",
   "receiveRequests": "Запросы на приём",
   "receiveRequestBody": "Нажмите, проверьте список и подтвердите.",
-  "backgroundReceiveUnavailable": "Разрешите уведомления и оба канала приёма в настройках системы."
+  "backgroundReceiveUnavailable": "Разрешите уведомления и оба канала приёма в настройках системы.",
+  "privacyPolicy": "Политика конфиденциальности",
+  "privacyPolicyDescription": "Доступна на китайском языке"
 }

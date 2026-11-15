@@ -922,4 +922,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get backgroundReceiveUnavailable => 'システム設定で通知と2つの受信通知チャンネルを許可してください。';
+
+  @override
+  String get privacyPolicy => 'プライバシーポリシー';
+
+  @override
+  String get privacyPolicyDescription => '中国語でご覧いただけます';
 }

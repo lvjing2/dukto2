@@ -1255,6 +1255,8 @@ void main() {
           250,
           scrollable: find.byType(Scrollable).first,
         );
+        await Scrollable.ensureVisible(tester.element(about), alignment: 0.5);
+        await tester.pumpAndSettle();
         await tester.tap(about);
         await tester.pumpAndSettle();
         await tester.runAsync(() async {

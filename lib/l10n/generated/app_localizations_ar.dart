@@ -951,4 +951,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'اسمح بالإشعارات وقناتي الاستقبال في إعدادات النظام.';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get privacyPolicyDescription => 'متاحة باللغة الصينية';
 }

@@ -927,4 +927,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get backgroundReceiveUnavailable => '시스템 설정에서 알림과 두 수신 알림 채널을 허용하세요.';
+
+  @override
+  String get privacyPolicy => '개인정보 처리방침';
+
+  @override
+  String get privacyPolicyDescription => '중국어로 제공됩니다';
 }

@@ -4,6 +4,12 @@ English | [Simplified Chinese](CHANGELOG.zh-CN.md)
 
 Versions describe source evolution, not published installation packages. See [validation coverage](docs/en/validation.md) for actual platform builds and transfers.
 
+## 0.1.8+21
+
+- Add a privacy policy link in Settings with labels in all supported interface languages.
+- Open the public policy in the browser and retain a copyable URL when the browser is unavailable.
+- Identify the currently Chinese-only policy in other interface languages.
+
 ## 0.1.7+20
 
 - Add optional Android background reception, off by default, with a 30-minute waiting window and notifications that open the existing receive confirmation.

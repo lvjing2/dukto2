@@ -4,6 +4,12 @@
 
 版本号描述源码演进，不表示已经发布对应安装包。各平台实际构建和互传范围以 [验证记录](docs/validation.md) 为准。
 
+## 0.1.8+21
+
+- Add a privacy policy link in Settings with labels in all supported interface languages.
+- Open the public policy in the browser and retain a copyable URL when the browser is unavailable.
+- Identify the currently Chinese-only policy in other interface languages.
+
 ## 0.1.7+20
 
 - Add optional Android background reception, off by default, with a 30-minute waiting window and notifications that open the existing receive confirmation.

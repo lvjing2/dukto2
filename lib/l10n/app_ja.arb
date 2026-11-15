@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "待機を停止",
   "receiveRequests": "受信リクエスト",
   "receiveRequestBody": "タップして一覧を確認し、受信を許可してください。",
-  "backgroundReceiveUnavailable": "システム設定で通知と2つの受信通知チャンネルを許可してください。"
+  "backgroundReceiveUnavailable": "システム設定で通知と2つの受信通知チャンネルを許可してください。",
+  "privacyPolicy": "プライバシーポリシー",
+  "privacyPolicyDescription": "中国語でご覧いただけます"
 }

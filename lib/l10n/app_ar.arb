@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "إيقاف الانتظار",
   "receiveRequests": "طلبات الاستقبال",
   "receiveRequestBody": "اضغط لمراجعة القائمة والتأكيد.",
-  "backgroundReceiveUnavailable": "اسمح بالإشعارات وقناتي الاستقبال في إعدادات النظام."
+  "backgroundReceiveUnavailable": "اسمح بالإشعارات وقناتي الاستقبال في إعدادات النظام.",
+  "privacyPolicy": "سياسة الخصوصية",
+  "privacyPolicyDescription": "متاحة باللغة الصينية"
 }

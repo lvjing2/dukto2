@@ -1789,6 +1789,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow notifications and both background reception channels in system settings.'**
   String get backgroundReceiveUnavailable;
+
+  /// Title of the link to the public Dukto2 privacy policy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicy;
+
+  /// Explain that the linked privacy policy currently has Chinese content only. Chinese locales may describe its contents.
+  ///
+  /// In en, this message translates to:
+  /// **'Available in Chinese'**
+  String get privacyPolicyDescription;
 }
 
 class _AppLocalizationsDelegate

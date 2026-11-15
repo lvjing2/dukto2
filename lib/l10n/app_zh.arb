@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "停止等待",
   "receiveRequests": "接收请求",
   "receiveRequestBody": "点击查看清单并确认。",
-  "backgroundReceiveUnavailable": "请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。"
+  "backgroundReceiveUnavailable": "请在系统设置中允许通知，并开启后台等待和接收请求通知渠道。",
+  "privacyPolicy": "隐私政策",
+  "privacyPolicyDescription": "查看数据使用与权限说明"
 }

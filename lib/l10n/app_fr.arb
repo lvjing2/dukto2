@@ -278,5 +278,7 @@
   "stopBackgroundReceive": "Arrêter l’attente",
   "receiveRequests": "Demandes de réception",
   "receiveRequestBody": "Touchez pour consulter la liste et confirmer.",
-  "backgroundReceiveUnavailable": "Autorisez les notifications et les deux canaux de réception dans les réglages du système."
+  "backgroundReceiveUnavailable": "Autorisez les notifications et les deux canaux de réception dans les réglages du système.",
+  "privacyPolicy": "Politique de confidentialité",
+  "privacyPolicyDescription": "Disponible en chinois"
 }

@@ -979,4 +979,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get backgroundReceiveUnavailable =>
       'Autorisez les notifications et les deux canaux de réception dans les réglages du système.';
+
+  @override
+  String get privacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get privacyPolicyDescription => 'Disponible en chinois';
 }
