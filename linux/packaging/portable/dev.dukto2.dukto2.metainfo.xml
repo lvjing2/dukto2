@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.dukto2.dukto2</id>
+  <name>Dukto2</name>
+  <summary>Share files and text directly on your local network</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <description>
+    <p>Dukto2 transfers files and text between computers, phones and tablets over a local network. It supports verified device connections, explicit receiving approval, encrypted transfers and content verification.</p>
+    <p>Files are streamed with bounded buffers. You can select a receiving folder, send batches, cancel transfers and browse recent completed transfers.</p>
+  </description>
+  <launchable type="desktop-id">dev.dukto2.dukto2.desktop</launchable>
+  <url type="homepage">https://github.com/lvjing2/dukto2</url>
+  <url type="bugtracker">https://github.com/lvjing2/dukto2/issues</url>
+  <provides><binary>dukto2</binary></provides>
+  <content_rating type="oars-1.1"/>
+  <releases><release version="@VERSION@" date="@DATE@"/></releases>
+</component>

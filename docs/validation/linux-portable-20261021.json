@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-21",
+  "sourceCommit": "e839d1eda254701876ffe9240c2bcb4110860a29",
+  "version": "0.1.6-rc.5+12",
+  "workflow": "https://github.com/lvjing2/dukto2/actions/runs/39469007386",
+  "result": "success",
+  "baseline": "Ubuntu 22.04 / GLIBC <= 2.35",
+  "runtime": "org.gnome.Platform//50",
+  "architectures": ["x64", "arm64"],
+  "checks": {
+    "repositoryChecks": "passed on both native Linux architectures",
+    "localPythonTests": 28,
+    "localFlutterTests": 139,
+    "localCoreTests": 50,
+    "staticAnalysis": "passed",
+    "completeBundle": "passed",
+    "elfArchitectureAndGlibc": "passed, including AppImage dependencies",
+    "appImageWindowStartup": "passed on both architectures in Ubuntu 22.04 containers under Xvfb",
+    "flatpakExportAndInstall": "passed on both architectures on Ubuntu 24.04 hosts",
+    "flatpakWindowStartup": "passed on both architectures under Xvfb, using declared sandbox permissions"
+  },
+  "notVerified": [
+    "Physical ARM64 desktop hardware",
+    "GNOME and KDE portal authorization for real files and folders",
+    "Notifications and idle-sleep inhibition in the Flatpak sandbox",
+    "Physical LAN discovery and bidirectional large-file transfers using these packages",
+    "Debian, Fedora, Mint, deepin and UOS desktop installations"
+  ],
+  "publication": "Private CI candidates only; no release, store listing or tag created."
+}
