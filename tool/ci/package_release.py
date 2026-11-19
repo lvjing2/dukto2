@@ -134,6 +134,17 @@ def main():
         subprocess.run(['python', str(ROOT / 'tool/ci/verify_native.py'), system, arch, str(bundle)], check=True)
         output = dest / (prefix + ('' if arch == 'arm64' else '-x64') + suffix)
         shutil.copy2(source, output)
+        if args.target == 'windows':
+            installer_name = prefix + '-x64-setup.exe'
+            installer = ROOT / 'build/windows/installer' / installer_name
+            validation = json.loads((installer.parent / 'smoke.json').read_text())
+            if (validation['status'] != 'passed' or validation['version'] != version()
+                    or validation['sha256'] != sha256(installer)):
+                raise ValueError('Missing verified Windows installer')
+            setup_output = dest / installer_name
+            shutil.copy2(installer, setup_output)
+            outputs = [output, setup_output]
+            metadata['installer'] = validation
     else:
         with tempfile.TemporaryDirectory(prefix='dukto2-package-') as temp:
             stage = Path(temp)

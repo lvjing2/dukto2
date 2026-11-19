@@ -5,7 +5,8 @@ Choose your system and architecture. Store distribution is pending.
 | System | Package and installation |
 | --- | --- |
 | Android | `*-android.apk`: install through the system installer. Differently signed debug builds cannot update in place. |
-| Windows x64 / ARM64 | Matching ZIP: extract fully and run `Dukto2.exe`. No publisher signing; Windows may block it. ARM64 requires Windows 11. |
+| Windows x64 | `*-windows-x64-setup.exe`: install for the current user, with an uninstall entry. Or extract the matching ZIP fully and run `Dukto2.exe`. No publisher signing; Windows may block it. |
+| Windows ARM64 | Matching ZIP: extract fully and run `Dukto2.exe`. Requires Windows 11. No publisher signing. |
 | Linux x64 / ARM64 | Matching TAR.GZ: extract and run the user installation script. Ubuntu 24.04 baseline; other distributions need compatible libraries. |
 | macOS | `*-macos-adhoc.zip`: extract and move the app to Applications. Not notarized; follow [Apple guidance](https://support.apple.com/en-us/102445) if blocked. |
 | iPhone / iPad | No public installable package yet. Unsigned builds stay in CI. |

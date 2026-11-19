@@ -108,6 +108,35 @@ class PublicationAssetsTest(unittest.TestCase):
                     publication.prepare(root, root / 'publish', version)
                 self.assertFalse((root / 'publish').exists())
 
+    def test_installer_bytes_preserved_and_tampering_or_failed_smoke_blocks_publication(self):
+        for failure in (None, 'tamper', 'failed-smoke', 'wrong-version'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                version = self.fixtures(root)
+                installer = root / 'Dukto2-1.2.3-rc.1-build.4-windows-x64-setup.exe'
+                installer.write_bytes(b'fixture complete installer payload')
+                (root / (installer.name + '.sha256')).write_text(publication.digest(installer) + '  ' + installer.name)
+                path = next(root.glob('*windows.json'))
+                info = json.loads(path.read_text())
+                info['installer'] = {'status': 'passed', 'version': version,
+                                     'sha256': publication.digest(installer)}
+                if failure == 'tamper':
+                    installer.write_bytes(b'altered after smoke test')
+                elif failure == 'failed-smoke':
+                    info['installer']['status'] = 'failed'
+                elif failure == 'wrong-version':
+                    info['installer']['version'] = '1.2.2+3'
+                path.write_text(json.dumps(info))
+                if failure:
+                    with self.assertRaises(ValueError):
+                        publication.prepare(root, root / 'publish', version)
+                    self.assertFalse((root / 'publish').exists())
+                else:
+                    publication.prepare(root, root / 'publish', version)
+                    self.assertEqual((root / 'publish' / installer.name).read_bytes(), installer.read_bytes())
+                    self.assertIn(publication.digest(installer) + '  ' + installer.name,
+                                  (root / 'publish/SHA256SUMS.txt').read_text())
+
 
 if __name__ == '__main__':
     unittest.main()

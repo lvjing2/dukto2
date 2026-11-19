@@ -122,6 +122,18 @@ def prepare(source, dest, version):
         inputs.append((target, artifact, info))
     if len(commits) != 1:
         raise ValueError('Cannot combine builds from different source commits')
+    installers = []
+    for target, _, info in inputs:
+        if target == 'windows' and 'installer' in info:
+            installer = source / (prefix + 'windows-x64-setup.exe')
+            validation = info['installer']
+            if (validation['status'] != 'passed' or validation['version'] != version
+                    or validation['sha256'] != digest(installer)):
+                raise ValueError('Windows installer validation or checksum mismatch')
+            expected = digest(installer) + '  ' + installer.name
+            if (source / (installer.name + '.sha256')).read_text().strip() != expected:
+                raise ValueError('Windows installer sidecar checksum mismatch')
+            installers.append(installer)
     install_guide = INSTALL_GUIDE.read_text()
     if any('\u4e00' <= char <= '\u9fff' for char in install_guide):
         raise ValueError('Release installation guide must be written in English')
@@ -136,6 +148,8 @@ def prepare(source, dest, version):
             repack_tar(artifact, output, info)
         else:
             repack_zip(artifact, output, info)
+    for installer in installers:
+        shutil.copy2(installer, dest / installer.name)
     (dest / 'INSTALL.md').write_text('# Dukto2 ' + version.split('+')[0] + '\n\n' + install_guide)
     files = sorted(dest.iterdir())
     (dest / 'SHA256SUMS.txt').write_text(''.join(digest(path) + '  ' + path.name + '\n' for path in files))
