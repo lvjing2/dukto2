@@ -4,6 +4,12 @@ English | [Simplified Chinese](../windows.md)
 
 Windows 11 x64 is tested; Windows 10 and ARM64 hardware are not; no 32-bit Windows package is provided. See [validation coverage](validation.md) for builds and transfers actually performed.
 
+## Installer
+
+Starting with 0.1.8, x64 also has a per-user EXE installer, defaulting to AppData/Local/Programs/Dukto2, with a Start menu entry and uninstaller. It has no publisher signature. ARM64 remains a full ZIP. Uninstall leaves settings, device identity, history and received files untouched.
+
+CI packages the complete Release directory with Inno Setup and checks installed file hashes, same-version reinstall and uninstall. Silent installation uses `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-`; `/DIR="destination"` selects an installation directory.
+
 ## Build
 
 Install Flutter 3.47.7 stable / Dart 3.13.5, Git, Visual Studio's Desktop development with C++ workload and Windows SDK. Visual Studio Code does not provide that toolchain. Check `flutter doctor -v` first.

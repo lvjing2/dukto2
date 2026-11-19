@@ -4,6 +4,12 @@
 
 已验证 Windows 11 x64；Windows 10 与 ARM64 真机尚未实测；不提供 32 位 Windows 包。实际构建与互传范围见 [验证范围](validation.md)。
 
+## 安装器
+
+从 0.1.8 开始，x64 提供 EXE 安装器，默认仅安装到当前用户的 AppData/Local/Programs/Dukto2，带开始菜单入口和卸载项。安装器未做发布者签名；ARM64 继续使用完整 ZIP。卸载不清理用户设置、设备身份、传输记录或已接收文件。
+
+CI 用 Inno Setup 打包完整 Release 目录，并验证安装文件摘要、同版本重装及卸载。静默安装参数为 `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-`，可用 `/DIR="目标目录"` 指定位置。
+
 ## 构建
 
 安装 Flutter 3.47.7 stable / Dart 3.13.5、Git、Visual Studio「使用 C++ 的桌面开发」工作负载及 Windows SDK。Visual Studio Code 不提供此工具链，先运行 `flutter doctor -v` 检查。
