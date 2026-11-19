@@ -894,7 +894,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceOnline => '在线 · 已核对';
 
   @override
-  String get aboutAuthor => '作者：lvjing2';
+  String get aboutAuthor => '作者：赵真灵(lvjing2)';
 
   @override
   String get peerCancelledTransfer => '对方已取消传输';
@@ -925,6 +925,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privacyPolicyDescription => '查看数据使用与权限说明';
+
+  @override
+  String get privacyWelcomeTitle => '使用前请阅读';
+
+  @override
+  String get privacyWelcomeBody =>
+      'Dukto2 用于设备间直传文件和文字。同意后，应用会启动局域网设备发现，并在本机保存设备身份、设置和传输记录。\n\n扫码为可选功能：打开扫码时申请相机权限，相机组件可能读取加速度传感器以适配画面方向。Google ML Kit 在本机识别二维码，并可能按隐私政策发送 SDK 诊断及使用数据；Dukto2 不上传相机画面。\n\n通知和后台等待接收由你自主开启，权限可在系统设置中管理。请阅读隐私政策后决定是否同意。';
+
+  @override
+  String get privacyReadPolicy => '阅读隐私政策';
+
+  @override
+  String get privacyAccept => '同意并继续';
+
+  @override
+  String get privacyDecline => '不同意并退出';
+
+  @override
+  String get privacySaveFailed => '未能保存你的选择，请重试。';
+
+  @override
+  String get privacyPolicyUnavailable =>
+      '没有可用浏览器，请访问 https://qtlink.cn/dukto2/privacy.html 阅读政策。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1816,7 +1839,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get deviceOnline => '在线 · 已核对';
 
   @override
-  String get aboutAuthor => '作者：lvjing2';
+  String get aboutAuthor => '作者：赵真灵(lvjing2)';
 
   @override
   String get peerCancelledTransfer => '对方已取消传输';
@@ -1847,4 +1870,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get privacyPolicyDescription => '查看数据使用与权限说明';
+
+  @override
+  String get privacyWelcomeTitle => '使用前请阅读';
+
+  @override
+  String get privacyWelcomeBody =>
+      'Dukto2 用于设备间直传文件和文字。同意后，应用会启动局域网设备发现，并在本机保存设备身份、设置和传输记录。\n\n扫码为可选功能：打开扫码时申请相机权限，相机组件可能读取加速度传感器以适配画面方向。Google ML Kit 在本机识别二维码，并可能按隐私政策发送 SDK 诊断及使用数据；Dukto2 不上传相机画面。\n\n通知和后台等待接收由你自主开启，权限可在系统设置中管理。请阅读隐私政策后决定是否同意。';
+
+  @override
+  String get privacyReadPolicy => '阅读隐私政策';
+
+  @override
+  String get privacyAccept => '同意并继续';
+
+  @override
+  String get privacyDecline => '不同意并退出';
+
+  @override
+  String get privacySaveFailed => '未能保存你的选择，请重试。';
+
+  @override
+  String get privacyPolicyUnavailable =>
+      '没有可用浏览器，请访问 https://qtlink.cn/dukto2/privacy.html 阅读政策。';
 }

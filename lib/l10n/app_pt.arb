@@ -270,7 +270,7 @@
   "deviceChecking": "A verificar ligação…",
   "deviceIdentityChanged": "A identidade do dispositivo mudou",
   "deviceOnline": "Online · Identidade verificada",
-  "aboutAuthor": "Autor: lvjing2",
+  "aboutAuthor": "Autor: 赵真灵(lvjing2)",
   "peerCancelledTransfer": "O outro dispositivo cancelou a transferência",
   "backgroundReceive": "Recebimento em segundo plano",
   "backgroundReceiveHint": "Aguarda solicitações por 30 minutos após sair. Sujeito aos limites de bateria do sistema.",
@@ -280,5 +280,12 @@
   "receiveRequestBody": "Toque para conferir a lista e confirmar.",
   "backgroundReceiveUnavailable": "Permita notificações e os dois canais de recebimento nas configurações do sistema.",
   "privacyPolicy": "Política de privacidade",
-  "privacyPolicyDescription": "Disponível em chinês"
+  "privacyPolicyDescription": "Disponível em chinês",
+  "privacyWelcomeTitle": "Antes de começar",
+  "privacyWelcomeBody": "O Dukto2 transfere arquivos e texto diretamente entre seus dispositivos. Ao concordar, inicia a descoberta na rede local e salva a identidade do dispositivo, as configurações e o histórico de transferências neste dispositivo.\n\nA leitura de códigos é opcional: ao abri-la, o app solicita acesso à câmera; seu componente pode usar o acelerômetro para ajustar a orientação. O Google ML Kit reconhece códigos no dispositivo e pode enviar dados de diagnóstico e uso do SDK conforme a política de privacidade. O Dukto2 não envia imagens da câmera.\n\nNotificações e recebimento em segundo plano são opcionais. Gerencie as permissões nas configurações do sistema. Leia a política de privacidade antes de decidir.",
+  "privacyReadPolicy": "Ler política de privacidade",
+  "privacyAccept": "Concordar e continuar",
+  "privacyDecline": "Recusar e sair",
+  "privacySaveFailed": "Não foi possível salvar sua escolha. Tente novamente.",
+  "privacyPolicyUnavailable": "Nenhum navegador disponível. Leia a política em https://qtlink.cn/dukto2/privacy.html."
 }

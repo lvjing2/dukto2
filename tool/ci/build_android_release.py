@@ -85,6 +85,10 @@ def main():
     code = int(code)
     if not 0 < code <= 2100000000:
         raise ValueError('Android versionCode out of range')
+    # First-use privacy must remain ahead of SDK/runtime startup in the actual
+    # Android launcher, including rejection and repeat-launch behavior.
+    run([ROOT / 'android/gradlew', ':app:testDebugUnitTest', '--tests',
+         'dev.dukto2.dukto2.PrivacyActivityTest', '--console=plain'], cwd=ROOT / 'android')
     with tempfile.TemporaryDirectory(prefix='dukto2-signing-', dir=os.environ.get('RUNNER_TEMP')) as temp:
         temp = Path(temp)
         roles = {}

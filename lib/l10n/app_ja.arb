@@ -270,7 +270,7 @@
   "deviceChecking": "接続を確認中…",
   "deviceIdentityChanged": "デバイスの識別情報が変更されました",
   "deviceOnline": "オンライン · 識別情報確認済み",
-  "aboutAuthor": "作者：lvjing2",
+  "aboutAuthor": "作者：赵真灵(lvjing2)",
   "peerCancelledTransfer": "相手のデバイスが転送をキャンセルしました",
   "backgroundReceive": "バックグラウンド受信待機",
   "backgroundReceiveHint": "アプリを離れても30分間待機します。システムの省電力制限は適用されます。",
@@ -280,5 +280,12 @@
   "receiveRequestBody": "タップして一覧を確認し、受信を許可してください。",
   "backgroundReceiveUnavailable": "システム設定で通知と2つの受信通知チャンネルを許可してください。",
   "privacyPolicy": "プライバシーポリシー",
-  "privacyPolicyDescription": "中国語でご覧いただけます"
+  "privacyPolicyDescription": "中国語でご覧いただけます",
+  "privacyWelcomeTitle": "ご利用の前に",
+  "privacyWelcomeBody": "Dukto2 はデバイス間でファイルとテキストを直接転送します。同意後にローカルネットワークのデバイス検索を開始し、デバイス識別情報、設定、転送履歴を本体に保存します。\n\nスキャンは任意です。スキャンを開くとカメラ権限を要求し、カメラ部品が画像の向きの調整に加速度センサーを使用する場合があります。Google ML Kit は本体でコードを認識し、プライバシーポリシーに従って SDK の診断・利用データを送信する場合があります。Dukto2 はカメラ画像をアップロードしません。\n\n通知とバックグラウンド受信待機は任意です。権限はシステム設定で管理できます。プライバシーポリシーを読んでから同意するか選択してください。",
+  "privacyReadPolicy": "プライバシーポリシーを読む",
+  "privacyAccept": "同意して続ける",
+  "privacyDecline": "同意せず終了",
+  "privacySaveFailed": "選択を保存できませんでした。再試行してください。",
+  "privacyPolicyUnavailable": "ブラウザーがありません。https://qtlink.cn/dukto2/privacy.html をご確認ください。"
 }

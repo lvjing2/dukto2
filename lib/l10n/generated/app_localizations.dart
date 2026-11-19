@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutAuthor.
   ///
   /// In en, this message translates to:
-  /// **'Author: lvjing2'**
+  /// **'Author: 赵真灵(lvjing2)'**
   String get aboutAuthor;
 
   /// Shown to the sender after authenticated confirmation that the receiver cancelled this transfer.
@@ -1801,6 +1801,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Available in Chinese'**
   String get privacyPolicyDescription;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you start'**
+  String get privacyWelcomeTitle;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Dukto2 shares files and text directly between your devices. After you agree, it starts local network discovery and stores your device identity, settings and transfer history on this device.\n\nScanning is optional: opening the scanner requests camera access, and its camera component may use the accelerometer to adjust image orientation. Google ML Kit processes barcodes on this device and may send SDK diagnostic and usage data as described in the privacy policy. Camera images are not uploaded by Dukto2.\n\nNotifications and background reception are optional. You can manage permissions in system settings. Please read the privacy policy before choosing whether to agree.'**
+  String get privacyWelcomeBody;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Read privacy policy'**
+  String get privacyReadPolicy;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and continue'**
+  String get privacyAccept;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Disagree and exit'**
+  String get privacyDecline;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your choice. Please try again.'**
+  String get privacySaveFailed;
+
+  /// Android native privacy notice shown before Flutter and SDK initialization. Keep the policy URL unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'No browser is available. Read the policy at https://qtlink.cn/dukto2/privacy.html.'**
+  String get privacyPolicyUnavailable;
 }
 
 class _AppLocalizationsDelegate

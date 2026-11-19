@@ -5,6 +5,8 @@ plugins {
 }
 
 val backgroundPreview = System.getenv("DUKTO2_BACKGROUND_PREVIEW") == "true"
+val privacyPreview = System.getenv("DUKTO2_PRIVACY_PREVIEW") == "true"
+require(!(backgroundPreview && privacyPreview)) { "Choose only one isolated preview" }
 
 val signedRelease = System.getenv("DUKTO2_ANDROID_SIGNED") == "true"
 val unsignedRelease = System.getenv("DUKTO2_ANDROID_UNSIGNED") == "true"
@@ -24,10 +26,23 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = if (backgroundPreview) "dev.dukto2.bgvalidation" else "dev.dukto2.dukto2"
-        manifestPlaceholders["dukto2Label"] = if (backgroundPreview) "Dukto2 后台预览" else "Dukto2"
+        applicationId = when {
+            privacyPreview -> "dev.dukto2.privacyvalidation"
+            backgroundPreview -> "dev.dukto2.bgvalidation"
+            else -> "dev.dukto2.dukto2"
+        }
+        manifestPlaceholders["dukto2Label"] = when {
+            privacyPreview -> "Dukto2 隐私验证"
+            backgroundPreview -> "Dukto2 后台预览"
+            else -> "Dukto2"
+        }
+        testInstrumentationRunner = "dev.dukto2.dukto2.PrivacyDeviceInstrumentation"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -69,4 +84,20 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Explicit public API for consent-delayed initialization; same version as
+    // the bundled barcode scanner's resolved ML Kit dependency.
+    implementation("com.google.mlkit:common:18.11.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16.1")
+}
+
+// Flutter adds its assets after AGP's host-test task is configured. Gradle 9
+// requires the real producer dependency before packaging Robolectric resources.
+tasks.configureEach {
+    Regex("package(.+)UnitTestForUnitTest").matchEntire(name)?.let { task ->
+        dependsOn("copyFlutterAssets${task.groupValues[1]}")
+    }
 }

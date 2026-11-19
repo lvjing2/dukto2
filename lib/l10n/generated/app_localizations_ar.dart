@@ -924,7 +924,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deviceOnline => 'متصل · تم التحقق من الهوية';
 
   @override
-  String get aboutAuthor => 'المؤلف: lvjing2';
+  String get aboutAuthor => 'المؤلف: 赵真灵(lvjing2)';
 
   @override
   String get peerCancelledTransfer => 'ألغى الجهاز الآخر عملية النقل';
@@ -957,4 +957,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyPolicyDescription => 'متاحة باللغة الصينية';
+
+  @override
+  String get privacyWelcomeTitle => 'قبل البدء';
+
+  @override
+  String get privacyWelcomeBody =>
+      'ينقل Dukto2 الملفات والنصوص مباشرة بين أجهزتك. بعد موافقتك يبدأ اكتشاف الأجهزة في الشبكة المحلية، ويحفظ هوية الجهاز والإعدادات وسجل النقل على هذا الجهاز.\n\nالمسح اختياري: عند فتح الماسح يُطلب إذن الكاميرا، وقد يستخدم مكوّن الكاميرا مقياس التسارع لضبط اتجاه الصورة. يتعرف Google ML Kit على الرموز على الجهاز وقد يرسل بيانات تشخيص واستخدام SDK وفق سياسة الخصوصية. لا يرفع Dukto2 صور الكاميرا.\n\nالإشعارات وانتظار الاستقبال في الخلفية اختياريان. يمكنك إدارة الأذونات في إعدادات النظام. اقرأ سياسة الخصوصية قبل اختيار الموافقة.';
+
+  @override
+  String get privacyReadPolicy => 'قراءة سياسة الخصوصية';
+
+  @override
+  String get privacyAccept => 'أوافق وأتابع';
+
+  @override
+  String get privacyDecline => 'لا أوافق وخروج';
+
+  @override
+  String get privacySaveFailed => 'تعذر حفظ اختيارك. حاول مرة أخرى.';
+
+  @override
+  String get privacyPolicyUnavailable =>
+      'لا يتوفر متصفح. اقرأ السياسة على https://qtlink.cn/dukto2/privacy.html.';
 }

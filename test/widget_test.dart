@@ -1264,7 +1264,7 @@ void main() {
         });
         await tester.pumpAndSettle();
         expect(find.text('Dukto2 · $projectVersion'), findsOneWidget);
-        expect(find.text('作者：lvjing2'), findsOneWidget);
+        expect(find.text('作者：赵真灵(lvjing2)'), findsOneWidget);
         expect(find.text('GitHub · lvjing2/dukto2'), findsOneWidget);
         expect(find.textContaining('Emanuele Colombo'), findsOneWidget);
         expect(find.textContaining('OpenAI Codex'), findsNothing);

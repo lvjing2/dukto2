@@ -951,7 +951,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deviceOnline => 'En ligne · Identité vérifiée';
 
   @override
-  String get aboutAuthor => 'Auteur : lvjing2';
+  String get aboutAuthor => 'Auteur : 赵真灵(lvjing2)';
 
   @override
   String get peerCancelledTransfer => 'L’autre appareil a annulé le transfert';
@@ -985,4 +985,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyPolicyDescription => 'Disponible en chinois';
+
+  @override
+  String get privacyWelcomeTitle => 'Avant de commencer';
+
+  @override
+  String get privacyWelcomeBody =>
+      'Dukto2 transfère directement des fichiers et du texte entre vos appareils. Après votre accord, il lance la découverte sur le réseau local et conserve l’identité de l’appareil, les réglages et l’historique des transferts sur cet appareil.\n\nLe scan est facultatif : son ouverture demande l’accès à la caméra, dont le composant peut utiliser l’accéléromètre pour adapter l’orientation. Google ML Kit reconnaît les codes sur l’appareil et peut transmettre des données de diagnostic et d’utilisation du SDK selon la politique de confidentialité. Dukto2 ne téléverse pas les images de la caméra.\n\nLes notifications et la réception en arrière-plan sont facultatives. Gérez les autorisations dans les réglages système. Lisez la politique avant de choisir.';
+
+  @override
+  String get privacyReadPolicy => 'Lire la politique de confidentialité';
+
+  @override
+  String get privacyAccept => 'Accepter et continuer';
+
+  @override
+  String get privacyDecline => 'Refuser et quitter';
+
+  @override
+  String get privacySaveFailed =>
+      'Impossible d’enregistrer votre choix. Réessayez.';
+
+  @override
+  String get privacyPolicyUnavailable =>
+      'Aucun navigateur disponible. Consultez https://qtlink.cn/dukto2/privacy.html.';
 }

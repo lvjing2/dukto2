@@ -3,6 +3,7 @@ package dev.dukto2.dukto2
 import android.content.Context
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.dart.DartExecutor
+import com.google.mlkit.common.MlKit
 
 /** One engine/server, independent of Activity recreation; never boot-started. */
 object DuktoRuntime {
@@ -12,7 +13,11 @@ object DuktoRuntime {
     var visible = false
     private var stopping = false
     fun engine(context: Context): FlutterEngine {
+        check(PrivacyConsent.accepted(context)) { "Privacy acceptance is required before starting Dukto2" }
         retained?.let { return it }
+        // The automatic provider is removed from the manifest. Initialize only
+        // after the native launcher has persisted an explicit acceptance.
+        MlKit.initialize(context.applicationContext)
         val engine = FlutterEngine(context.applicationContext)
         retained = engine
         bridge = PlatformBridge(context).also { it.initialize(engine) }
