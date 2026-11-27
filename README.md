@@ -2,6 +2,8 @@
 
 English | [Simplified Chinese](README.zh-CN.md)
 
+[Official website and downloads](https://qtlink.cn/en/dukto2/)
+
 Dukto2 shares files and text directly between computers, phones and tablets on the same local network. No account or cloud upload is required: connect to a device, choose what to send, and transfer after the receiver approves.
 
 **Scan to connect, choose and share; optional background reception on Android.**
