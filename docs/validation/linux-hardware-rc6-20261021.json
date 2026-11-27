@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-21",
+  "version": "0.1.6-rc.6+13",
+  "system": "Ubuntu 24.04.3 x86_64, physical desktop, Wayland",
+  "normalPackage": {
+    "sourceCommit": "8184566369083c56178588e95ce927521879bb18",
+    "sha256": "7872920690d22a5aa8f10fe03a88330482a6bba0a363a84e0853a9773a3d0ea7",
+    "startup": "passed",
+    "desktopRegistration": "passed, previous entry backed up",
+    "guiTransfers": [
+      {
+        "direction": "macOS GUI -> Linux GUI",
+        "name": "mac-to-linux-rc6-1m-plus17.bin",
+        "size": 1048593,
+        "sha256": "198fe22858bf90dd34cba065bf3e3d4680918f930e94ce51807b9b3055f2eb1e",
+        "independentDigestMatch": true,
+        "userConfirmedReceive": true
+      },
+      {
+        "direction": "Linux GUI -> macOS GUI",
+        "name": "linux-to-mac-rc6-1m-plus17.bin",
+        "size": 1048593,
+        "sha256": "22c5f9fd4f2fbf658500b596cb919b9654cebd7550ab64a52481f3c8ebeca857",
+        "independentDigestMatch": true,
+        "userInitiatedSend": true
+      }
+    ],
+    "receiveFolder": "Previously configured custom receiving folder; retained across upgrade",
+    "previousPreferencesPreserved": true
+  },
+  "appImage": {
+    "file": "Dukto2-0.1.6-rc.6-build.13-linux-x64.AppImage",
+    "bytes": 20015608,
+    "sha256": "6d89b085498fbb347e5333a62718a062a3f0998e8ba94711e392ecd3d804f766",
+    "version": "0.1.6-rc.6+13",
+    "commit": "8759a87a79795055be218b019f5d4c87d4a2afae",
+    "startup": "passed, real Wayland desktop; GTK/GIO module errors observed",
+    "ciWorkflow": "https://github.com/lvjing2/dukto2/actions/runs/39471378216",
+    "acceptance": "incomplete: real desktop module loading failures remain unresolved"
+  },
+  "findings": [
+    {
+      "issue": "Discovery and selected-peer availability flap on a high-latency local link",
+      "evidence": "12 sequential probes using the GUI 800ms timeout: 6 passed, 6 timed out; Linux -> Mac ping measured 550-607ms; later Mac -> Linux ping recovered to 5-86ms and GUI selection recovered without a code change.",
+      "status": "observed, unresolved, not a proven packaging-specific issue"
+    },
+    {
+      "issue": "AppImage mixes bundled older GLib with newer system GIO and input-method modules",
+      "evidence": [
+        "libdconfsettings.so: undefined symbol g_assertion_message_cmpint",
+        "libgvfscommon.so: undefined symbol g_task_set_static_name",
+        "libfcitx-gclient.so.1: undefined symbol g_once_init_leave_pointer"
+      ],
+      "status": "observed, unresolved; AppImage is not fully accepted for publication"
+    }
+  ],
+  "flatpakHardwareTest": "skipped at user request",
+  "largeTransfer": "User stopped testing. macOS GUI showed cancellation after approximately 84.1 MiB of the 4 GiB + 17 byte file. No completed large-file integrity result. Receiver cleanup was not verified; 128 MiB transfer was not started.",
+  "sessionStatus": "Hardware testing stopped; retained observations only. No further device operations are required to read or commit this record.",
+  "publication": "No release published and no system network settings modified.",
+  "scope": "This record covers rc.6 only. It does not establish acceptance of rc.7, ARM64 hardware or other distributions. No application or packaging fix was made during this hardware verification session."
+}
